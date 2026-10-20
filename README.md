@@ -267,8 +267,10 @@ make type-check
 
 The uv resolution envelope is Linux with Python 3.10–3.13 because the existing
 optional vLLM version excludes Python 3.14. CI tests the portable core on Python
-3.10 and 3.12; this is not a claim that a GPU stack or every interpreter is
-qualified. `requirements/aurora-frameworks-2025.3.1.lock` remains the separate
+3.12, matching the current Aurora Python 3.12.12 runtime. The published core
+minimum remains 3.10, but older interpreters are outside the current CI scope.
+This is not a claim that a GPU stack or every interpreter is qualified.
+`requirements/aurora-frameworks-2025.3.1.lock` remains the separate
 site runtime record. Do not use `uv sync --all-extras` to replace the Aurora
 frameworks environment.
 

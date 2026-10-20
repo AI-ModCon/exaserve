@@ -18,17 +18,17 @@ recipe or a claim that those packages are qualified on another platform.
 The uv resolution envelope is Linux with Python below 3.14, retaining the
 project's published Python requirement. The upper bound comes from the
 existing exact vLLM dependency, which uv must resolve even though portable
-sync does not install it. The portable CI interpreters are **Python 3.10 and
-3.12**; other interpreters are not newly qualified by this lock.
+sync does not install it. Portable CI targets **Python 3.12**, matching Aurora's
+current Python 3.12.12 runtime; other interpreters are outside the current CI
+scope and are not qualified by the lock's wider resolution envelope.
 
 Use `make install-dev` for a locked portable environment and `make lock-check`
 to check freshness without changing it. To intentionally refresh metadata,
 use `make lock` (`uv lock --no-build --no-python-downloads`), then review the
 lock and pin changes. No third-party source builds or GPU installation are
 needed for this metadata workflow. Do not use `uv sync --all-extras` for
-portable development. Markers in exported requirements must be evaluated
-separately for Python 3.10 and 3.12; backports need not have identical active
-dependency edges on both interpreters.
+portable development. Evaluate markers in exported requirements for the
+selected Python 3.12 interpreter rather than comparing inactive backports.
 
 `aurora-frameworks-2025.3.1.lock` records the exact heavy stack supplied by
 ALCF. It is verified at runtime by `CompatibilityProfile`; it is not a PyPI

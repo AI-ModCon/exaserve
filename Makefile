@@ -23,7 +23,7 @@ help:
 	  'Aurora: full tests and builds require a validated compute session and environment.' \
 	  'Use a verified interactive PBS compute shell; see docs/getting_started.md#aurora-development-and-serving.' \
 	  'The session guard is a safety check, not allocation or environment setup.' \
-	  'Portable CI covers Linux Python 3.10 and 3.12, not GPU/runtime qualification.'
+	  'Portable CI covers Linux Python 3.12 (Aurora Python), not GPU/runtime qualification.'
 
 install install-dev:
 	$(UV) sync --locked --group dev --group test --no-python-downloads

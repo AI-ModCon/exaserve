@@ -38,7 +38,7 @@ public issue or pull request.
 
 ## Development setup
 
-Use Linux, a supported portable CI interpreter (Python 3.10 or 3.12), Git, and
+Use Linux, Python 3.12 (matching Aurora's current Python 3.12.12), Git, and
 `uv==0.10.1`. Fork the repository if needed, clone
 your fork, and create a focused branch. The setup target uses the committed lock
 file to create or update the managed `.venv` development environment:

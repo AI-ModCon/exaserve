@@ -7,10 +7,10 @@ environment is not an installation recipe for Aurora's serving stack.
 
 Use a Linux workstation or a suitable CI runner with Git, Make, Python, and
 `uv==0.10.1` (install it with `python3 -m pip install uv==0.10.1`).
-Package metadata requires Python 3.10 or newer; the portable CI matrix targets
-Python 3.10 and 3.12. Select one of those versions for reproducible development.
-This does not claim qualification on Python 3.13 or 3.14, nor does portable CI
-qualify any GPU runtime.
+Package metadata accepts Python 3.10 or newer; current portable CI targets
+Python 3.12, matching Aurora's current Python 3.12.12 runtime. Use Python 3.12
+for development. Other interpreter versions are outside the current CI scope,
+and portable CI does not qualify any GPU runtime.
 
 The committed uv lock resolves Linux Python 3.10–3.13; the existing optional
 vLLM dependency excludes Python 3.14. Use a CI interpreter version above for

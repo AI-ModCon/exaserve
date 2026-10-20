@@ -10,9 +10,9 @@ evaluation clients. Start with [the overview](../README.md) and
 
 ## Which Python versions are supported?
 
-The portable package requires Python 3.10 or newer, with a portable CI matrix
-targeting Python 3.10 and 3.12. That metadata is not a claim that every newer
-Python version has been qualified. The pinned Aurora serving compatibility
+The portable package accepts Python 3.10 or newer, while current CI targets
+Python 3.12, matching Aurora's current Python 3.12.12 runtime. Other interpreter
+versions are outside the current validation scope. The pinned serving compatibility
 profile uses Python 3.12.12, Ray 2.53.0, and vLLM 0.15.0+xpu. See
 [dependency profiles](../requirements/README.md).
 
