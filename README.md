@@ -57,6 +57,14 @@ They use argument vectors, finite deadlines, process-group ownership, and
 structured handshakes/status. No shell script or stdout marker owns lifecycle or
 readiness.
 
+The default dense real-engine layout behind HAProxy uses one model application
+with all replicas: one model, TP=1, PP=1, and exactly one replica on every GPU
+of every serving node. Serve selects the replica; HAProxy distributes connections
+among the node proxies. The plan derives this layout automatically. Per-node
+proxy-anchor applications remain, so the total application count is
+`num_nodes + 1`. Sparse, multi-device, pipeline-parallel and multi-model plans
+keep one application per replica; dense null-compute keeps its node groups.
+
 [`doc/design/call_graph.md`](doc/design/call_graph.md) walks the same path
 function by function, worked against the canonical two-node HAProxy example.
 
@@ -279,6 +287,12 @@ Coverage is reported for the portable Python code, with XML artifacts retained
 by CI. It does not measure or certify real GPU, native MPI, scheduler, or scale
 behavior. The independently installed-wheel and randomized-order gates remain
 separate from the editable development environment.
+
+Staging tests require `/tmp` to be a separate writable tmpfs from the declared
+shared roots. GitHub-hosted CI provisions that filesystem explicitly; the
+production locality guards remain active. Tests that import the optional
+Ray/FastAPI serving API are skipped when those dependencies are absent; pure
+deployment-plan and routing tests still run in the portable lane.
 
 The release gate also builds an sdist and wheel, installs the wheel into a clean
 Python environment outside the source tree, runs deterministic and randomized

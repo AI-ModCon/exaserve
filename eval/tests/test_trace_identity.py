@@ -7,6 +7,8 @@ import importlib
 import sys
 from types import SimpleNamespace
 
+import pytest
+
 from eval.lib.spec_io import load_experiment_spec
 from eval.lib.trace_generators import _request_mode
 from eval.lib.trace_store import _trace_identity
@@ -61,6 +63,38 @@ def _write(tmp_path, name: str, arrival: str, prompt_content: dict) -> str:
 
 
 _PROMPTS = {"prompts": [{"text": "hello world one two three"}]}
+
+
+@pytest.mark.parametrize("kind", ["weak_scaling", "dataset_replay"])
+def test_non_azure_identity_ignores_an_unused_arrival_csv(tmp_path, kind):
+    spec = load_experiment_spec(_write(tmp_path, "unused-csv", "fixed", _PROMPTS))
+    spec.trace.kind = kind
+    csv_path = tmp_path / "missing-site-dataset.csv"
+    spec.trace.input_trace_path = str(csv_path)
+
+    before = _trace_identity(spec)
+    csv_path.write_text("unrelated site data\n")
+
+    assert before == _trace_identity(spec)
+    assert before["trace"]["input_trace_digest"] == ""
+
+
+def test_azure_identity_requires_and_hashes_the_arrival_csv(tmp_path):
+    spec = load_experiment_spec(_write(tmp_path, "azure-csv", "fixed", _PROMPTS))
+    spec.trace.kind = "azure_trace"
+    csv_path = tmp_path / "arrival.csv"
+    spec.trace.input_trace_path = str(csv_path)
+
+    with pytest.raises(FileNotFoundError):
+        _trace_identity(spec)
+    csv_path.write_text("first arrival data\n")
+    before = _trace_identity(spec)
+    csv_path.write_text("changed arrival data\n")
+
+    assert (
+        before["trace"]["input_trace_digest"]
+        != _trace_identity(spec)["trace"]["input_trace_digest"]
+    )
 
 
 def test_arrival_mode_changes_trace_identity(tmp_path):

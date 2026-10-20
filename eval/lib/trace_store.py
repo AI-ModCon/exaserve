@@ -57,7 +57,13 @@ def _trace_identity(spec: ExperimentSpec) -> dict[str, Any]:
         "trace": {
             "kind": spec.trace.kind,
             "input_prompt_digest": _content_digest(spec.trace.input_prompt_path),
-            "input_trace_digest": _content_digest(spec.trace.input_trace_path),
+            # Only Azure replay reads the arrival CSV. Synthetic/dataset
+            # traces must not depend on an unrelated site-default dataset.
+            "input_trace_digest": (
+                _content_digest(spec.trace.input_trace_path)
+                if spec.trace.kind == "azure_trace"
+                else ""
+            ),
             "tokenizer_builder": getattr(spec.trace, "tokenizer_builder", ""),
             "tokenizer_source": tokenizer_source_identity(spec),
         },

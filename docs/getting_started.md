@@ -49,6 +49,16 @@ uv run --locked ruff check src/exaserve/config.py
 uv run --locked exaserve-status --help
 ```
 
+The filesystem/staging tests exercise the real node-local guards and require
+`/tmp` to be a separate writable tmpfs from `/home` and other declared shared
+roots. Aurora compute nodes already provide that layout. GitHub-hosted test and
+installed-wheel jobs mount a temporary tmpfs on their disposable runners before
+installing test dependencies. On another workstation, use a suitable isolated
+VM/container with that layout; do not disable the locality checks to run tests.
+Tests of the optional Ray/FastAPI serving API skip explicitly when those
+dependencies are absent. The portable plan, gateway-routing, trace, and
+filesystem tests still run without the serving stack.
+
 Read [CONTRIBUTING.md](../CONTRIBUTING.md) before changing dependencies, runtime
 contracts, or generated compatibility files. Do not regenerate the lockfile as
 a routine response to a failing test; first establish whether the interpreter

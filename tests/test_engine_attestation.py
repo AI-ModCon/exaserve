@@ -317,11 +317,11 @@ def test_ray_worker_runtime_env_explicitly_carries_local_rpc_and_cache_roots(mon
 
 
 def test_replica_validates_rpc_path_on_its_node_before_engine_import():
-    import inspect
+    from importlib import resources
 
-    from exaserve import server
-
-    source = inspect.getsource(server.EngineWorker.func_or_class)
+    source = (
+        (resources.files("exaserve") / "server.py").read_text().split("class EngineWorker:", 1)[1]
+    )
     rpc_validation = source.index("validate_vllm_rpc_base_path(")
     compatibility_activation = source.index("CompatibilityActivator().activate")
     backend_import = source.index("from .engines import EngineSpec")

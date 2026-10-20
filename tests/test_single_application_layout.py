@@ -163,8 +163,8 @@ def test_gateway_bypass_uses_node_proxies_for_one_application():
     assert all(f":8000/{route}_r" in url for url in urls)
 
 
-def test_dense_graph_runs_one_deployment_with_every_replica(monkeypatch, request):
-    from exaserve import server
+def test_dense_graph_runs_one_deployment_with_every_replica(monkeypatch, request, serve_module):
+    server = serve_module
 
     plan, bound = _bound_plan(monkeypatch, request)
     deploy_calls = []

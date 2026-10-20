@@ -6,6 +6,15 @@ passed hardware qualification. Exact artifacts and scope are recorded in
 
 ## Unreleased
 
+### Portable CI
+
+- Give GitHub-hosted staging tests a separate `/tmp` tmpfs so real shared/local
+  filesystem guards can run without assuming Aurora's mount layout.
+- Declare Ray/FastAPI requirements for optional Serve graph tests and keep
+  source-order and deployment-plan checks independent of those dependencies.
+- Hash the arrival CSV only for Azure replay. Synthetic and dataset-replay
+  trace identities no longer require an unused site-default Azure dataset.
+
 ### Serve application layout
 
 - Deploy a dense real-engine model (one HAProxy model, TP=1, PP=1, every GPU of

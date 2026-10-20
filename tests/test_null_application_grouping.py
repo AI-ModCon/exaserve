@@ -89,8 +89,8 @@ def _bound_plan(monkeypatch, request):
     return plan, bound
 
 
-def test_node_group_graph_has_one_twelve_replica_app_per_rank(monkeypatch, request):
-    from exaserve import server
+def test_node_group_graph_has_one_twelve_replica_app_per_rank(monkeypatch, request, serve_module):
+    server = serve_module
 
     plan, bound = _bound_plan(monkeypatch, request)
     deploy_calls = []
@@ -134,8 +134,10 @@ def test_node_group_graph_has_one_twelve_replica_app_per_rank(monkeypatch, reque
     assert observed_run_many[0][1] == {"wait_for_applications_running": True}
 
 
-def test_node_group_actor_options_pin_rank_and_resolve_replica_dynamically(monkeypatch, request):
-    from exaserve import server
+def test_node_group_actor_options_pin_rank_and_resolve_replica_dynamically(
+    monkeypatch, request, serve_module
+):
+    server = serve_module
 
     plan, bound = _bound_plan(monkeypatch, request)
     captured = {}

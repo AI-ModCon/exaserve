@@ -1237,8 +1237,10 @@ def test_source_and_model_rank_identity_never_guess_zero(monkeypatch):
         _runtime_rank()
 
 
-def test_deployment_loads_model_mapping_once_and_actors_get_only_local_paths(monkeypatch):
-    from exaserve import server
+def test_deployment_loads_model_mapping_once_and_actors_get_only_local_paths(
+    monkeypatch, serve_module
+):
+    server = serve_module
 
     plan = SimpleNamespace()
     binding = SimpleNamespace()
@@ -1278,8 +1280,8 @@ def test_server_has_no_ambient_model_id_fallback():
         },
     ],
 )
-def test_server_rejects_missing_or_extra_staged_model_mapping(mapping):
-    from exaserve.server import _model_path_for_deployment
+def test_server_rejects_missing_or_extra_staged_model_mapping(mapping, serve_module):
+    _model_path_for_deployment = serve_module._model_path_for_deployment
 
     config = SimpleNamespace(
         runtime=SimpleNamespace(null_compute=False),
