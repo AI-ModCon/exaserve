@@ -8,11 +8,11 @@ Contributions to ExaServe are welcome. Please read the [README](README.md) and
 [AGENTS.md](AGENTS.md) governs agent execution safety and where commands may run.
 [Getting started](docs/getting_started.md) documents environment preparation and
 compute-session checks for contributors and deployers. The
-[production-hardening execution plan](doc/PRODUCTION_HARDENING_EXECUTION_PLAN.md)
+[production-hardening execution plan](docs/PRODUCTION_HARDENING_EXECUTION_PLAN.md)
 is the authoritative architecture and implementation specification. Historical
 audits, Known Issues, TODOs, and design drafts provide context, not overrides.
 
-The [hardening status](doc/hardening/STATUS.md) records candidate identities,
+The [hardening status](docs/hardening/STATUS.md) records candidate identities,
 qualification evidence, supersessions, and unresolved release gates. A passing
 unit suite is not hardware qualification. Do not describe a platform, engine,
 gateway, scale, or source snapshot as supported without the corresponding

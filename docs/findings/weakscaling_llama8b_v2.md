@@ -79,7 +79,7 @@ Follow-up profiling revealed this was insufficient:
 | Distributed MPI | 1024 | 256.1 | 91% |
 
 The proxy path has not been re-tested with go_concurrency=2048.
-See `clientlab/findings/bottleneck_profiling.md` for full analysis.
+See `docs/findings/bottleneck_profiling.md` for full analysis.
 
 ## Trace generation fix
 
@@ -116,4 +116,4 @@ fixed trace generator and show 0 errors.
 
 - Results: `runs/weakscaling_llama8b_v2/run2/`
 - Plot: `weakscaling_v2_results.png`
-- Phase 0: `clientlab/findings/phase0_server_characterization.md`
+- Phase 0: `docs/findings/phase0_server_characterization.md`

@@ -132,7 +132,7 @@ readiness protocol.
 
 The SC26 research campaign includes measurements through 256 Aurora nodes,
 including HAProxy/non-streaming and pipeline-parallel workloads. Those artifacts
-were produced before the final hardened control plane and remain in `findings/`
+were produced before the final hardened control plane and remain in `docs/findings/`
 for scientific context. They may be used as regression baselines, not as current
 release evidence. A support statement requires the final code, exact packaged
 artifact, approved envelope, canonical status/receipt chain, and required tier
@@ -140,14 +140,14 @@ to pass together.
 
 ## Regenerating the Word reference card
 
-`doc/ExaServe_Reference_Card.docx` is generated output. The repository does not
+`docs/ExaServe_Reference_Card.docx` is generated output. The repository does not
 redistribute the Academy template or the paper figures, so a clean clone needs
 these ignored inputs restored first:
 
 ```text
 tmp/ref_card/Academy_Framework_Reference_Card.docx
-doc/figures/fig1_proxy_scaling.png
-doc/figures/fig7_pp405b.png
+docs/figures/fig1_proxy_scaling.png
+docs/figures/fig7_pp405b.png
 ```
 
 The two figures come from the paper-analysis output; the template must be

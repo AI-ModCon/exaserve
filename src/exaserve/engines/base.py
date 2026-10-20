@@ -5,7 +5,7 @@ One shared Ray Serve host (``EngineWorker`` in server.py) owns the OpenAI HTTP
 surface, per-tile placement, and stats; each concrete engine (vLLM, SGLang,
 null) implements only the model-specific core behind this interface.
 
-Design doc: doc/design/pluggable_interfaces.md
+Design doc: docs/design/pluggable_interfaces.md
 
 The generation contract is intentionally the *same dict/return shape the worker
 already used* so the port is behavior-preserving:

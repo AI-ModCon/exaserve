@@ -78,7 +78,6 @@ def test_runtime_and_generic_examples_do_not_embed_a_developer_account():
         *sorted((root / "eval/plot").glob("*.py")),
         *sorted((root / "eval/scripts").glob("*.py")),
         *sorted((root / "eval/tools").glob("*.py")),
-        *sorted((root / "findings").glob("*.py")),
         *sorted((root / "examples").glob("*.yaml")),
         root / "clientlab/README.md",
     ]

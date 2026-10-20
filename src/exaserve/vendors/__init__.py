@@ -9,7 +9,7 @@ Production callers pass the vendor from the verified DeploymentPlan. The
 environment fallback exists only for isolated compatibility tooling. To add a
 vendor, implement ``VendorBackend`` (base.py) and register it in ``_register``.
 
-Design doc: doc/design/vendor_site_abstraction.md
+Design doc: docs/design/vendor_site_abstraction.md
 """
 
 from __future__ import annotations

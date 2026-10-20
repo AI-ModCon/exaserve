@@ -162,7 +162,7 @@ namespaces = true
 "exaserve.resources" = ["*.c", "*.Makefile", "vllm_modelinfo/*.json"]
 
 [tool.pytest.ini_options]
-# WP0 canonical test policy (doc/hardening/BASELINE.md): deterministic order
+# WP0 canonical test policy (docs/hardening/BASELINE.md): deterministic order
 # by default; the WP11 randomized CI job re-enables ordering explicitly with
 # `-o addopts=""` and records the printed pytest-randomly seed.
 addopts = "-p no:randomly"

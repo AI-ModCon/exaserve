@@ -16,16 +16,18 @@ evidence or cross-platform support claims.
 Qualification is immutable-candidate and dimension specific. The proposed
 64-node target is not a support claim: it needs product-owner scope approval
 and the predeclared exact-candidate ladder. See
-[`doc/hardening/STATUS.md`](doc/hardening/STATUS.md) for the current artifact,
+[`docs/hardening/STATUS.md`](docs/hardening/STATUS.md) for the current artifact,
 evidence-backed maximum, and unresolved gates.
 
 ## Documentation and AI-ModCon preparation
 
 Start with the [documentation index](docs/index.md),
 [getting-started guide](docs/getting_started.md), [usage examples](docs/usage.md),
-and [API reference](docs/api.md). The existing `doc/` tree remains the home of
-the authoritative architecture plan, design notes, and historical evidence;
-the `docs/` entry points do not replace those contracts.
+and [API reference](docs/api.md). The unified `docs/` tree also contains the
+authoritative architecture plan, design notes, hardening records, and
+[research findings](docs/findings/index.md). The
+[path migration guide](docs/path_migrations.md) explains relocated historical
+references and the [archived scratchpad](docs/archive/README.md).
 
 This repository is being prepared for transfer to AI-ModCon. The
 [compliance and transfer checklist](docs/modcon_compliance.md) records the
@@ -65,7 +67,7 @@ proxy-anchor applications remain, so the total application count is
 `num_nodes + 1`. Sparse, multi-device, pipeline-parallel and multi-model plans
 keep one application per replica; dense null-compute keeps its node groups.
 
-[`doc/design/call_graph.md`](doc/design/call_graph.md) walks the same path
+[`docs/design/call_graph.md`](docs/design/call_graph.md) walks the same path
 function by function, worked against the canonical two-node HAProxy example.
 
 ## Install on Aurora
@@ -110,7 +112,7 @@ an audited source hash, not on the login node.
 The current default SiteProfile intentionally has no approved, evidence-backed
 production envelope, so submitting the canonical HAProxy example currently
 fails with `production execution is not qualified`. That is a release gate, not
-a setup error. After `doc/hardening/STATUS.md` records the required measurements
+a setup error. After `docs/hardening/STATUS.md` records the required measurements
 and approval, copy the canonical HAProxy example and change the shared model
 path:
 
@@ -298,13 +300,13 @@ deployment-plan and routing tests still run in the portable lane.
 
 The release gate also builds an sdist and wheel, installs the wheel into a clean
 Python environment outside the source tree, runs deterministic and randomized
-hermetic suites, validates `doc/hardening/FINDINGS.yaml`, strictly compiles the
+hermetic suites, validates `docs/hardening/FINDINGS.yaml`, strictly compiles the
 native MPI helper, and performs the required tests inside validated Aurora
 compute sessions. Hardware/scale evidence that has not run on the final code is
 reported as pending, never inferred from unit tests or historical artifacts.
 
 The authoritative architecture and implementation contract is
-[`doc/PRODUCTION_HARDENING_EXECUTION_PLAN.md`](doc/PRODUCTION_HARDENING_EXECUTION_PLAN.md).
+[`docs/PRODUCTION_HARDENING_EXECUTION_PLAN.md`](docs/PRODUCTION_HARDENING_EXECUTION_PLAN.md).
 Historical audits, `KNOWN_ISSUES`, and TODO material are context only and cannot
 override it.
 

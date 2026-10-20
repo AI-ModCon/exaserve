@@ -13,20 +13,26 @@ and hardware-qualified serving are separate support boundaries.
 - [FAQ](faq.md): environment, qualification, readiness, and contribution questions.
 - [AI-ModCon checklist](modcon_compliance.md): requirement mapping, validation
   limits, and administrator steps for the organization transfer.
+- [Research findings](findings/index.md): historical measurements and analysis.
+- [Documentation path migration](path_migrations.md): old-to-new path mapping
+  and preservation of historical evidence identities.
+- [Archived development notes](archive/README.md): the original scratchpad and
+  its limits as guidance.
 
 ## Architecture and operational authority
 
-The established `doc/` tree remains in place. This `docs/` directory is a reader
-entry point, not a replacement specification.
+User guides, architecture, hardening records, and research reports share this
+directory. Their authority is unchanged: research and archived notes do not
+override the execution plan or candidate qualification records.
 
 | Topic | Authoritative document or entry point |
 | --- | --- |
 | Site-neutral safety and permissions | [Repository operating rules](../AGENTS.md) |
 | Aurora allocation, toolchain, and runtime setup | [Aurora setup guide](getting_started.md#aurora-development-and-serving) |
-| Architecture, implementation, and acceptance gates | [Production-hardening execution plan](../doc/PRODUCTION_HARDENING_EXECUTION_PLAN.md) |
-| Candidate identities and qualification caveats | [Hardening status](../doc/hardening/STATUS.md) |
-| Implemented boundaries and design notes | [Design index](../doc/design/README.md) |
-| Submit-to-readiness control flow | [Call graph](../doc/design/call_graph.md) |
+| Architecture, implementation, and acceptance gates | [Production-hardening execution plan](PRODUCTION_HARDENING_EXECUTION_PLAN.md) |
+| Candidate identities and qualification caveats | [Hardening status](hardening/STATUS.md) |
+| Implemented boundaries and design notes | [Design index](design/README.md) |
+| Submit-to-readiness control flow | [Call graph](design/call_graph.md) |
 | Dependency and site-stack separation | [Dependency profiles](../requirements/README.md) |
 | Evaluation control plane | [Eval design](../eval/DESIGN.md) |
 | Client measurement studies | [ClientLab](../clientlab/README.md) |

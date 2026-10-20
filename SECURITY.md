@@ -32,7 +32,7 @@ any identifiable revision; maintainers must determine affected revisions and
 the appropriate remediation scope. Do not infer support from a version number,
 the existence of a development branch, or a passing CI check.
 
-The [README](README.md) and [hardening status](doc/hardening/STATUS.md) describe
+The [README](README.md) and [hardening status](docs/hardening/STATUS.md) describe
 the intended runtime boundary, exact candidates, superseded evidence, and open
 qualification gates. Qualification is specific to the artifact and deployment
 dimensions; it is not a guarantee that a deployment is free of vulnerabilities.

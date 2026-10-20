@@ -21,7 +21,7 @@ candidate is the Aurora PBS / Intel XPU / vLLM / HAProxy,
 trusted-allocation, non-streaming path. An implemented adapter or accepted
 validation setting is not a production support claim.
 
-Before submitting, review [the current status](../doc/hardening/STATUS.md),
+Before submitting, review [the current status](hardening/STATUS.md),
 including its supersession notices. The default profile has unresolved
 production qualification gates. A dry run also validates admission and can
 reject an unqualified configuration. Do not add `validation_mode: true` merely

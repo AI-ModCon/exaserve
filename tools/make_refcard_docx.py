@@ -1,4 +1,4 @@
-"""Generate doc/ExaServe_Reference_Card.docx.
+"""Generate docs/ExaServe_Reference_Card.docx.
 
 Matches the Academy_Framework_Reference_Card.docx visual language exactly:
 same palette (rust 9C4A2E/C2613F, navy 2C3340, warm grays), same
@@ -9,7 +9,7 @@ Word file, or your changes will be lost on the next regeneration.
 
 Usage:  python3 tools/make_refcard_docx.py
 Needs:  tmp/ref_card/Academy_Framework_Reference_Card.docx as the template and
-        the two source figures listed in doc/exaserve.md.
+        the two source figures listed in docs/exaserve.md.
 """
 
 import os
@@ -20,7 +20,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "tmp/ref_card/Academy_Framework_Reference_Card.docx"
-OUT = ROOT / "doc/ExaServe_Reference_Card.docx"
+OUT = ROOT / "docs/ExaServe_Reference_Card.docx"
 
 RUST = "9C4A2E"
 RUST_BORDER = "C2613F"
@@ -136,12 +136,12 @@ def callout(lead, text, fill):
     return one_cell_table(cell, RUST_BORDER, 20, RUST_BORDER, 4, fill, (110, 170, 110, 150))
 
 
-IMG_DIR = ROOT / "doc/figures"
+IMG_DIR = ROOT / "docs/figures"
 _images = []  # (zip_target, src_path, relationship_id)
 
 
 def figure(png_name, caption, width_in):
-    """Embed doc/figures/<png_name> centered at width_in inches, with an
+    """Embed docs/figures/<png_name> centered at width_in inches, with an
     italic gray caption underneath (paper-figure style)."""
     import struct
 
@@ -608,7 +608,7 @@ blocks.append(
 )
 blocks.append(
     body_par(
-        "Historical scale cliffs are catalogued in doc/KNOWN_ISSUES.md. The compatibility "
+        "Historical scale cliffs are catalogued in docs/KNOWN_ISSUES.md. The compatibility "
         "profile activates only version-pinned targeted changes and every required process "
         "attests the result before READY."
     )
@@ -663,7 +663,7 @@ blocks.append(
             ["Documentation", "README.md — install, configuration, console-script reference"],
             [
                 "Machine-actionable card",
-                "doc/exaserve.md — markdown version of this card for coding agents",
+                "docs/exaserve.md — markdown version of this card for coding agents",
             ],
             [
                 "Deployment templates",
@@ -676,7 +676,7 @@ blocks.append(
             ],
             [
                 "Scaling analyses",
-                "findings/ and doc/KNOWN_ISSUES.md — root-cause write-ups, scale cliffs and fixes",
+                "docs/findings/ and docs/KNOWN_ISSUES.md — root-cause write-ups, scale cliffs and fixes",
             ],
         ],
         [2800, 7424],

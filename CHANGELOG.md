@@ -2,9 +2,17 @@
 
 This records project changes, not an assertion that a deployment or release has
 passed hardware qualification. Exact artifacts and scope are recorded in
-[`doc/hardening/STATUS.md`](doc/hardening/STATUS.md) and the linked evidence.
+[`doc/hardening/STATUS.md`](docs/hardening/STATUS.md) and the linked evidence.
 
 ## Unreleased
+
+### Documentation paths
+
+- Consolidate architecture, hardening records and research findings under
+  `docs/`, and archive the original scratchpad at `docs/archive/note.txt`.
+- Update documentation, analysis and reference-card paths; check local links in
+  CI against tracked files. Historical ledger bytes and qualification/profile
+  identities are preserved through documented legacy-reference resolution.
 
 ### Portable CI
 
@@ -53,5 +61,5 @@ gates do not establish a complete production release or Frontier support.
 
 The package version remains `0.4.0`; this entry does not create a release or tag.
 The `release-v0.4.0` baseline and `v0.4.0-rc2` evidence are preserved in
-[`doc/hardening/STATUS.md`](doc/hardening/STATUS.md). Its supersession notice
+[`doc/hardening/STATUS.md`](docs/hardening/STATUS.md). Its supersession notice
 explains why earlier artifacts do not automatically qualify the current tree.

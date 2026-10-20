@@ -432,7 +432,7 @@ class CompatibilityProfile:
             raise ProfileMismatch(
                 f"environment does not match profile {self.name!r}: "
                 + "; ".join(mismatches)
-                + ". Pin the supported versions (doc/hardening/"
+                + ". Pin the supported versions (docs/hardening/"
                 "COMPATIBILITY_MATRIX.md) or declare a new profile."
             )
 
@@ -692,7 +692,7 @@ def observed_versions() -> dict[str, str]:
 def default_profile(vendor: str = "xpu") -> CompatibilityProfile:
     """The Aurora frameworks 2025.3.1 profile (ADR-003 selected set).
 
-    Patch ids mirror ``doc/hardening/COMPATIBILITY_INVENTORY.md``.
+    Patch ids mirror ``docs/hardening/COMPATIBILITY_INVENTORY.md``.
     """
     package_dir = Path(__file__).resolve().parents[1]
 

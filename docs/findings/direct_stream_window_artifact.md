@@ -11,6 +11,9 @@ run start to the LAST completion across ALL ranks
 (`end_time = max(item[4] ...)`); `rps = completed / duration`. The
 denominator therefore includes the fleet-maximum drain.
 
+The analysis script is now
+[eval/scripts/direct_stream_window_analysis.py](../../eval/scripts/direct_stream_window_analysis.py).
+
 ## Data (direct_stream_window_analysis.py over
 `full/proxycmp_direct{,_scale}` per-request records; start = first_token_at
 − ttft, end = start + latency)

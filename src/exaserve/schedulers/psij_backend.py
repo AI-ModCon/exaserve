@@ -6,7 +6,7 @@ so new sites need no hand-written backend. It is registered as the optional
 ``psij``/``exawork`` backend. The first production SiteProfile selects the
 native PBS backend; PSI/J remains gated until its executor is qualified.
 
-Division of labor (see doc/exawork_psij_notes.md for the friction log):
+Division of labor (see docs/exawork_psij_notes.md for the friction log):
 - PSI/J: job-script rendering + submission (qsub/sbatch/bsub/... quirks).
 - Ours:  job *body* (identical to the native backends), site defaults
   (queue/walltime/account), and status/head-node resolution — PSI/J cannot
