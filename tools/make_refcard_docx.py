@@ -395,9 +395,9 @@ blocks.append(
     code_block(
         "exaserve-serve-submit my_config.yaml --project-account YOUR_PROJECT --wait\n"
         "# 1234567.aurora-pbs-0001...          <- PBS job id\n"
-        "# http://x9013c1s0b0n0:4001           <- service URL\n"
+        "# http://<head-node>:4001             <- service URL\n"
         "\n"
-        'curl -sS -X POST "http://x9013c1s0b0n0:4001/v1/chat/completions" \\\n'
+        'curl -sS -X POST "http://<head-node>:4001/v1/chat/completions" \\\n'
         "     -H 'Content-Type: application/json' \\\n"
         '     -d \'{"model":"meta-llama/Meta-Llama-3-8B-Instruct",\n'
         '          "messages":[{"role":"user","content":"hello"}],"max_tokens":8}\'\n'

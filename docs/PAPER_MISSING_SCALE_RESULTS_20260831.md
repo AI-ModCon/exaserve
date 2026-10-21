@@ -651,7 +651,7 @@ buffers on failure; unfinished collectives prohibit retries and are retained
 until process teardown. Native replay failures also enable Python stack dumps.
 The focused transport/failure suite passed 98 tests.
 
-A differential compute probe on PBS `J078`, node `x9022c1s6b0n0`, verified
+A differential compute probe on PBS `J078`, node `node-22-1-6`, verified
 the old object receive at 16 KiB, reproduced `MPI.Exception: Message truncated`
 at 128 KiB, and verified a 1 MiB transfer with explicit `MPI.BYTE` buffers.
 The runs took approximately 0.62 seconds each; their return codes were 0, 1,

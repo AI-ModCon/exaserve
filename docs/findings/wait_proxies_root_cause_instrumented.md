@@ -38,7 +38,7 @@ Instrumented `ProxyActor.__init__` and `ready()` directly in a copy of
 
 | Host | Init dur | Ready dur | Scheduling delay |
 |------|----------|-----------|------------------|
-| head (x9008c0s3b0n0) | 0.225s | 0.0s | 0.0s |
+| head (node-8-0-3) | 0.225s | 0.0s | 0.0s |
 | worker min | 0.270s | 0.0s | 38.1s |
 | worker max | 0.509s | 0.0s | 39.2s |
 
@@ -46,7 +46,7 @@ Instrumented `ProxyActor.__init__` and `ready()` directly in a copy of
 
 | Host | Attempt | Init dur | Ready dur | Scheduling delay |
 |------|---------|----------|-----------|------------------|
-| head (x9005c3s5b0n0) | 1 | 0.384s | 0.0s | 0.0s |
+| head (node-5-3-5) | 1 | 0.384s | 0.0s | 0.0s |
 | workers (first batch) | 1 | 0.27-0.50s | 0.0s | 38.9-40.0s |
 | **workers (restarts)** | **2** | 0.42-0.48s | 0.0s | **107.9-119.7s** |
 
@@ -54,7 +54,7 @@ Instrumented `ProxyActor.__init__` and `ready()` directly in a copy of
 
 | Host | Attempt | Init dur | Ready dur | Scheduling delay |
 |------|---------|----------|-----------|------------------|
-| head (x9023c1s0b0n0) | 1 | 0.364s | 0.0s | 0.0s |
+| head (node-23-1-0) | 1 | 0.364s | 0.0s | 0.0s |
 | workers (first batch) | 1 | 0.35-0.63s | 0.0s | 39.2-40.8s |
 | **workers (restarts)** | **2** | 0.27-0.59s | 0.0s | **109.2-121.7s** |
 
@@ -62,7 +62,7 @@ Instrumented `ProxyActor.__init__` and `ready()` directly in a copy of
 
 | Host | Attempt | Init dur | Ready dur | Scheduling delay |
 |------|---------|----------|-----------|------------------|
-| head (x9020c7s2b0n0) | 1 | 0.423s | 0.0s | 0.0s |
+| head (node-20-7-2) | 1 | 0.423s | 0.0s | 0.0s |
 | workers (first batch) | 1 | 0.37-0.96s | 0.0s | 40.8-43.4s |
 | **workers (restarts)** | **2** | 0.41-0.73s | 0.0s | **125.5-130.6s** |
 

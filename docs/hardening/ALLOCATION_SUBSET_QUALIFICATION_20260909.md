@@ -139,7 +139,7 @@ or deleted, and neither A nor B is qualification evidence.
 ### Corrected-candidate regression and cold bootstrap
 
 On the validated one-node interactive session PBS `J089`, head
-`x9007c7s0b0n0`, `/tmp/exaserve` was actually absent. The corrected validator
+`node-7-7-0`, `/tmp/exaserve` was actually absent. The corrected validator
 accepted the declared `/tmp` mount and created/removed a private temporary
 directory successfully, without requiring an existing ExaServe tree.
 
@@ -168,9 +168,9 @@ result and cold-bootstrap check above cover this controller's code.
 
 PBS `J092` was submitted at 23:08 UTC on 2026-09-09 and entered R at
 23:21:33 UTC. The approved start waiter confirmed native head
-`x9025c1s0b0n0`; PBS reports exactly four physical capacity nodes:
-`x9025c1s0b0n0`, `x9025c1s1b0n0`, `x9025c1s2b0n0`, and
-`x9025c1s4b0n0`, with the project allocation and one-hour walltime. The two children
+`node-25-1-0`; PBS reports exactly four physical capacity nodes:
+`node-25-1-0`, `node-25-1-1`, `node-25-1-2`, and
+`node-25-1-4`, with the project allocation and one-hour walltime. The two children
 remain logical two-node runs, not exact-size physical two-node jobs.
 
 The batch body sources `~/script/env_aurora` and invokes the sealed controller:
@@ -200,7 +200,7 @@ bindings were revalidated without modifying them.
 | Independent happy-path child | SUCCEEDED | 1788996154633383398 | 156.146s | Two complete replays; each 3,072 scheduled, 3,072 completed, zero errors |
 | Independent cancellation child | CANCELLED_AFTER_READY | 1788996312031078850 | 70.254s | Identity-bound RUNNING/replaying plus canonical READY preceded the deliberate SIGINT; clean CANCELLED RunStatus, no `cleanup_error` key |
 
-Both bindings use exactly `x9025c1s0b0n0` and `x9025c1s1b0n0`, preserving the
+Both bindings use exactly `node-25-1-0` and `node-25-1-1`, preserving the
 native parent head and PBS job ID. The original child SchedulerPlans were not
 submitted. Exact binding hashes are
 `36ddc43f5d208ae61dcf433aee707c91fb08d227829f06a2f3f4cc851a6ee292`
@@ -225,7 +225,7 @@ and
 Native MPI placement returned exactly the two logical hosts with exit zero.
 The three-rank over-launch returned 127, empty stdout, and
 `Cannot place all ranks on node list`; no extra hostname was emitted.
-The excluded-node sentinel on `x9025c1s4b0n0`, PID `19242`, was witnessed
+The excluded-node sentinel on `node-25-1-4`, PID `19242`, was witnessed
 before child startup at sequence 0 and after each cleanup at sequences 158
 and 230. All witnesses retain the same campaign token/host/PID, fresh timing,
 and authenticated transcript prefixes. The sentinel survived both cleanups,
@@ -283,7 +283,7 @@ paper measurement. No child standalone PBS request is submitted alongside it.
   ambiguous/duplicate submissions, failure gating, cancellation/lease guards,
   strict native PBS completion, sentinel identity/freshness, and contract budgets.
 - Full regression passed on interactive PBS `J087`, exact node
-  `x9014c4s3b0n0`, after the approved `srundbg` fallback and fresh `env_aurora`
+  `node-14-4-3`, after the approved `srundbg` fallback and fresh `env_aurora`
   setup: **1,768 passed, 27 warnings, 165.99 seconds**, exit 0. The session was
   validated against its actual PBS job/nodefile before execution and released
   after the test. Pytest used a fresh short `/tmp/xs-regression.*` base directory.

@@ -71,8 +71,8 @@ The root task separately owns investigation and qualification of that route.
 ## n4 live execution
 
 PBS `J081` entered `R` at `2026-09-09 20:29:18 UTC`, with exactly four
-nodes and a two-hour allocation. The exact bound nodes are `x9015c4s4b0n0`,
-`x9015c6s1b0n0`, `x9015c6s5b0n0` and `x9015c7s3b0n0`. Generation is
+nodes and a two-hour allocation. The exact bound nodes are `node-15-4-4`,
+`node-15-6-1`, `node-15-6-5` and `node-15-7-3`. Generation is
 `1788985796180450420`; the logged allocation-binding prefix is `528fb16f0c6e`.
 
 By `20:30:01 UTC`, head-rooted source distribution and verification passed on
@@ -150,7 +150,7 @@ Queued time is expected; runtime/setup evidence will be checked after start.
 
 PBS entered `R` at `2026-09-09 22:05:53 UTC`, with exactly eight nodes and
 two hours (nominal allocation deadline `2026-09-10 00:05:53 UTC`). The approved
-wait helper returned `JOB_READY|J084|x9001c3s4b0n0`. The first direct check at
+wait helper returned `JOB_READY|J084|node-1-3-4`. The first direct check at
 `22:06:20 UTC` found PBS stdout/stderr files newly created but empty; canonical
 state was still `SUBMITTED` during initial shell startup. A live stdout/stderr
 tail is now following the sealed PBS job. No READY claim is made from PBS
@@ -168,9 +168,9 @@ Model staging has begun; no execution error was observed at this checkpoint.
 
 Generation is `1788991595757467635`; allocation-binding hash is
 `b26e32844e872a9d6ce0c8cf72b7260f802625b403eb616b92e4a1ac4f03bd7e`.
-Exact rank-order nodes are `x9001c3s4b0n0`, `x9006c5s7b0n0`,
-`x9009c6s7b0n0`, `x9015c0s5b0n0`, `x9018c0s3b0n0`, `x9018c1s6b0n0`,
-`x9004c3s2b0n0`, and `x9016c2s7b0n0`.
+Exact rank-order nodes are `node-1-3-4`, `node-6-5-7`,
+`node-9-6-7`, `node-15-0-5`, `node-18-0-3`, `node-18-1-6`,
+`node-4-3-2`, and `node-16-2-7`.
 
 At approximately `23:00 UTC`, model staging completed in 3192.6 seconds.
 Shared model validation took 786.37 seconds; PP stage 0 transferred

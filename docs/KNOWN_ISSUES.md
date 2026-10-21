@@ -28,8 +28,13 @@ new control plane. Ledger: `KI-A1`, `IN_PROGRESS`.
 Historical 256-node runs showed roughly quadratic proxy/actor-handle work and a
 single-controller bottleneck. ExaServe's final readiness processing is indexed,
 bounded, and does not fleet-poll, but it cannot remove or claim to solve
-upstream Ray behavior. Measure the exact release-v0.4.0 candidate at the approved
-boundary tier before setting a larger supported maximum. Refs:
+upstream Ray behavior. Early deployments of one Serve application with a
+replica on every GPU tile (February 2026) took about 100 s at 256 nodes, 199 s
+at 512 and 1,241 s at 1,024, about six times longer for the last doubling; at
+2,048 nodes (24,576 replicas) all three attempts reached the 1,200 s driver
+limit with about half of the replicas running. Measure the exact release-v0.4.0
+candidate at the approved boundary tier before setting a larger supported
+maximum. Refs:
 `docs/findings/gcs_contention_quantitative.md` and
 `docs/findings/proxyactor_death_cascade_256n.md`. Ledger: `KI-A3`, `IN_PROGRESS`.
 
@@ -160,6 +165,70 @@ PP topology is a plan capability with explicit node-pinned stage ownership.
 Final43 proves one real PP=2 replica across two physical hosts and exact
 EngineCore/worker receipts. Unsupported multi-replica/non-shard combinations
 fail plan capability checks rather than proceeding with ambiguous placement.
+
+## Lessons kept from retired branches
+
+These issues recurred during development on branches that were removed before
+the repository was opened ([retired branches](path_migrations.md#retired-branches)).
+They are recorded here because no other document describes them; the findings
+ledger does not track them.
+
+### L1. Ray Serve request-router crash loop when queue-length probes time out — mitigated
+
+At 64 or more nodes (768 or more single-tile replicas) with saturated
+replicas, every queue-length probe from Ray Serve's request router missed the
+default 0.1 s deadline at once, and the router then failed in a loop with
+`AttributeError: 'NoneType' object has no attribute 'routing_context'`: Ray's
+backoff path reaches that check with no pending request when routing tasks
+outnumber queued requests (February 2026). Raising the deadline removed the
+crash. The Aurora site profile sets `RAY_SERVE_QUEUE_LENGTH_RESPONSE_DEADLINE_S=300.0`
+before any Ray process starts ([site.py](../src/exaserve/site.py)); keep it, and
+repeat a saturated 64-node run before lowering or removing it.
+
+### L2. Control reconnect grace shorter than the start-up burst — configuration
+
+Twice in August 2026, at 16 and at 64 nodes, the synchronized engine start-up
+burst outlasted the default 60 s control reconnect grace: rank control sessions
+that dropped during the burst could not reconnect in time, and the deployment
+failed closed before READY. Set `deployment.control.reconnect_grace_s`
+explicitly for large start-ups. The paper preview used 300 s, which recovered
+every rank at 16 nodes; the 64-node attempts also needed the transport and
+event-store fixes in [paper preview](PAPER_EXPERIMENT_PREVIEW_20260811.md)
+items 27 to 29.
+
+### L3. Lmod is not `nounset`-clean — resolved
+
+Job scripts that enabled `set -u` before sourcing the site environment failed
+inside Lmod with an unbound-variable error (`ZSH_EVAL_CONTEXT`); this recurred
+three times. Job bodies rendered by ExaServe enable `set -u` only after the site
+bootstrap ([schedulers/base.py](../src/exaserve/schedulers/base.py)); hand-written
+setup scripts need the same order.
+
+### L4. Outbound HTTP proxy intercepts allocation-internal requests — resolved
+
+Compute-node environments export an outbound HTTP proxy whose `no_proxy` list
+does not cover node addresses or numeric loopback, so health checks, canaries
+and replay requests made with standard HTTP clients went to the proxy and
+failed; this recurred at least four times. Every internal HTTP client
+(composition root, node supervisor, readiness checks, replay engine, ClientLab)
+now uses a direct opener that ignores proxy variables; new internal clients must
+do the same.
+
+### L5. Worker-node logs lost when collected at job teardown — resolved
+
+In April 2026, copying Ray session logs and node-local instrumentation from
+worker nodes after the launcher exited repeatedly returned empty or partial
+results at 32 to 64 nodes. Nodes stopped answering while the scheduler tore the
+job down and cleaned node-local scratch, Ray session directories could
+disappear once shutdown began, remote-glob copies returned nothing without an
+error, archiving live Ray log directories hung on sockets and files still being
+written, and a timeout wrapper killed copy jobs it did not own. Each rank now
+archives its own node-local diagnostics after its Ray child has stopped, in a
+bounded, killable subprocess that skips links and non-regular files and records
+how many it skipped ([state/diagnostics.py](../src/exaserve/state/diagnostics.py),
+called from [rank_main.py](../src/exaserve/rank_main.py)). A diagnostics failure
+is reported but never changes the run outcome; new collectors should gather in
+band before the job step ends.
 
 ## Current release blockers
 

@@ -124,7 +124,7 @@ subjob lease).
 
 ## 2026-08-05 — Slice P00.4: S01 two-node proof PASSED; S02 probe iterating
 
-**Gate S01-2N (allocation 8734762, x9003c0s7b0n0 + x9003c4s3b0n0): PASS —
+**Gate S01-2N (allocation 8734762, node-3-0-7 + node-3-4-3): PASS —
 all 4 scenarios.** Evidence in `artifacts/hardening/s01-2n/verdict_*.json`,
 decision in `decisions/ADR-001-process-boundaries.md`. Facts proven: PALS
 propagates the secret env (2/2 authenticated registrations in ≤0.4s); typed
@@ -1386,7 +1386,7 @@ The chain transported and adjudicated on the first try, and the adjudication
 immediately rejected **every receipt from every correctly-placed rank**:
 
 ```
-node_id 'x9013c4s0b0n0' != bound 'x9013c4s0b0n0.hsn.cm.aurora.alcf.anl.gov'
+node_id 'node-13-4-0' != bound 'node-13-4-0.hsn.cm.aurora.alcf.anl.gov'
 ```
 
 The scheduler's node file is fully qualified; a process reports
@@ -2202,7 +2202,7 @@ buffers on failure; unfinished collectives prohibit retries and are retained
 until process teardown. Native replay failures also enable Python stack dumps.
 The focused transport/failure suite passed 98 tests.
 
-A differential compute probe on PBS `J078`, node `x9022c1s6b0n0`, verified
+A differential compute probe on PBS `J078`, node `node-22-1-6`, verified
 the old object receive at 16 KiB, reproduced `MPI.Exception: Message truncated`
 at 128 KiB, and verified a 1 MiB transfer with explicit `MPI.BYTE` buffers.
 The runs took approximately 0.62 seconds each; their return codes were 0, 1,

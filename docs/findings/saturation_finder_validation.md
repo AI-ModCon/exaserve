@@ -13,7 +13,7 @@ same binary, same `max_active_requests=80`, `num_go_workers=4`.
 - Control: trace-based ceiling study (1M rps target, 15s, replays pre-generated trace)
 - Test: saturation finder (binary search with 10s step duration, 3s warmup, 5% tolerance)
 
-## Run 1: Before Transport Fix (x9012c0s3b0n0, 204 cores)
+## Run 1: Before Transport Fix (node-12-0-3, 204 cores)
 
 Ceiling study control:
 
@@ -56,7 +56,7 @@ connection pool serializes goroutines, inflating per-request latency.
 Fix: changed `saturation.go` to create per-scheduler transports with separate
 connection pools, matching the replay mode's `newHTTPClient()` approach.
 
-## Run 2: After Transport Fix (x9012c4s0b0n0, 204 cores)
+## Run 2: After Transport Fix (node-12-4-0, 204 cores)
 
 Ceiling study control:
 
@@ -89,7 +89,7 @@ Saturation finder, 12-proc step sweep:
 
 Gap narrowed: single-proc 65% of ceiling, 12-proc 89% of ceiling.
 
-## Run 3: 16-proc Sweep (x9013c4s7b0n0, 204 cores)
+## Run 3: 16-proc Sweep (node-13-4-7, 204 cores)
 
 To test whether more procs push the saturation finder closer to ceiling:
 

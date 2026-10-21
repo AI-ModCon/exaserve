@@ -29,6 +29,9 @@ passed hardware qualification. Exact artifacts and scope are recorded in
 - Replace PBS job identifiers in published records with labels. The legacy
   paper-evidence ledger moves to schema 3 without job identifiers; its loader
   reads them from the pinned PBS stdout file name.
+- Label compute nodes in published records as `node-<rack>-<chassis>-<slot>`,
+  list the branches retired before publication in the path migration guide, and
+  keep the issues that recurred on them in `docs/KNOWN_ISSUES.md`.
 - Reject request-supplied chat templates and reserved `chat_template_kwargs`
   keys with HTTP 400, require a model configuration's `model_type` to match its
   reviewed architecture before broadcast, and load evaluation tokenizers

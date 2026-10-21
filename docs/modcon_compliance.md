@@ -252,9 +252,12 @@ so the payload still has to be applied there.
 7. Review any future package publishing separately: registry ownership, release
    evidence, protected environments and trusted publishing are distinct actions.
    Do not introduce a publish token or deploy-on-push workflow as part of transfer.
-8. Before changing visibility, review every branch and tag, not only `main`:
-   all of them become public with the repository. Delete branches that are no
-   longer needed, and record which tag, if any, is described as a release.
+8. Before changing visibility, delete every branch except `main`; all branches
+   and tags become public with the repository. The
+   [retired branches](path_migrations.md#retired-branches) and the lessons kept
+   from them ([known issues](KNOWN_ISSUES.md#lessons-kept-from-retired-branches))
+   are recorded. Keep the tags, and record which tag, if any, is described as a
+   release.
 
 ## Historical validation boundary (2026-09-23)
 

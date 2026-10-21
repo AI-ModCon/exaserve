@@ -94,7 +94,7 @@ is `2026-09-09 20:04:19 UTC`; the monitor did not submit it again. The queued
 start helper began at `2026-09-09T20:05:41+00:00`, with a three-hour bound.
 
 The first job started at `2026-09-09 20:29:18 UTC`, allocation head
-`x9025c1s6b0n0`, requesting exactly 32 nodes for one hour. Canonical state
+`node-25-1-6`, requesting exactly 32 nodes for one hour. Canonical state
 became RUNNING at 20:29:56 UTC. Its allocation-binding hash is
 `821ed9ef2f204ace681657dd415a26b02b66d34611326cda6e4dabeb3ba05b69`.
 Source staging produced 32/32 rank receipts in 4.019767 seconds for 415 files
@@ -167,7 +167,7 @@ exactly 64 nodes in debug-scaling for one hour; no overrides were applied.
 ### Accepted run12/n64
 
 The three-hour start helper began at `2026-09-09 21:51:14 UTC`;
-PBS started at `22:05:53 UTC`, allocation head `x9002c1s0b0n0`.
+PBS started at `22:05:53 UTC`, allocation head `node-2-1-0`.
 The sealed body initialized the intended Aurora environment. Live logs showed
 successful source staging, exact 64-node Ray membership/resources, 768 null
 replica measurements and 128 applications at target, followed by clean STOPPED
@@ -193,7 +193,7 @@ The queued-start helper uses the explicit 10,800-second bound.
 ### Accepted run13/n64
 
 The queued-start helper began at `2026-09-09 22:09:54 UTC`;
-PBS started at `22:48:32 UTC`, allocation head `x9024c4s7b0n0`.
+PBS started at `22:48:32 UTC`, allocation head `node-24-4-7`.
 Live logs verified exact 64-node membership/resources, 768 measured replicas,
 128 applications and 898 receipt slots, followed by 64/64 DRAIN and GOODBYE.
 The first final check correctly withheld acceptance while PBS was still E;
