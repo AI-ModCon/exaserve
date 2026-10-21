@@ -28,8 +28,9 @@ import numpy as np
 from exaserve.state.atomic import regular_file_reader, strict_json_loads
 
 PP405B_NODE_COUNTS = (4, 8, 16, 32, 64, 128, 256)
-# A retained PBS stdout file is named "<job id>.<PBS server>.OU". The ledger pins
-# its bytes by SHA-256; the job id and server are read from the name, not stored.
+# A retained PBS stdout file is named "<job id>.<PBS server>.OU". A cell can keep
+# several (resubmissions); the ledger pins the producing one by SHA-256, and its
+# job id and server are read from the name rather than stored.
 _PBS_STDOUT_NAME = re.compile(r"(\d+)\.([A-Za-z0-9][A-Za-z0-9.-]*)\.OU")
 _STAGE_HOSTS = re.compile(
     r"^\[pp_stage\] bcast stage ([01]) \([^)]*\) -> (\d+) node\(s\): (\[.*\])$"
@@ -994,19 +995,30 @@ def _validate_series(series: PP405BSeries) -> None:
             _validate_current_ref(ref, context=f"PP=2 series {series.key}.refs[{offset}]")
 
 
-def _legacy_stdout_path(stdout_dir: Path) -> Path:
-    """Return the one retained PBS stdout file of a legacy cell."""
+def _legacy_stdout(stdout_dir: Path, expected_sha256: str) -> tuple[Path, bytes]:
+    """Return the retained PBS stdout file of a legacy cell whose bytes are pinned."""
     try:
         names = sorted(entry.name for entry in stdout_dir.iterdir())
     except OSError as exc:
         raise RuntimeError(f"legacy PBS stdout directory is unreadable: {stdout_dir}") from exc
-    matches = [name for name in names if _PBS_STDOUT_NAME.fullmatch(name)]
-    if len(matches) != 1:
-        raise RuntimeError(
-            f"legacy PBS stdout directory must hold exactly one <job id>.<server>.OU file, "
-            f"found {len(matches)}: {stdout_dir}"
-        )
-    return stdout_dir / matches[0]
+    candidates = [stdout_dir / name for name in names if _PBS_STDOUT_NAME.fullmatch(name)]
+    matches = []
+    mismatches = []
+    for candidate in candidates:
+        try:
+            payload = _sha_bound_bytes(candidate, expected_sha256, label="legacy PBS stdout")
+        except RuntimeError as exc:
+            mismatches.append(exc)
+            continue
+        matches.append((candidate, payload))
+    if len(matches) == 1:
+        return matches[0]
+    if not matches and len(mismatches) == 1:
+        raise mismatches[0]  # the cell's only stdout file: report its own hash mismatch
+    raise RuntimeError(
+        "legacy PBS stdout directory must hold exactly one <job id>.<server>.OU file "
+        f"with the pinned SHA-256, found {len(matches)} of {len(candidates)}: {stdout_dir}"
+    )
 
 
 def load_pp405b_points(series: PP405BSeries, *, runs_root: str | Path) -> list[dict[str, Any]]:
@@ -1019,10 +1031,11 @@ def load_pp405b_points(series: PP405BSeries, *, runs_root: str | Path) -> list[d
             cell = root / series.stem / ref.run_group_id / ref.run_id
             plan_path = cell / "run.yaml"
             result_path = cell / "results" / ref.result_name
-            stdout_path = _legacy_stdout_path(cell / "logs" / "pbs" / "stdout")
+            stdout_path, stdout = _legacy_stdout(
+                cell / "logs" / "pbs" / "stdout", ref.stdout_sha256
+            )
             plan = _load_sha_bound_yaml(plan_path, ref.run_yaml_sha256, label="legacy run.yaml")
             original_cell = _validate_legacy_plan(plan, path=plan_path, series=series, ref=ref)
-            stdout = _sha_bound_bytes(stdout_path, ref.stdout_sha256, label="legacy PBS stdout")
             _validate_producing_stdout(
                 stdout,
                 path=stdout_path,

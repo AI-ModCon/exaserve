@@ -463,19 +463,26 @@ def test_legacy_pp_json_is_hashed_before_strict_parsing(tmp_path):
             evidence._load_sha_bound_json(artifact, digest, label="test result")
 
 
-def test_legacy_pp_stdout_directory_must_hold_exactly_one_pbs_stdout(tmp_path):
+def test_legacy_pp_stdout_is_selected_by_its_pinned_hash(tmp_path):
     from eval.lib import pp405b_evidence as evidence
 
     stdout_dir = tmp_path / "stdout"
     stdout_dir.mkdir()
-    with pytest.raises(RuntimeError, match="exactly one <job id>.<server>.OU file, found 0"):
-        evidence._legacy_stdout_path(stdout_dir)
-    (stdout_dir / "1234567.pbs-server.example.OU").write_text("a\n", encoding="utf-8")
-    (stdout_dir / "notes.txt").write_text("b\n", encoding="utf-8")
-    assert evidence._legacy_stdout_path(stdout_dir).name == "1234567.pbs-server.example.OU"
-    (stdout_dir / "1234568.pbs-server.example.OU").write_text("c\n", encoding="utf-8")
+    pinned = hashlib.sha256(b"producing run\n").hexdigest()
+    with pytest.raises(RuntimeError, match="with the pinned SHA-256, found 0"):
+        evidence._legacy_stdout(stdout_dir, pinned)
+    # A cell can retain several PBS stdout files from resubmissions.
+    (stdout_dir / "1234567.pbs-server.example.OU").write_bytes(b"earlier attempt\n")
+    (stdout_dir / "1234568.pbs-server.example.OU").write_bytes(b"producing run\n")
+    (stdout_dir / "notes.txt").write_bytes(b"producing run\n")
+    path, payload = evidence._legacy_stdout(stdout_dir, pinned)
+    assert path.name == "1234568.pbs-server.example.OU"
+    assert payload == b"producing run\n"
+    with pytest.raises(RuntimeError, match="found 0"):
+        evidence._legacy_stdout(stdout_dir, hashlib.sha256(b"missing\n").hexdigest())
+    (stdout_dir / "1234569.pbs-server.example.OU").write_bytes(b"producing run\n")
     with pytest.raises(RuntimeError, match="found 2"):
-        evidence._legacy_stdout_path(stdout_dir)
+        evidence._legacy_stdout(stdout_dir, pinned)
 
 
 def test_legacy_pp_yaml_errors_are_normalized(tmp_path):
@@ -604,7 +611,7 @@ def test_legacy_pp_stdout_rejects_tamper_and_allocation_mismatch(tmp_path, line_
     series = _legacy_pp_series(tmp_path, evidence)
     ref = series.legacy_refs[0]
     cell = tmp_path / series.stem / ref.run_group_id / ref.run_id
-    stdout_path = evidence._legacy_stdout_path(cell / "logs" / "pbs" / "stdout")
+    stdout_path, _ = evidence._legacy_stdout(cell / "logs" / "pbs" / "stdout", ref.stdout_sha256)
     lines = stdout_path.read_text(encoding="utf-8").splitlines()
     lines[line_index] = replacement
     payload = ("\n".join(lines) + "\n").encode()
@@ -623,7 +630,7 @@ def test_legacy_pp_stdout_requires_typed_subset_only_when_declared(tmp_path):
     series = _legacy_pp_series(tmp_path, evidence)
     ref = series.legacy_refs[4]
     cell = tmp_path / series.stem / ref.run_group_id / ref.run_id
-    stdout_path = evidence._legacy_stdout_path(cell / "logs" / "pbs" / "stdout")
+    stdout_path, _ = evidence._legacy_stdout(cell / "logs" / "pbs" / "stdout", ref.stdout_sha256)
     payload = stdout_path.read_bytes()
     evidence._validate_producing_stdout(
         payload,
@@ -659,7 +666,7 @@ def test_legacy_pp_stdout_accepts_and_binds_prod256_subset(tmp_path):
         evidence_marker=evidence.AllocationEvidenceMarker.PROD256,
     )
     cell = tmp_path / "legacy_proxy" / "run5" / "n128"
-    stdout_path = evidence._legacy_stdout_path(cell / "logs" / "pbs" / "stdout")
+    stdout_path, _ = evidence._legacy_stdout(cell / "logs" / "pbs" / "stdout", ref.stdout_sha256)
     payload = stdout_path.read_bytes()
     evidence._validate_producing_stdout(
         payload,
@@ -687,7 +694,7 @@ def test_legacy_pp_stdout_requires_exact_disjoint_stage_and_replica_placement(tm
     series = _legacy_pp_series(tmp_path, evidence)
     ref = series.legacy_refs[0]
     cell = tmp_path / series.stem / ref.run_group_id / ref.run_id
-    stdout_path = evidence._legacy_stdout_path(cell / "logs" / "pbs" / "stdout")
+    stdout_path, _ = evidence._legacy_stdout(cell / "logs" / "pbs" / "stdout", ref.stdout_sha256)
     lines = stdout_path.read_text(encoding="utf-8").splitlines()
 
     duplicate_stage = list(lines)
@@ -730,7 +737,7 @@ def test_legacy_pp_loader_rejects_stdout_byte_tamper(tmp_path):
     series = _legacy_pp_series(tmp_path, evidence)
     ref = series.legacy_refs[0]
     cell = tmp_path / series.stem / ref.run_group_id / ref.run_id
-    stdout_path = evidence._legacy_stdout_path(cell / "logs" / "pbs" / "stdout")
+    stdout_path, _ = evidence._legacy_stdout(cell / "logs" / "pbs" / "stdout", ref.stdout_sha256)
     stdout_path.write_text(stdout_path.read_text(encoding="utf-8") + "tamper\n", encoding="utf-8")
     with pytest.raises(RuntimeError, match="PBS stdout SHA-256 mismatch"):
         evidence.load_pp405b_points(series, runs_root=tmp_path)

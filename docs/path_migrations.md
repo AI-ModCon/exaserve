@@ -53,9 +53,10 @@ name is not published, and the code has no default PBS account or project root
 
 The legacy paper-evidence ledger
 ([pp405b_legacy_evidence.yaml](../eval/plot/pp405b_legacy_evidence.yaml),
-schema 3) no longer stores job identifiers. Its loader takes them from the name
-of the one retained PBS stdout file in each run cell, whose bytes the ledger
-pins by SHA-256. Measurements, evidence hashes and the findings ledger bytes
+schema 3) no longer stores job identifiers. In each run cell its loader selects
+the retained PBS stdout file whose bytes match the pinned SHA-256 (a cell can
+keep several from resubmissions) and reads the job identifier and server from
+that file's name. Measurements, evidence hashes and the findings ledger bytes
 are unchanged. The original text remains at each record's source commit.
 
 ## Generated reference card
