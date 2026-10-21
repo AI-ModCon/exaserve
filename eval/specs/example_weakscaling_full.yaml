@@ -173,7 +173,7 @@ scheduler:
   queue: capacity
   # Optional. If omitted, eval chooses a default walltime from node count.
   walltime: "01:00:00"
-  project: AuroraGPT
+  project: YOUR_PROJECT
   filesystems: home:flare
   keep_output: doe
   # Optional. If omitted, site_config.pbs_mail_user is used.

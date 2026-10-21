@@ -673,7 +673,7 @@ Rejected attempts remain on disk and are not counted above.
     production exposure.
 52. The replacement `bf27004` LiteLLM streaming identity confirms both the
     feasibility of the relaxed timeout policy and the centralized gateway's
-    performance limit. PBS job `8751396` used one validated 64-node
+    performance limit. PBS job `J040` used one validated 64-node
     `debug-scaling` allocation and the hash-bound plan
     `1536ddc753ae52bfd61aea5af57d925b23c6460e076ad917a6f0699674a0d021`.
     Clean staging produced 64/64 receipts, and exact READY followed a
@@ -726,7 +726,7 @@ Rejected attempts remain on disk and are not counted above.
     and `929ce696119857cb3c29af333bfa0a6feef00b8af170c3ba64c87c40346a01d8`.
 54. The replacement `ccccb82` HeadOnly non-streaming identity validates both
     the native-Ray baseline and its corrected recovery contract. PBS job
-    `8751591` ran in one validated 64-node `debug-scaling` allocation after a
+    `J041` ran in one validated 64-node `debug-scaling` allocation after a
     64/64 clean residual preflight. Exact READY followed an 81.73-second
     backend bring-up: 64 planned sessions, 64 exact Ray nodes, one exact native
     Serve application, one healthy head proxy, 1,665/1,665 receipts, 768/768
@@ -751,7 +751,7 @@ Rejected attempts remain on disk and are not counted above.
     success rate at 64 nodes confirms that it is not a production exposure.
 55. The replacement `ccccb82` HeadOnly streaming identity completes the
     six-cell 64-node checkpoint and independently confirms the corrected
-    recovery contract. PBS job `8751657` ran in one validated 64-node
+    recovery contract. PBS job `J042` ran in one validated 64-node
     `debug-scaling` allocation after a 64/64 clean residual preflight. Exact
     READY followed a 139.05-second backend bring-up: 64 planned sessions, 64
     exact Ray nodes, one exact native Serve application, one healthy head

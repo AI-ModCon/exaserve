@@ -185,8 +185,14 @@ Select the setup file before materializing the run:
 ```bash
 export EXASERVE_ENV_SCRIPT_AURORA=/absolute/path/to/environment.sh
 export EXASERVE_PROJECT_ROOT=/lus/flare/projects/YOUR_PROJECT
+export EXASERVE_PROJECT_ACCOUNT=YOUR_PROJECT
 python3 -m eval.site_config get env_script_aurora
 ```
+
+Neither variable has a built-in default. Storage paths that are not set
+explicitly are derived from `EXASERVE_PROJECT_ROOT`, and PBS jobs are charged
+to `EXASERVE_PROJECT_ACCOUNT` unless a spec sets `scheduler.project`; commands
+that need either value fail with an error that names it.
 
 Set model/data/output paths in your
 [local site configuration](../eval/site_config_local.example.py).

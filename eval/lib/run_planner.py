@@ -1442,6 +1442,10 @@ def _materialize_variant(
         run_group_id=run_group_id,
         run_id=run_id,
     )
+    if not scheduler.project:
+        raise ValueError(
+            "scheduler.project is empty: set it in the spec or export EXASERVE_PROJECT_ACCOUNT"
+        )
     job_text = get_scheduler(getattr(scheduler, "type", "pbs")).render_job(
         JobSpec(
             job_name=scheduler_identity,

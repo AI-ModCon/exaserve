@@ -21,6 +21,7 @@ import time
 from pathlib import Path
 from types import SimpleNamespace
 
+from exaserve.config import get_site_defaults
 from exaserve.plan.contracts import SchedulerPlan, canonical_hash, canonical_node_id
 from exaserve.exception_notes import add_exception_note
 from exaserve.schedulers import JobSpec, SubmissionRejected, get_scheduler
@@ -132,10 +133,12 @@ def _validate_contract(campaign: dict) -> None:
     ):
         raise ValueError("campaign SchedulerPlan shape mismatch")
     request = SchedulerPlan(**request_raw)
+    if not isinstance(request.account, str) or not request.account:
+        raise ValueError("campaign scheduler account must be a non-empty string")
     expected = SchedulerPlan(
         type="pbs",
         nodes=request.nodes,
-        account="AuroraGPT",
+        account=request.account,
         queue=request.queue,
         walltime=request.walltime,
         filesystem_refs=("home", "flare"),
@@ -426,8 +429,15 @@ def materialize_campaign(
     qualification_mode: bool = False,
     repo_root: str | None = None,
     allow_dirty: bool = False,
+    account: str | None = None,
 ) -> str:
     """Create immutable acquisition intent. No child is submitted or modified."""
+    account = account or get_site_defaults().project_account
+    if not account:
+        raise ValueError(
+            "allocation campaigns need a PBS account: pass --account or set "
+            "EXASERVE_PROJECT_ACCOUNT"
+        )
     if type(qualification_mode) is not bool or type(allow_dirty) is not bool:
         raise ValueError("mode flags must be boolean")
     if not isinstance(children, list) or not children or len(children) != len(set(children)):
@@ -437,7 +447,7 @@ def materialize_campaign(
         type="pbs",
         nodes=physical_nodes,
         queue=queue,
-        account="AuroraGPT",
+        account=account,
         walltime=walltime,
         filesystem_refs=("home", "flare"),
         launcher="mpi",

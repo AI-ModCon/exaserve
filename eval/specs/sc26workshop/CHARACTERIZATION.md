@@ -38,13 +38,13 @@ stress test, so the SCALING TREND is the result, not the absolute SLO number.
   request routing scales fine; matches an Apr-2026 run (26.9k). [SOLID]
 - **haproxy 256n STREAMING: degraded-but-stable, with a RARE stochastic total failure.**
   (a) **Degraded-but-stable (the common case)** — completes ~100% of requests but slowly:
-  across a 6-run sustained job (8548562) every run hit **99.9–100% success, E2E p50 ~5.7s /
+  across a 6-run sustained job (J025) every run hit **99.9–100% success, E2E p50 ~5.7s /
   p99 ~17s** (vs direct 19.4k rps / healthy ~1.6s). SLO attain ~0 (E2E ≫ 1s). Driven by ~200k
   concurrent SSE connections + TCP-retransmit congestion funneled through one proxy. This is the
   reproducible result — report it. [SOLID]
-  (b) **Rare total proxy DEATH** — observed in 2 early runs (8545884 prod, 8546289 dbg-scale):
+  (b) **Rare total proxy DEATH** — observed in 2 early runs (J012 prod, J020 dbg-scale):
   proxy process died mid-job → 100% ECONNREFUSED. But it is **RARE on prod: ~1 in 12 ramp-ups**
-  (NOT reproduced across 11 consecutive instrumented prod ramps: 8548202/8548410/8548562). The
+  (NOT reproduced across 11 consecutive instrumented prod ramps: J023/J024/J025). The
   death is **NOT resource exhaustion**: in a 43-min / 6-run survivor the resource trajectory is
   flat at 4–16% of every limit (fds 16% of 1.05M, threads 4% of pid_max, MemAvailable ~untouched
   at ~1 TB) with **no upward creep** (rules out both steady-state exhaustion AND slow leak), and
@@ -60,7 +60,7 @@ stress test, so the SCALING TREND is the result, not the absolute SLO number.
   ~0, E2E 18s) is **entirely the centralized-proxy delivery path**, not the GPUs. Direct/
   distributed dispatch lets the client see this healthy server performance (19.4k). This is the
   cleanest statement of the result: *the proxy, not the model server, is the 256n streaming wall.*
-- **coalescing (http-no-delay OFF) actually HELPS throughput** [CORRECTED, job 8546289]: its
+- **coalescing (http-no-delay OFF) actually HELPS throughput** [CORRECTED, job J020]: its
   warm-up served **~10k rps at 99.6% success** (vs the ~4.6k no-delay-ON survivor) and ~halved
   the packet storm (3.5M vs 7M retransmits). The data run then showed 100% ECONNREFUSED — but
   that was the **HAProxy process death** (mode (b) above), NOT a coalescing failure. So the

@@ -3,7 +3,7 @@
 Status: **CODE REMEDIATED; TWO-NODE DISTRIBUTION GATE PASSED; REAL-RUNTIME/SCALE QUALIFICATION PENDING**
 
 This audit was opened after the failed 256-node null-compute trial
-`run7/n256` (PBS `8800730`) exposed load-sensitive startup behavior. It audits
+`run7/n256` (PBS `J055`) exposed load-sensitive startup behavior. It audits
 the current branch at commit `6052979` against the product-owner requirement
 that shared project/home storage have one allocation-head reader and that
 runtime content be delivered to node-local storage through MPI/native
@@ -112,7 +112,7 @@ lint over `src`, `eval`, `clientlab`, `scripts`, and `tests`; Python compilation
 the Go test suite; C compilation with `mpicc -Wall -Wextra -Werror`; C++
 compilation with `g++ -Wall -Wextra -Werror`; and focused Python suites covering
 the new contracts and injected failure paths. The complete suite then passed
-on Aurora compute node PBS job `8806880`: **1,522 passed**. The same allocation
+on Aurora compute node PBS job `J056`: **1,522 passed**. The same allocation
 verified `/home` and `/lus/flare` as read-write Lustre, the framework Python as
 read-only `/opt/aurora` squashfs, PALS executable transfer, `envnone` isolation,
 local `/tmp` cwd, absence of `PBS_NODEFILE` in the application, native streaming,
@@ -121,7 +121,7 @@ tests because Lmod is not `nounset`-clean; the retry followed the scheduler
 renderer contract by enabling `set -u` only after `env_aurora` was sourced.
 
 The final integrated tree passed **1,563 tests** (27 dependency warnings) on
-the two-node Aurora interactive PBS allocation `8806903`. That allocation also
+the two-node Aurora interactive PBS allocation `J057`. That allocation also
 proved the following through the repository-generated PALS prefix:
 
 - PALS executable transfer and a closed application environment;

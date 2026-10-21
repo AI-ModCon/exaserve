@@ -29,6 +29,11 @@ for _path in _TEST_PATHS:
 os.environ.setdefault("HF_HUB_OFFLINE", "1")
 os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 
+# The package and the eval site configuration have no built-in allocation; tests
+# that derive storage paths or render jobs use this neutral placeholder project.
+os.environ.setdefault("EXASERVE_PROJECT_ROOT", "/lus/flare/projects/example-project")
+os.environ.setdefault("EXASERVE_PROJECT_ACCOUNT", "example-project")
+
 
 @pytest.fixture
 def serve_module():

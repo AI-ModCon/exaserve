@@ -30,7 +30,7 @@ def test_metrics_render_in_prometheus_text_format():
 
 def test_identity_matches_the_id_other_subsystems_use(monkeypatch):
     """A metric must be joinable with a receipt and a readiness snapshot."""
-    exact = "8736431.aurora-pbs-0001.hostmgmt.example"
+    exact = "1234567.pbs-server.example"
     monkeypatch.setenv("EXASERVE_DEPLOYMENT_ID", exact)
     from exaserve.compat.collector import deployment_scope
 

@@ -43,6 +43,8 @@ exaserve-serve-submit my_config.yaml \
 
 `--dry-run` can create local plan/submission artifacts; it means no scheduler
 submission, not no filesystem writes. Choose a fresh output directory.
+The PBS account comes from `--project-account` or `EXASERVE_PROJECT_ACCOUNT`;
+there is no built-in allocation.
 
 Submit only after the relevant approval, environment, and input checks:
 

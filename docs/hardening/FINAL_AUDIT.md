@@ -42,13 +42,13 @@ are retained evidence, not proof for the successor wheel. A new clean package
 gate and owner-approved 4/16/64 ladder are required before changing the
 production support maximum.
 
-The reconciled successor source gate in validated PBS job `8792581` passes
+The reconciled successor source gate in validated PBS job `J043` passes
 1,323 tests with 19 skips, repository-wide Ruff and compileall, the canonical
 findings validator, the scale adjudicator/harness tests, and Go formatting,
 vet, and unit tests.
 
 The final clean package built from source commit `a920d7e3` also passes in
-validated PBS job `8792605`: 1,302 tests pass with 31 optional-plugin skips,
+validated PBS job `J044`: 1,302 tests pass with 31 optional-plugin skips,
 packaged resources are present, and the four-module typed core is mypy clean.
 The wheel SHA-256 is
 `75bab1c97948d29237000d5fa087f3ed1f1d18e5ef3233fe2c759b4faf0e32f8`;

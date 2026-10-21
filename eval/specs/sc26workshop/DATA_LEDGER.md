@@ -9,7 +9,7 @@ overwhelms a single proxy at large N (the "regression" that wasn't).
 - `direct` cells: cli=num_nodes is CORRECT (one client per local replica) → VALID.
 - proxy cells n1 (cli=1), n4 (cli=4): == the bounded fix min(N,4) → VALID.
 - proxy cells n16 (cli=16), n64 (cli=64): 4x / 16x the bounded client fleet → SUSPECT
-  (pending the n64 cli=4 check, job 8546128). At n64 they did NOT collapse on throughput
+  (pending the n64 cli=4 check, job J015). At n64 they did NOT collapse on throughput
   (0% err, good rps) so the confound, if any, is in TTFT/attain, not throughput.
 - proxy cells n256 (cli=256): CONFOUNDED (proven; see FINDINGS_haproxy_256n.md).
 - OAT n64 (cli=64): SUSPECT (same as Set-1 n64).
@@ -78,7 +78,7 @@ serverstats_ttft_ondelay_1node           run1  n1     1    S        20   0.0
 ## Reviewer-proof status (as of audit)
 - SOLID: all direct cells; all proxy n1/n4; non-stream 256n (cli=4, 27.1k); the n1
   on/off-delay TTFT/TBT (Task 2); server-side collector validated.
-- RESOLVED n64 cli=4 (8546128): cli=4 ~= cli=64 (attain 0.029 vs 0.042, TTFT 4.56 vs 4.47s)
+- RESOLVED n64 cli=4 (J015): cli=4 ~= cli=64 (attain 0.029 vs 0.042, TTFT 4.56 vs 4.47s)
   → STREAMING cells are cli-INVARIANT. n16/n64 proxy + OAT-n64 data VALID, no re-run. The
   cli confound materially hit ONLY non-stream 256n throughput (fixed: 27k).
 - KNOWN-CONFOUNDED, re-run with cli=4: all proxy n256 streaming.

@@ -335,6 +335,10 @@ def submit_serve(
     resolved_queue = queue or defaults.queue or topology_queue
     resolved_walltime = walltime or defaults.walltime or topology_walltime
     resolved_account = project_account or defaults.project_account
+    if not resolved_account:
+        raise ValueError(
+            "no PBS allocation account: pass --project-account or set EXASERVE_PROJECT_ACCOUNT"
+        )
     scheduler = get_scheduler()
     if scheduler.name not in site_profile.scheduler_types:
         raise ValueError(

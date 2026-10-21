@@ -42,23 +42,27 @@ class SiteConfigTests(unittest.TestCase):
     def test_default_paths_follow_user_and_home(self) -> None:
         with tempfile.TemporaryDirectory() as temp_home:
             with (
-                patched_site_env(USER="ignored-ambient-user", HOME=temp_home),
+                patched_site_env(
+                    USER="ignored-ambient-user",
+                    HOME=temp_home,
+                    EXASERVE_PROJECT_ROOT="/lus/flare/projects/example-project",
+                ),
                 mock.patch.object(site_config, "local_account_name", return_value="alice"),
             ):
                 cfg = site_config.get_site_config()
 
-        self.assertEqual(cfg.user_data_root, "/lus/flare/projects/AuroraGPT/alice/data")
-        self.assertEqual(cfg.model_storage_path, "/lus/flare/projects/AuroraGPT/alice/models")
+        self.assertEqual(cfg.user_data_root, "/lus/flare/projects/example-project/alice/data")
+        self.assertEqual(cfg.model_storage_path, "/lus/flare/projects/example-project/alice/models")
         self.assertEqual(
             cfg.input_trace_path,
-            "/lus/flare/projects/AuroraGPT/alice/data/input_traces/AzureLLMInferenceTrace_code_1week.csv",
+            "/lus/flare/projects/example-project/alice/data/input_traces/AzureLLMInferenceTrace_code_1week.csv",
         )
         self.assertEqual(
             cfg.input_prompt_path,
-            "/lus/flare/projects/AuroraGPT/alice/data/input_traces/ShareGPT_V3_unfiltered_cleaned_split_no_imsorry.json",
+            "/lus/flare/projects/example-project/alice/data/input_traces/ShareGPT_V3_unfiltered_cleaned_split_no_imsorry.json",
         )
         self.assertEqual(
-            cfg.experiments_root, "/lus/flare/projects/AuroraGPT/alice/data/experiments"
+            cfg.experiments_root, "/lus/flare/projects/example-project/alice/data/experiments"
         )
         self.assertEqual(cfg.litellm_python_path, f"{temp_home}/agpt/venv/litellm/bin/python3")
         self.assertEqual(cfg.snapshot_dir, f"{temp_home}/agpt/data/snapshots")
@@ -66,8 +70,14 @@ class SiteConfigTests(unittest.TestCase):
         self.assertEqual(cfg.sglang_python_path, "")
         self.assertEqual(
             site_config.get_runs_root(),
-            site_config.Path("/lus/flare/projects/AuroraGPT/alice/data/experiments/runs"),
+            site_config.Path("/lus/flare/projects/example-project/alice/data/experiments/runs"),
         )
+
+    def test_missing_project_root_fails_loudly(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_home:
+            with patched_site_env(USER="alice", HOME=temp_home):
+                with self.assertRaisesRegex(ValueError, "project_root is not set"):
+                    site_config.get_site_config()
 
     def test_relative_site_paths_are_rejected(self) -> None:
         with patched_site_env(EXASERVE_PROJECT_ROOT="relative/project"):
@@ -108,6 +118,7 @@ class SiteConfigTests(unittest.TestCase):
                 USER="alice",
                 HOME=temp_home,
                 EXASERVE_SITE_CONFIG_LOCAL=handle.name,
+                EXASERVE_PROJECT_ROOT="/lus/flare/projects/example-project",
             ):
                 cfg = site_config.get_site_config()
 
@@ -129,6 +140,7 @@ class SiteConfigTests(unittest.TestCase):
                 USER="alice",
                 HOME=temp_home,
                 EXASERVE_SITE_CONFIG_LOCAL=handle.name,
+                EXASERVE_PROJECT_ROOT="/lus/flare/projects/example-project",
                 EXASERVE_MODEL_STORAGE_PATH="/tmp/env/models",
                 EXASERVE_NUM_GPUS_PER_NODE="24",
             ):
@@ -140,7 +152,10 @@ class SiteConfigTests(unittest.TestCase):
     def test_cache_reset_is_required_after_env_changes(self) -> None:
         with tempfile.TemporaryDirectory() as temp_home:
             with patched_site_env(
-                USER="alice", HOME=temp_home, EXASERVE_MODEL_STORAGE_PATH="/tmp/first"
+                USER="alice",
+                HOME=temp_home,
+                EXASERVE_PROJECT_ROOT="/lus/flare/projects/example-project",
+                EXASERVE_MODEL_STORAGE_PATH="/tmp/first",
             ):
                 first = site_config.get_site_config()
                 os.environ["EXASERVE_MODEL_STORAGE_PATH"] = "/tmp/second"

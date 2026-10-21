@@ -123,6 +123,9 @@ def build_parser() -> argparse.ArgumentParser:
     allocation_materialize.add_argument("--qualification-mode", action="store_true")
     allocation_materialize.add_argument("--repo-root", default=None)
     allocation_materialize.add_argument("--allow-dirty", action="store_true")
+    allocation_materialize.add_argument(
+        "--account", default=None, help="PBS account (default: EXASERVE_PROJECT_ACCOUNT)"
+    )
     for name in ("submit", "execute"):
         allocation_commands.add_parser(name).add_argument("campaign")
 
@@ -168,6 +171,7 @@ def main(argv: list[str] | None = None) -> int:
                     qualification_mode=args.qualification_mode,
                     repo_root=args.repo_root,
                     allow_dirty=args.allow_dirty,
+                    account=args.account,
                 )
             )
             return 0

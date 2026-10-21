@@ -46,9 +46,17 @@ Compute-node names keep their Aurora format but use synthetic racks
 `x9001` to `x9025`; one real rack maps to one synthetic rack, so statements
 about shared racks still hold. Allocation-internal addresses appear as
 documentation addresses from `192.0.2.0/24`, and a reservation identifier as
-`<reservation>`. Measurements, PBS job identifiers, evidence hashes and the
-findings ledger bytes are unchanged. The original text remains at each record's
-source commit.
+`<reservation>`. PBS job identifiers appear as labels `J001` to `J095`,
+numbered in job order; a job keeps its label in every document. The allocation
+name is not published, and the code has no default PBS account or project root
+([getting started](getting_started.md#configure-evaluation-environment-preparation)).
+
+The legacy paper-evidence ledger
+([pp405b_legacy_evidence.yaml](../eval/plot/pp405b_legacy_evidence.yaml),
+schema 3) no longer stores job identifiers. Its loader takes them from the name
+of the one retained PBS stdout file in each run cell, whose bytes the ledger
+pins by SHA-256. Measurements, evidence hashes and the findings ledger bytes
+are unchanged. The original text remains at each record's source commit.
 
 ## Generated reference card
 

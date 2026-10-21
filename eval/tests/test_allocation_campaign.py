@@ -394,7 +394,7 @@ def qualification_contract(tmp_path):
                 nodes=4,
                 queue="capacity",
                 walltime="01:00:00",
-                account="AuroraGPT",
+                account="example-project",
                 filesystem_refs=("home", "flare"),
                 launcher="mpi",
             )

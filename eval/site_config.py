@@ -12,7 +12,7 @@ from exaserve.site import local_account_name
 
 _FIELD_DEFAULTS = OrderedDict(
     [
-        ("project_root", "/lus/flare/projects/AuroraGPT"),
+        ("project_root", ""),
         ("user_data_root", ""),
         ("model_storage_path", ""),
         ("input_trace_path", ""),
@@ -152,8 +152,13 @@ def _normalize_config(config: SiteConfig) -> SiteConfig:
     home_dir = str(Path.home())
 
     project_root = _coerce_field_value("project_root", config.project_root)
-    if not os.path.isabs(project_root):
+    if project_root and not os.path.isabs(project_root):
         raise ValueError("project_root must be an absolute path")
+    if not project_root and not (config.user_data_root and config.model_storage_path):
+        raise ValueError(
+            "site config project_root is not set; set EXASERVE_PROJECT_ROOT or project_root "
+            "in site_config_local.py, or set both user_data_root and model_storage_path"
+        )
     user_data_root = config.user_data_root or os.path.join(project_root, current_user, "data")
     model_storage_path = config.model_storage_path or os.path.join(
         project_root, current_user, "models"

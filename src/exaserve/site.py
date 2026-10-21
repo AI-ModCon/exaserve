@@ -52,9 +52,15 @@ def local_account_name() -> str:
 
 
 def default_model_storage_path() -> str:
-    """Derive an account-local Aurora path without embedding a developer name."""
+    """Derive an account-local path under the configured allocation project root."""
 
-    project_root = Path(os.environ.get("EXASERVE_PROJECT_ROOT", "/lus/flare/projects/AuroraGPT"))
+    configured_root = os.environ.get("EXASERVE_PROJECT_ROOT", "").strip()
+    if not configured_root:
+        raise RuntimeError(
+            "cannot derive the model storage path; set EXASERVE_MODEL_STORAGE_PATH, or "
+            "EXASERVE_PROJECT_ROOT to the allocation's project directory"
+        )
+    project_root = Path(configured_root)
     if not project_root.is_absolute():
         raise RuntimeError("EXASERVE_PROJECT_ROOT must be an absolute path")
     try:

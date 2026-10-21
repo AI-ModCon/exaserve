@@ -33,7 +33,7 @@ ceiling"; accept-queue overflow; TIME_WAIT/port exhaustion; CPU saturation.
 > are HAProxy PROCESS DEATHS**, not "stochastic congestion variance" (see TL;DR #3). The death
 > cause is under instrumented investigation (job 8548202, prod). The n1 baseline already rules
 > out HAProxy's own fd limit (compute-node `Max open files`=1,048,575 ≫ ~200k conns). This
-> body will be rewritten with the confirmed death mechanism once 8548202 lands; treat §"client
+> body will be rewritten with the confirmed death mechanism once J023 lands; treat §"client
 > count variance" below as SUPERSEDED for the 100% runs.
 
 ## Measured root cause of the streaming-256n collapse
@@ -144,7 +144,7 @@ Recipe with no-delay off: TTFT client-side (note the bounded ~150 ms offset), TB
 - Spec knob fixed: `client.num_nodes: min(num_nodes, 4)` for `dest=proxy` serving
   specs (proxycmp_{haproxy,envoy,litellm,rayserve}, oat_8b_*, oat_120b). `direct`
   specs keep `num_nodes` (one client per local replica). `nullcompute` left as-is.
-- Jobs: non-stream client=4 → 8545811 (27.1k); stream client=4 → 8545884 (100%
-  fail), 8545993 (diag, ~5k, the table above).
+- Jobs: non-stream client=4 → J011 (27.1k); stream client=4 → J012 (100%
+  fail), J013 (diag, ~5k, the table above).
 - Branch `haproxy-no-delay-knob`: `http_no_delay` option + diag sampler (both
   default-safe).

@@ -377,7 +377,6 @@ def test_legacy_pp_evidence_map_hash_and_corrected_arrays_are_frozen() -> None:
                 None if ref.evidence_marker is None else ref.evidence_marker.value,
                 ref.run_group_id,
                 ref.result_name,
-                ref.pbs_job_id,
             )
             for ref in refs
         ]
@@ -385,22 +384,22 @@ def test_legacy_pp_evidence_map_hash_and_corrected_arrays_are_frozen() -> None:
     }
     assert selections == {
         "direct_stream": [
-            (4, 4, "exact", None, "run1", "result0.json", 8654870),
-            (8, 8, "exact", None, "run1", "result0.json", 8654871),
-            (16, 16, "exact", None, "run3", "result0.json", 8662386),
-            (32, 32, "exact", None, "run1", "result0.json", 8654872),
-            (256, 64, "nodefile_subset", "allocfix", "run3", "result1.json", 8726613),
-            (128, 128, "exact", None, "run0", "result0.json", 8641122),
-            (256, 256, "exact", None, "run0", "result0.json", 8640747),
+            (4, 4, "exact", None, "run1", "result0.json"),
+            (8, 8, "exact", None, "run1", "result0.json"),
+            (16, 16, "exact", None, "run3", "result0.json"),
+            (32, 32, "exact", None, "run1", "result0.json"),
+            (256, 64, "nodefile_subset", "allocfix", "run3", "result1.json"),
+            (128, 128, "exact", None, "run0", "result0.json"),
+            (256, 256, "exact", None, "run0", "result0.json"),
         ],
         "haproxy_stream": [
-            (4, 4, "exact", None, "run3", "result0.json", 8655141),
-            (8, 8, "exact", None, "run3", "result0.json", 8655160),
-            (16, 16, "exact", None, "run3", "result0.json", 8655268),
-            (256, 32, "nodefile_subset", "allocfix", "run5", "result1.json", 8726612),
-            (256, 64, "nodefile_subset", "allocfix", "run5", "result1.json", 8702358),
-            (256, 128, "nodefile_subset", "prod256", "run5", "result0.json", 8686262),
-            (256, 256, "exact", None, "run5", "result0.json", 8662385),
+            (4, 4, "exact", None, "run3", "result0.json"),
+            (8, 8, "exact", None, "run3", "result0.json"),
+            (16, 16, "exact", None, "run3", "result0.json"),
+            (256, 32, "nodefile_subset", "allocfix", "run5", "result1.json"),
+            (256, 64, "nodefile_subset", "allocfix", "run5", "result1.json"),
+            (256, 128, "nodefile_subset", "prod256", "run5", "result0.json"),
+            (256, 256, "exact", None, "run5", "result0.json"),
         ],
     }
     snapshot = [
@@ -421,7 +420,7 @@ def test_legacy_pp_evidence_map_hash_and_corrected_arrays_are_frozen() -> None:
     ]
     canonical = json.dumps(snapshot, sort_keys=True, separators=(",", ":")).encode()
     assert hashlib.sha256(canonical).hexdigest() == (
-        "09a22688dbe6fc9c2e329e384f82c920947758e95f70bf0a4596fb733b389ee4"
+        "3daadc6adf965ea61b0e06de36970a2828e10097c007bc734c043324e3b6f0fc"
     )
 
     direct = [ref.expected_successful_rps for ref in legacy_selections["direct_stream"]]

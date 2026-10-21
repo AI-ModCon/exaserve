@@ -46,7 +46,7 @@ Standing principles for the night:
 - 03:55 CDT — Prepared (not yet submitted) Task 3 spec
   proxycmp_haproxy_256_nodelayoff_stream_val (stream, http_no_delay:false, client=4,
   collect_stats, rate 110) + server_vs_client.py comparison tool. Holding submit until
-  the n1 collector validation (job 8546121) confirms server_stats.json works — won't
+  the n1 collector validation (job J014) confirms server_stats.json works — won't
   spend prod 256n on an unproven collector.
   Justification: validate-one-first; prod is expensive + flaky.
 
@@ -79,7 +79,7 @@ Standing principles for the night:
   Justification: push avoids the Ray-version enumeration gap AND the MDS load; the in-process
   diagnostic resolves the open question of whether the stat logger records where we can reach it.
 
-- 23:25 CDT — TASK 2 RESULT (n1, low load, client-side, jobs 8546121 on / 8546137 off):
+- 23:25 CDT — TASK 2 RESULT (n1, low load, client-side, jobs J014 on / J016 off):
   TTFT p50 66ms->213ms (+147ms bounded additive); TBT-p99/req p50 30ms->228ms (DESTROYED:
   off measures the ~220ms proxy flush, not the 30ms decode); E2E 1.448->1.477s (+29ms,
   invariant). Confirms: TTFT stays valid with a bounded ~150ms offset under no-delay-off;
@@ -89,7 +89,7 @@ Standing principles for the night:
   server-side. This is the reviewer-proof recipe for the streaming-256n cell IF the proxy
   survives with coalescing (Task 3). Task 2 essentially COMPLETE.
 
-- 23:40 CDT — TASK 1 VALIDATED (job 8546145): server_stats.json written, 12/12 replicas
+- 23:40 CDT — TASK 1 VALIDATED (job J017): server_stats.json written, 12/12 replicas
   pushed. server TTFT p50/p99=51/84ms (=client 66/85ms minus net hop), server TBT
   p50/p99=22/24ms (TIGHT true decode; client TBT 30/126ms includes delivery jitter even
   with no-delay ON). The low server-TBT variance (p99≈p50) empirically backs "mean server
@@ -101,13 +101,13 @@ Standing principles for the night:
 - 23:35 CDT — Built DATA_LEDGER.md (provenance audit of all cells). KEY FINDING: the
   client-topology confound (cli=num_nodes) affects ALL proxy n16/n64 cells, not just n256.
   BUT at n64 they did NOT collapse on throughput (0% err, good rps) — so any confound is in
-  TTFT/attain, not throughput. The pivotal gate is 8546128 (n64 cli=4): if its TTFT/attain
+  TTFT/attain, not throughput. The pivotal gate is J015 (n64 cli=4): if its TTFT/attain
   ~= the old cli=64 n64, then n16/n64 are valid and only n256 needs re-running; if not, a
   larger re-run (Set1 ×4 ×{n16,n64} + OAT ×9 ×n64) is needed — would prioritize haproxy/
   envoy/direct/baseline and note the rest given the per-cell ~30min debug-scaling cost.
   Justification: don't re-run 26 cells blindly; one cheap n64 cli=4 cell decides the scope.
 
-- 23:50 CDT — GATE RESOLVED (job 8546128): n64 haproxy streaming cli=4 vs cli=64 are
+- 23:50 CDT — GATE RESOLVED (job J015): n64 haproxy streaming cli=4 vs cli=64 are
   statistically identical (attain 0.029 vs 0.042; TTFT p50 4.56 vs 4.47s; E2E 7.94 vs 7.60s).
   => client topology does NOT confound STREAMING cells; the low n64 attain is REAL GPU
   saturation (rate 110 > 109 knee), cli-invariant. DECISION: NO broad Set-1 re-run. Existing
@@ -117,7 +117,7 @@ Standing principles for the night:
   re-runs; the characterization's n1-n64 trend stands.
 
 - 00:05 CDT (Jun17) — Hardened server-stats collection BEFORE the 256n Task-3 run (it was
-  still queued, so cancelled 8546156 + resubmitted as 8546166, snapshot 11dd95b):
+  still queued, so cancelled J018 + resubmitted as 8546166, snapshot 11dd95b):
   (a) write ONE combined replica_stats_all.json instead of 3072 per-replica files (256n
   Lustre MDS storm, ~5s/file); (b) data-run-only fleet metrics via cooldown-gap split (drop
   the cold warm-up run from server TTFT/TBT). Unit-tested both. Justification: the linchpin
@@ -125,13 +125,13 @@ Standing principles for the night:
   prod run.
 
 - 03:25 CDT — Prod/small congested (67 queued, "not enough free nodes"); Task-3 prod job
-  8546166 stuck 3.3h. Submitted Task 3 to debug-scaling instead (8546289, 256n, 1h walltime
-  — debug-scaling permits 256 nodes and is far less backed up). Keep 8546166 as backup;
+  J019 stuck 3.3h. Submitted Task 3 to debug-scaling instead (8546289, 256n, 1h walltime
+  — debug-scaling permits 256 nodes and is far less backed up). Keep J019 as backup;
   qdel the loser once one starts. Justification: don't burn the night waiting on a congested
   prod queue when debug-scaling can run the same 256n cell within ~1h.
 
 - 06:01 CDT — Machine saturated (debug-scaling 8 queued, small 67 queued); both Task-3 jobs
-  (8546166 prod, 8546289 dbgscale) stuck queued ~2.5-3.3h, may not seat 256 nodes before 9am.
+  (J019 prod, J020 dbgscale) stuck queued ~2.5-3.3h, may not seat 256 nodes before 9am.
   KEY REFRAME: the characterization is COMPLETE without Task 3 — the DEFAULT config (no-delay
   ON) streaming-256n collapse is already measured (real network saturation); Task 3 only tests
   whether coalescing RESCUES it (a fix experiment, not core characterization). DECISION: keep
@@ -164,14 +164,14 @@ Standing principles for the night:
   Justification: a reviewer would catch the contradiction; the corrected framing matches the
   controlled n64 evidence.
 - 06:25 CDT — STATE: night's reviewer-proofing complete except the PENDING Task-3 fix-experiment
-  (8546166 prod / 8546289 dbgscale, both stuck in congested queues). Combined monitor runs to
+  (J019 prod / J020 dbgscale, both stuck in congested queues). Combined monitor runs to
   ~08:31 CDT; if Task 3 seats I fold it in, else I summarize at 9am. Deliverables finalized:
   CHARACTERIZATION.md, FINDINGS_haproxy_256n.md, DATA_LEDGER.md, 5 plots, OVERNIGHT_LOG.md.
   Code committed on branch haproxy-no-delay-knob (http_no_delay knob, diag sampler + NIC
   counters, server-stats collector + fixes).
 
 - 08:35 CDT — Task 3 (8546289, debug-scaling) SEATED and RUNNING after ~2.5h queue (bring-up
-  phase, 18min in). Result expected ~09:00. Re-armed monitor. Keeping prod backup 8546166
+  phase, 18min in). Result expected ~09:00. Re-armed monitor. Keeping prod backup J019
   queued in case the 1h debug-scaling walltime is too tight for 256n bring-up (~28min) +
   the run. This is the last data point (does coalescing rescue 256n streaming?); will fold
   in + do the final summary when it lands (~9am).
@@ -185,9 +185,9 @@ Standing principles for the night:
   coalescing only addresses packets. The real fix is distributed/direct dispatch (19.4k).
   server_stats missing: run_executor ray.init(auto) failed at collection (256n teardown/timing
   fragility) — note for full sweep; data run had 0 successes anyway so server-side moot here.
-  Cancelled redundant prod backup 8546166. Task 3 DONE → all handed-off tasks complete.
+  Cancelled redundant prod backup J019. Task 3 DONE → all handed-off tasks complete.
 
-- 11:30 CDT (morning) — nbthread=32 256n streaming test (8546671) + server-stats fix validated:
+- 11:30 CDT (morning) — nbthread=32 256n streaming test (J021) + server-stats fix validated:
   * MORE THREADS DON'T HELP: run1 4470 rps (≈ baseline 4578), HAProxy peak CPU 390% (~4 of
     32 threads) → NOT thread/CPU-bound. Retransmits 6.4M, peak estab 202k (storm persists).
   * NIC sysfs rx_dropped/fifo = 0 → the retransmit storm is NOT host-NIC-RX-drop. CORRECTS my
@@ -209,7 +209,7 @@ Standing principles for the night:
   (perf drops, CPU<=100%) verified exactly.
 
 - Jun18 ~08:00 CDT — USER CAUGHT a misattribution: the 100%-err 256n data runs are HAProxy
-  PROCESS DEATHS, not congestion. Verified (8546289): warm-up 99.6% success @ ~10k rps, then
+  PROCESS DEATHS, not congestion. Verified (J020): warm-up 99.6% success @ ~10k rps, then
   `haproxy pid gone` (nlwp 64->1->0), data run 0 survivors / all ECONNREFUSED. RSS flat 730MB
   (not self-OOM), no logged segfault. Existing logs have NO 'resource temporarily unavailable'/
   EAGAIN/OOM line — evidence wasn't captured. CORRECTED docs: (1) "coalescing doesn't rescue"
@@ -223,10 +223,10 @@ Standing principles for the night:
 
 - Jun18 ~09:40 CDT — SELF-INFLICTED BUG (caught via user's "poke it"): the enhanced diag used
   .format(pid=) on a script containing awk {print $1$2} → KeyError on the literal braces →
-  _start_diag_sampler raised → broke HAProxy start() → run 8548052 died (raylet exit, no replay).
+  _start_diag_sampler raised → broke HAProxy start() → run J022 died (raylet exit, no replay).
   NOT the proxy death we're hunting. FIX: .replace("{pid}",...) instead of .format (ba317b8);
   verified the sampler end-to-end (limits+res+canary+NIC, no bash errors) before re-running.
-  Re-submitted on PROD (8548202) per user (debug-scaling queues too long at 256n).
+  Re-submitted on PROD (J023) per user (debug-scaling queues too long at 256n).
   Lesson: never .format() a shell script string with literal braces; test instrumentation
   in isolation before putting it in the critical launch path.
 
@@ -241,13 +241,13 @@ Standing principles for the night:
   E2E 5s), ~half the proxy dies (100% ECONNREFUSED). Resources aren't the steady-state limit.
   Found the reason every death was unexplained: HAProxyProxy.stop() returned SILENTLY when the
   proxy had already died -> exit signal never logged. FIX (8912099): stop() now decodes the
-  death signal (SIGKILL=OOM/resource-kill, SIGSEGV=crash, code=self-exit). Submitted 8548410
+  death signal (SIGKILL=OOM/resource-kill, SIGSEGV=crash, code=self-exit). Submitted J024
   (prod, num_runs=3 = 3 ramp-up death chances) to catch a death WITH the signal recorded.
 
 - Jun18 late — DEATH HUNT (8548562, prod, num_runs=6, death-signal snapshot): survived ALL 6
   ramps (gone=0, canary=0, no death signal). Per-run 99.9-100% success, E2E p50 ~5.7s/p99 ~17s
   — degradation is STABLE and reproducible, not a collapse. Revises the death rate: prod = 1
-  death (8545884) / 11 surviving ramps (8548202+8548410+8548562) ≈ 1/12, NOT ~2/3. Death is
+  death (J012) / 11 surviving ramps (J023+J024+J025) ≈ 1/12, NOT ~2/3. Death is
   genuinely RARE. 43-min/6-run resource trajectory: ha_fds 16% max (no creep), threads 4% (flat),
   MemAvailable ~untouched (~1TB, flat), estab conns wave 10k-199k (no creep) -> rules out BOTH
   steady-state exhaustion AND slow leak as the death cause. DECISION (user chose "one efficient

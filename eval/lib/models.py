@@ -187,7 +187,7 @@ class SchedulerSpec:
     nodes: int = 1
     queue: str = ""
     walltime: str = ""
-    project: str = "AuroraGPT"
+    project: str = ""
     filesystems: str = "home:flare"
     keep_output: str = "doe"
     mail_user: str = ""

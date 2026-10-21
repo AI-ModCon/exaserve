@@ -46,7 +46,7 @@ rewrites clean content in place.
 | 1-node v3 (capacity) | haproxy_short_v3 | df48571 | ✓ 107 RPS, 4/4 runs (with trailing-garbage fix) |
 | 128-node v3 run0 | haproxy_short_v3 | df48571 | ✗ rayon panic (pre-rayon-fix) |
 | 128-node v3 run1 | haproxy_short_v3 | 05b7bc3 | ✓ 844800 reqs, 0 errors, setup 487s |
-| 256-node v3 run1 | haproxy_short_v3 | 05b7bc3 | in progress (8431216) |
+| 256-node v3 run1 | haproxy_short_v3 | 05b7bc3 | in progress (J001) |
 
 ## Baseline Comparison (HAProxy short)
 

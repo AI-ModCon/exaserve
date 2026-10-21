@@ -23,6 +23,7 @@ from dataclasses import replace
 from typing import Any
 
 from eval.site_config import get_site_config
+from exaserve.config import get_site_defaults
 
 from .models import (
     BackendSpec,
@@ -531,7 +532,9 @@ def load_experiment_spec(path: str) -> ExperimentSpec:
         nodes=_integer(scheduler_raw.get("nodes", deployment.num_nodes), "scheduler.nodes"),
         queue=_string(scheduler_raw.get("queue", ""), "scheduler.queue"),
         walltime=_string(scheduler_raw.get("walltime", ""), "scheduler.walltime"),
-        project=_string(scheduler_raw.get("project", "AuroraGPT"), "scheduler.project"),
+        project=_string(
+            scheduler_raw.get("project", get_site_defaults().project_account), "scheduler.project"
+        ),
         filesystems=_string(
             scheduler_raw.get("filesystems", "home:flare"), "scheduler.filesystems"
         ),

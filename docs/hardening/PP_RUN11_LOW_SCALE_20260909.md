@@ -1,7 +1,7 @@
 # Final-snapshot PP405B low-scale completion — 2026-09-09
 
 Status: n4 and n8 accepted on 2026-09-09 after independent strict validation;
-n16 queued as PBS 8814926 after both lower gates passed.
+n16 queued as PBS J093 after both lower gates passed.
 
 This execution record covers the existing immutable `run11` n4, n8 and n16
 cells of `pp405b_pp2_haproxy_nostream_v040`. It is evidence/context; the
@@ -11,16 +11,16 @@ All three cells bind commit `0a835470421bfabba744688061ad6ef70ed6752c`, source
 snapshot
 `5d85794f26a54596dc4ddb237996652171b9cd78d21751c8235bf0e25f8d365f`, and the
 `bounded_hash_v2` identity scheme. This matches accepted `run11/n256`, PBS
-`8811810`; its accepted result is preserved unchanged.
+`J080`; its accepted result is preserved unchanged.
 
 Run-group root:
 `/lus/flare/projects/YOUR_PROJECT/YOUR_USER/data/experiments/runs/sc26workshop/full/pp405b_pp2_haproxy_nostream_v040/run11`.
 
 | Cell | PBS job | Queue / walltime | Observed status | Expected requests per replay |
 |---|---|---|---|---:|
-| n4 | 8814589 | capacity / 02:00:00 | Accepted; PBS finished 21:31:50 UTC, exit 0 | 96 |
-| n8 | 8814766 | capacity / 02:00:00 | Accepted; PBS finished 23:23:28 UTC, exit 0 | 192 |
-| n16 | 8814926 | capacity / 02:00:00 | Queued; submitted once at 23:25:33 UTC after accepted n8 | 384 |
+| n4 | J081 | capacity / 02:00:00 | Accepted; PBS finished 21:31:50 UTC, exit 0 | 96 |
+| n8 | J084 | capacity / 02:00:00 | Accepted; PBS finished 23:23:28 UTC, exit 0 | 192 |
+| n16 | J093 | capacity / 02:00:00 | Queued; submitted once at 23:25:33 UTC after accepted n8 | 384 |
 
 ## WP12 execution budgets
 
@@ -51,7 +51,7 @@ reads occur on the login node; model, Ray, MPI and replay execution do not.
 Logs are under `<cell>/logs/pbs/{stdout,stderr}` and outputs under
 `<cell>/results`.
 
-The provided Aurora `wait_for_job.sh` is monitoring PBS `8814589` with the
+The provided Aurora `wait_for_job.sh` is monitoring PBS `J081` with the
 explicit capacity start-wait bound of 604800 seconds. Queued time is not an
 execution failure. Once running, stdout/stderr, canonical state and remaining
 walltime are inspected for early failures.
@@ -70,7 +70,7 @@ The root task separately owns investigation and qualification of that route.
 
 ## n4 live execution
 
-PBS `8814589` entered `R` at `2026-09-09 20:29:18 UTC`, with exactly four
+PBS `J081` entered `R` at `2026-09-09 20:29:18 UTC`, with exactly four
 nodes and a two-hour allocation. The exact bound nodes are `x9015c4s4b0n0`,
 `x9015c6s1b0n0`, `x9015c6s5b0n0` and `x9015c7s3b0n0`. Generation is
 `1788985796180450420`; the logged allocation-binding prefix is `528fb16f0c6e`.
@@ -138,19 +138,19 @@ PYTHONPATH=src python3 -m eval.cli run submit /lus/flare/projects/YOUR_PROJECT/Y
 ```
 
 The canonical command submitted PBS
-`8814766.aurora-pbs-0001.hostmgmt.cm.aurora.alcf.anl.gov` once at
+`J084` once at
 `2026-09-09 21:50:53 UTC`; the scheduler name is `es-d6c3ff1f758b`.
 Post-submit canonical state is `SUBMITTED`, revision 2, `submit_attempt=1`.
 At `21:51:42 UTC`, PBS was `Q` with exactly eight requested nodes and two
-hours. The skill's `wait_for_job.sh 8814766 604800` monitor is live and printed
-`WAITING|job=8814766|queue=capacity|max_wait=7d|started=2026-09-09T21:51:45+00:00`.
+hours. The skill's `wait_for_job.sh J084 604800` monitor is live and printed
+`WAITING|job=J084|queue=capacity|max_wait=7d|started=2026-09-09T21:51:45+00:00`.
 Queued time is expected; runtime/setup evidence will be checked after start.
 
 ## n8 live execution
 
 PBS entered `R` at `2026-09-09 22:05:53 UTC`, with exactly eight nodes and
 two hours (nominal allocation deadline `2026-09-10 00:05:53 UTC`). The approved
-wait helper returned `JOB_READY|8814766|x9001c3s4b0n0`. The first direct check at
+wait helper returned `JOB_READY|J084|x9001c3s4b0n0`. The first direct check at
 `22:06:20 UTC` found PBS stdout/stderr files newly created but empty; canonical
 state was still `SUBMITTED` during initial shell startup. A live stdout/stderr
 tail is now following the sealed PBS job. No READY claim is made from PBS
@@ -247,8 +247,8 @@ PYTHONPATH=src python3 -m eval.cli run submit /lus/flare/projects/YOUR_PROJECT/Y
 ```
 
 Submitted once at `2026-09-09 23:25:33 UTC` as
-`8814926.aurora-pbs-0001.hostmgmt.cm.aurora.alcf.anl.gov`, scheduler name
+`J093`, scheduler name
 `es-bfbc7508671f`. The post-submit record is `SUBMITTED`, revision 2,
 `submit_attempt=1`; PBS was `Q` at `23:25:46 UTC`, with exactly sixteen nodes
 and two hours. The Aurora wait helper is active with the explicit bound:
-`WAITING|job=8814926|queue=capacity|max_wait=7d|started=2026-09-09T23:25:48+00:00`.
+`WAITING|job=J093|queue=capacity|max_wait=7d|started=2026-09-09T23:25:48+00:00`.
