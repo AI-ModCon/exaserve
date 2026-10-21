@@ -36,7 +36,7 @@ deployment:
     initial_deadline_s: 7200.0
     recovery_deadline_s: 3600.0
     canary_timeout_s: 300.0
-  model_storage_path: /lus/flare/projects/AuroraGPT/wenyiw/models
+  model_storage_path: /lus/flare/projects/YOUR_PROJECT/YOUR_USER/models
   local_stage_path: /tmp/pp405b_shard
   models:
   - model_id: meta-llama/Llama-3.1-405B-Instruct

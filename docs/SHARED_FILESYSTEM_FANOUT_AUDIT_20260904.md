@@ -125,8 +125,8 @@ the two-node Aurora interactive PBS allocation `8806903`. That allocation also
 proved the following through the repository-generated PALS prefix:
 
 - PALS executable transfer and a closed application environment;
-- allocation rank 0 on `x4514c5s4b0n0` as the sole shared source reader;
-- recipient-only transfer to rank 1 on `x4514c5s6b0n0`;
+- allocation rank 0 on `x9019c5s4b0n0` as the sole shared source reader;
+- recipient-only transfer to rank 1 on `x9019c5s6b0n0`;
 - zero rank-1 `open`/`stat`/`readlink` syscalls beneath `/home` or `/lus/flare`
   after the PMIx controls and local HOME were applied;
 - a destination-collision failure returning nonzero (`143`) followed by exact,
@@ -374,8 +374,8 @@ framework Python has user-site enabled. Before source staging, normal framework
 interpreters automatically import both:
 
 ```text
-/home/wenyiw/.local/aurora/frameworks/2025.3.1/lib/python3.12/site-packages/sitecustomize.py
-/home/wenyiw/.local/aurora/frameworks/2025.3.1/lib/python3.12/site-packages/usercustomize.py
+/home/YOUR_USER/.local/aurora/frameworks/2025.3.1/lib/python3.12/site-packages/sitecustomize.py
+/home/YOUR_USER/.local/aurora/frameworks/2025.3.1/lib/python3.12/site-packages/usercustomize.py
 ```
 
 The first file globally replaces `builtins.__import__` and mutates Ray Serve

@@ -229,7 +229,7 @@ blocks.append(
     par(
         run(
             "Scaling LLM Inference on HPC  —  One OpenAI-Compatible Endpoint "
-            "from N Compute Nodes  •  github.com/wenyiwang-us/exaserve",
+            "from N Compute Nodes  •  github.com/AI-ModCon/exaserve",
             sz=19,
             color=GRAYTXT,
         ),
@@ -363,7 +363,7 @@ blocks.append(
 blocks.append(
     code_block(
         "module load frameworks\n"
-        "git clone https://github.com/wenyiwang-us/exaserve && cd exaserve\n"
+        "git clone https://github.com/AI-ModCon/exaserve && cd exaserve\n"
         "python3 -m pip install --user .\n"
         "\n"
         "# console scripts land in a frameworks-versioned bin dir; add it to PATH:\n"
@@ -394,16 +394,16 @@ blocks.append(
 blocks.append(
     code_block(
         "exaserve-serve-submit my_config.yaml --project-account YOUR_PROJECT --wait\n"
-        "# 8470123.aurora-pbs-0001...          <- PBS job id\n"
-        "# http://x4310c1s0b0n0:4001           <- service URL\n"
+        "# 1234567.aurora-pbs-0001...          <- PBS job id\n"
+        "# http://x9013c1s0b0n0:4001           <- service URL\n"
         "\n"
-        'curl -sS -X POST "http://x4310c1s0b0n0:4001/v1/chat/completions" \\\n'
+        'curl -sS -X POST "http://x9013c1s0b0n0:4001/v1/chat/completions" \\\n'
         "     -H 'Content-Type: application/json' \\\n"
         '     -d \'{"model":"meta-llama/Meta-Llama-3-8B-Instruct",\n'
         '          "messages":[{"role":"user","content":"hello"}],"max_tokens":8}\'\n'
         '# {"id":"chatcmpl-...","choices":[{"message":{"content":"Hi!"...}}],...}\n'
         "\n"
-        "qdel 8470123                           # tear down"
+        "qdel 1234567                           # tear down"
     )
 )
 blocks.append(
@@ -652,14 +652,14 @@ blocks.append(
     body_par(
         "Runnable configurations and benchmark specifications live in the repository; code is "
         "linked rather than copied here. Paths are relative to "
-        "github.com/wenyiwang-us/exaserve."
+        "github.com/AI-ModCon/exaserve."
     )
 )
 blocks.append(
     data_table(
         [
             ["Resource", "Location"],
-            ["Source code", "github.com/wenyiwang-us/exaserve"],
+            ["Source code", "github.com/AI-ModCon/exaserve"],
             ["Documentation", "README.md — install, configuration, console-script reference"],
             [
                 "Machine-actionable card",

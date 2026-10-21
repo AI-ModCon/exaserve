@@ -19,7 +19,7 @@ matrix:
     expr: '"02:00:00" if num_nodes <= 16 else ("06:00:00" if num_nodes >= 256 else "01:00:00")'
 trace:
   kind: dataset_replay
-  input_prompt_path: /lus/flare/projects/AuroraGPT/wenyiw/data/paper_datasets/cnn_dailymail.jsonl
+  input_prompt_path: /lus/flare/projects/YOUR_PROJECT/YOUR_USER/data/paper_datasets/cnn_dailymail.jsonl
 workload:
   duration: 60.0
   input_len: 768

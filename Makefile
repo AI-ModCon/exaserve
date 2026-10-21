@@ -9,7 +9,7 @@ PYTEST_ENV = PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 HF_HUB_OFFLINE=1 TRANSFORMERS_OFFL
 
 help:
 	@printf '%s\n' \
-	  'ExaServe portable development commands (uv 0.10.1)' \
+	  'ExaServe portable development commands (uv 0.13.4)' \
 	  '  install / install-dev  Sync locked portable dev and test groups; no GPU extras' \
 	  '  lock                   Deliberately update uv.lock from dependency metadata' \
 	  '  lock-check             Check uv.lock without changing it' \

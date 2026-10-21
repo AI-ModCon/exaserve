@@ -8,11 +8,10 @@ Documentation is consolidated under `docs/`. Existing filenames and the
 | `doc/<path>` | `docs/<path>` |
 | `findings/<report>.md` | `docs/findings/<report>.md` |
 | `findings/direct_stream_window_analysis.py` | `eval/scripts/direct_stream_window_analysis.py` |
-| `note.txt` | `docs/archive/note.txt` |
+| `note.txt` | Removed from the published tree (personal development scratchpad) |
 
 The [findings index](findings/index.md) distinguishes research reports from
-current qualification evidence. The [archived-note guide](archive/README.md)
-explains the scratchpad's historical status. Runtime behavior, legacy tools,
+current qualification evidence. Runtime behavior, legacy tools,
 dependency locks, generated reference-card bytes and personal agent state are
 outside this documentation cleanup.
 
@@ -37,10 +36,25 @@ that string is included in its canonical hash. The ADR now lives at
 The documentation move does not create a new qualified profile or transfer
 historical hardware results to the current code.
 
+### Publication redaction
+
+Before the repository was opened, operational details were redacted from
+documentation, example and hardening configurations, frozen evaluation specs
+and test fixtures. A maintainer's home or project directory appears as
+`/home/YOUR_USER/...` or `/lus/flare/projects/YOUR_PROJECT/YOUR_USER/...`.
+Compute-node names keep their Aurora format but use synthetic racks
+`x9001` to `x9025`; one real rack maps to one synthetic rack, so statements
+about shared racks still hold. Allocation-internal addresses appear as
+documentation addresses from `192.0.2.0/24`, and a reservation identifier as
+`<reservation>`. Measurements, PBS job identifiers, evidence hashes and the
+findings ledger bytes are unchanged. The original text remains at each record's
+source commit.
+
 ## Generated reference card
 
-The existing Word reference card is retained at its new documentation path.
+The Word reference card is retained at its new documentation path.
 Its generator reads figures from `docs/figures/`; those figures and the Academy
 template remain externally supplied inputs described in
 [the reference-card guide](exaserve.md#regenerating-the-word-reference-card).
-The card is not regenerated as part of the directory migration.
+The card was regenerated for publication with the `AI-ModCon/exaserve` URL,
+synthetic example identifiers and the current `docs/` paths.

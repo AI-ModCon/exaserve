@@ -123,7 +123,7 @@ One open/write/close per file.
 
 ```bash
 module load frameworks go/1.25.3
-PYTHONPATH=/home/wenyiw/exaserve python3 -m eval.cli run materialize weakscaling_nullcompute_proxy
+PYTHONPATH=/home/YOUR_USER/exaserve python3 -m eval.cli run materialize weakscaling_nullcompute_proxy
 # edit job.pbs to use reservation queue if needed
 qsub /lus/flare/.../runN/{scale}-nodes/job/job.pbs
 

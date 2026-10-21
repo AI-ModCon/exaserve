@@ -11,7 +11,7 @@ This is campaign evidence/context; `AGENTS.md` and the production-hardening
 execution plan remain authoritative.
 
 Run-store parent:
-`/lus/flare/projects/AuroraGPT/wenyiw/data/experiments/runs/sc26workshop/full/nullcompute_haproxy_scale_to256_v040`.
+`/lus/flare/projects/YOUR_PROJECT/YOUR_USER/data/experiments/runs/sc26workshop/full/nullcompute_haproxy_scale_to256_v040`.
 
 ## WP12 execution budgets
 
@@ -54,7 +54,7 @@ python3 -m eval.cli run submit <run-store-parent>/<group>/n<nodes>/run.yaml
 ```
 
 The sealed job body selects its immutable source snapshot, sources
-`/home/wenyiw/script/env_aurora`, and executes the exact materialized run in
+`/home/YOUR_USER/script/env_aurora`, and executes the exact materialized run in
 its PBS compute allocation. The login node is used only for submission,
 monitoring and small evidence reads. Logs are at `<cell>/logs/pbs/{stdout,stderr}`
 and backend logs at `<cell>/logs/backend`; accepted output is under
@@ -94,7 +94,7 @@ is `2026-09-09 20:04:19 UTC`; the monitor did not submit it again. The queued
 start helper began at `2026-09-09T20:05:41+00:00`, with a three-hour bound.
 
 The first job started at `2026-09-09 20:29:18 UTC`, allocation head
-`x4711c1s6b0n0`, requesting exactly 32 nodes for one hour. Canonical state
+`x9025c1s6b0n0`, requesting exactly 32 nodes for one hour. Canonical state
 became RUNNING at 20:29:56 UTC. Its allocation-binding hash is
 `821ed9ef2f204ace681657dd415a26b02b66d34611326cda6e4dabeb3ba05b69`.
 Source staging produced 32/32 rank receipts in 4.019767 seconds for 415 files
@@ -154,7 +154,7 @@ and provenance hashes. Metrics-exporter warnings again did not prevent the
 hash-bound acceptance or clean shutdown.
 
 Before the next submission, `subjob status` reports no active leases,
-`qstat -u wenyiw` reports no jobs, and the user-managed keepalive record remains
+`qstat -u "$USER"` reports no jobs, and the user-managed keepalive record remains
 stopped with no source allocation. Canonical batch fallback therefore remains
 the acquisition path. The clean frozen checkout remains at `0a83547`.
 
@@ -167,7 +167,7 @@ exactly 64 nodes in debug-scaling for one hour; no overrides were applied.
 ### Accepted run12/n64
 
 The three-hour start helper began at `2026-09-09 21:51:14 UTC`;
-PBS started at `22:05:53 UTC`, allocation head `x4116c1s0b0n0`.
+PBS started at `22:05:53 UTC`, allocation head `x9002c1s0b0n0`.
 The sealed body initialized the intended Aurora environment. Live logs showed
 successful source staging, exact 64-node Ray membership/resources, 768 null
 replica measurements and 128 applications at target, followed by clean STOPPED
@@ -193,7 +193,7 @@ The queued-start helper uses the explicit 10,800-second bound.
 ### Accepted run13/n64
 
 The queued-start helper began at `2026-09-09 22:09:54 UTC`;
-PBS started at `22:48:32 UTC`, allocation head `x4709c4s7b0n0`.
+PBS started at `22:48:32 UTC`, allocation head `x9024c4s7b0n0`.
 Live logs verified exact 64-node membership/resources, 768 measured replicas,
 128 applications and 898 receipt slots, followed by 64/64 DRAIN and GOODBYE.
 The first final check correctly withheld acceptance while PBS was still E;

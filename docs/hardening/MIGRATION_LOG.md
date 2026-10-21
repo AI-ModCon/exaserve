@@ -124,7 +124,7 @@ subjob lease).
 
 ## 2026-08-05 — Slice P00.4: S01 two-node proof PASSED; S02 probe iterating
 
-**Gate S01-2N (allocation 8734762, x4117c0s7b0n0 + x4117c4s3b0n0): PASS —
+**Gate S01-2N (allocation 8734762, x9003c0s7b0n0 + x9003c4s3b0n0): PASS —
 all 4 scenarios.** Evidence in `artifacts/hardening/s01-2n/verdict_*.json`,
 decision in `decisions/ADR-001-process-boundaries.md`. Facts proven: PALS
 propagates the secret env (2/2 authenticated registrations in ≤0.4s); typed
@@ -583,7 +583,7 @@ changes) at 2 → 16 → 64 nodes; per-node RPS should stay flat vs the recorded
   READY" → working canary → SIGTERM drain. The fail-closed changes did NOT
   false-negative healthy startup (the critical regression risk).
 - **PR-003 compute-validated same run:** source `config.pp2.yaml` head_ip
-  stayed `""`; `runtime_config.yaml` got `head_ip: 10.115.33.38`. (The
+  stayed `""`; `runtime_config.yaml` got `head_ip: 192.0.2.10`. (The
   battery's own immutable-source assertion FAILED on a stale-glob bug picking
   an old run_logs dir — the invariant itself is verified by direct inspection;
   battery assertion fix is cosmetic.)
@@ -1386,7 +1386,7 @@ The chain transported and adjudicated on the first try, and the adjudication
 immediately rejected **every receipt from every correctly-placed rank**:
 
 ```
-node_id 'x4310c4s0b0n0' != bound 'x4310c4s0b0n0.hsn.cm.aurora.alcf.anl.gov'
+node_id 'x9013c4s0b0n0' != bound 'x9013c4s0b0n0.hsn.cm.aurora.alcf.anl.gov'
 ```
 
 The scheduler's node file is fully qualified; a process reports
@@ -1439,7 +1439,7 @@ marker, the Ray receipt actor **including its fallback**, and the
 ```
 [Composition] GLOBAL receipts issued: 1
 [Composition] evidence receipts: 72 {'engine': 48, 'replica': 24}
-[Composition] READY via http://10.112.170.100:8000 —
+[Composition] READY via http://192.0.2.20:8000 —
   ['sessions: 2 planned ranks established',
    'receipts: 5/5 exact slots',
    'model meta-llama/Meta-Llama-3-8B-Instruct: 24/24',
@@ -2202,7 +2202,7 @@ buffers on failure; unfinished collectives prohibit retries and are retained
 until process teardown. Native replay failures also enable Python stack dumps.
 The focused transport/failure suite passed 98 tests.
 
-A differential compute probe on PBS `8811712`, node `x4613c1s6b0n0`, verified
+A differential compute probe on PBS `8811712`, node `x9022c1s6b0n0`, verified
 the old object receive at 16 KiB, reproduced `MPI.Exception: Message truncated`
 at 128 KiB, and verified a 1 MiB transfer with explicit `MPI.BYTE` buffers.
 The runs took approximately 0.62 seconds each; their return codes were 0, 1,

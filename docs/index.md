@@ -12,17 +12,15 @@ and hardware-qualified serving are separate support boundaries.
 - [API reference](api.md): public plan and status interfaces and installed commands.
 - [FAQ](faq.md): environment, qualification, readiness, and contribution questions.
 - [AI-ModCon checklist](modcon_compliance.md): requirement mapping, validation
-  limits, and administrator steps for the organization transfer.
+  limits, and GitHub administrator steps for `AI-ModCon/exaserve`.
 - [Research findings](findings/index.md): historical measurements and analysis.
 - [Documentation path migration](path_migrations.md): old-to-new path mapping
   and preservation of historical evidence identities.
-- [Archived development notes](archive/README.md): the original scratchpad and
-  its limits as guidance.
 
 ## Architecture and operational authority
 
 User guides, architecture, hardening records, and research reports share this
-directory. Their authority is unchanged: research and archived notes do not
+directory. Their authority is unchanged: research reports do not
 override the execution plan or candidate qualification records.
 
 | Topic | Authoritative document or entry point |
@@ -51,8 +49,8 @@ evidence. Historical runs do not qualify a changed artifact.
 - [Security reporting](../SECURITY.md)
 - [Changelog](../CHANGELOG.md)
 - [Apache License 2.0](../LICENSE) and [notice](../NOTICE)
-- [Source repository](https://github.com/globus-labs/exaserve)
-- [Issue tracker](https://github.com/globus-labs/exaserve/issues)
+- [Source repository](https://github.com/AI-ModCon/exaserve)
+- [Issue tracker](https://github.com/AI-ModCon/exaserve/issues)
 
 For a bug report, include the command, package or commit identity, environment,
 and relevant redacted errors. Do not include credentials, private model data,

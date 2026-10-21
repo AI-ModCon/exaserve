@@ -72,7 +72,7 @@ architecture is not the executing architecture:
   waiting for `CLUSTER FULLY READY`.
 - The generated `readiness.json` contains `"plan_hash": "plan"`, demonstrating
   that readiness is not bound to a compiled immutable plan.
-- That snapshot's canary URL is `http://10.115.33.38:8000/...`, the internal
+- That snapshot's canary URL is `http://192.0.2.10:8000/...`, the internal
   Ray Serve endpoint. The smoke configured direct mode and exercised no
   external-gateway path.
 - On configurations with an external proxy, the server declares READY before

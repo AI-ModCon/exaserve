@@ -8,17 +8,19 @@ CI checks that a locked uv environment matches every applicable `ci.lock`
 pin. The independent installed-wheel gate continues to install `ci.lock`
 with pip before installing the audited ExaServe wheel with `--no-deps`.
 
-The root `uv.lock` is generated with **uv 0.10.1**. Default `uv sync` selects
+The root `uv.lock` is generated with **uv 0.13.4**. Default `uv sync` selects
 only the portable `dev` and `test` dependency groups, not the optional
 `server`, `proxy`, `scheduler`, `eval`, or `paper` extras. The lock resolves
 optional dependency metadata too, so it can list GPU packages that are not
 installed in the default environment. It is not an Aurora installation
 recipe or a claim that those packages are qualified on another platform.
 
-The uv resolution envelope is Linux with Python below 3.14, retaining the
-project's published Python requirement. The upper bound comes from the
-existing exact vLLM dependency, which uv must resolve even though portable
-sync does not install it. Portable CI targets **Python 3.12**, matching Aurora's
+The uv resolution envelope is Linux with Python 3.11 to 3.13. The upper bound
+comes from the existing exact vLLM dependency, which uv must resolve even though
+portable sync does not install it. The lower bound comes from Pillow 13.0.0, the
+first release without its known advisories, which requires Python 3.11; the
+published package metadata still accepts Python 3.10, but the lock does not
+cover it. Portable CI targets **Python 3.12**, matching Aurora's
 current Python 3.12.12 runtime; other interpreters are outside the current CI
 scope and are not qualified by the lock's wider resolution envelope.
 

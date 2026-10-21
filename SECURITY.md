@@ -39,6 +39,33 @@ dimensions; it is not a guarantee that a deployment is free of vulnerabilities.
 The current production-candidate design assumes a trusted allocation-internal
 network and is not a public Internet service security boundary.
 
+## Deployment trust assumptions
+
+ExaServe's inference endpoints have no authentication, TLS or rate limiting.
+HAProxy and the per-node Ray Serve proxies listen on all interfaces of the
+allocated nodes, and Ray's own ports are unauthenticated in this
+configuration. Anyone who can connect to those nodes can send inference
+requests, and anyone who can reach the Ray ports can run code as the job user.
+Deploy ExaServe only where the site network limits these ports to users you
+trust; ExaServe does not check this.
+
+Model weights, `config.json`, tokenizer and chat-template files are trusted
+input and are treated like code. ExaServe loads them with
+`trust_remote_code=False`, Hugging Face offline mode and an architecture
+allowlist (`LlamaForCausalLM`, `GptOssForCausalLM`), but these checks are not
+a sandbox. Stage only models from sources you trust, and keep
+`model_storage_path` writable only by the operator. A chat request may also
+carry its own `chat_template`, which the serving replica renders; it is part
+of the trusted request surface.
+
+Ray, vLLM, PyTorch and Transformers come from the qualified Aurora
+`frameworks/2025.3.1` module (see
+[`requirements/aurora-frameworks-2025.3.1.lock`](requirements/aurora-frameworks-2025.3.1.lock))
+and change only through requalification. Advisories against those versions are
+assessed against the request surface in
+[docs/api.md](docs/api.md#inference-http-surface). Low-severity engine defects
+that ordinary requests can reach are accepted until the next requalified stack.
+
 ## Coordination and updates
 
 Maintainers should coordinate investigation, fixes, and disclosure privately,

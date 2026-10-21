@@ -13,7 +13,7 @@ commit/branch/push is performed (not authorized by the active request).
 ## Environment (login node, Aurora)
 
 - Python: `/opt/aurora/26.26.0/frameworks/aurora_frameworks-2025.3.1/bin/python` (3.12.12)
-- `PYTHONUSERBASE=/home/wenyiw/.local/aurora/frameworks/2025.3.1`
+- `PYTHONUSERBASE=/home/YOUR_USER/.local/aurora/frameworks/2025.3.1`
   (contains `sitecustomize.py`/`usercustomize.py` `_aurora_import` hooks)
 - pytest 8.3.5; plugins: `pytest-randomly 4.0.1` (auto-loaded; shuffles order,
   prints seed in header)
@@ -25,7 +25,7 @@ commit/branch/push is performed (not authorized by the active request).
 ## Test baseline (exact command and results)
 
 ```
-cd /home/wenyiw/exaserve && PYTHONUSERBASE=... python -m pytest -q -p no:cacheprovider
+cd /home/YOUR_USER/exaserve && PYTHONUSERBASE=... python -m pytest -q -p no:cacheprovider
 ```
 
 36 collected. **24 passed / 12 failed in this environment** (3 consecutive

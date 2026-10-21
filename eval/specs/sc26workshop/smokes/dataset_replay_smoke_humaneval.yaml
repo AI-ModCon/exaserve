@@ -17,7 +17,7 @@ matrix:
     expr: '1'
 trace:
   kind: dataset_replay
-  input_prompt_path: /lus/flare/projects/AuroraGPT/wenyiw/data/paper_datasets/humaneval.jsonl
+  input_prompt_path: /lus/flare/projects/YOUR_PROJECT/YOUR_USER/data/paper_datasets/humaneval.jsonl
 workload:
   duration: 30.0
   input_len: 256

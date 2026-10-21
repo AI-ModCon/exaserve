@@ -11,7 +11,7 @@ and explain why that rate is the hard ceiling.
 - `num_go_procs=1`, `num_go_workers=4` (4 dispatcher goroutines)
 - Sweep `max_active_requests`: 40, 80, 160, 320, 640, 1280, 2560, 5120, 10240
 - 5M requests per point, 5s configured duration (actual ~31-36s due to dispatch saturation)
-- Node: Aurora x4220c4s7b0n0 (208 cores)
+- Node: Aurora x9008c4s7b0n0 (208 cores)
 
 ## Results
 
@@ -121,7 +121,7 @@ does it plateau and why?
 - `num_go_workers=4` per process (4 dispatcher goroutines per process)
 - Sweep `num_go_procs`: 1, 2, 4, 8, 12, 16
 - 10M requests per point, 10s configured duration
-- Node: Aurora x4400c3s5b0n0 (208 cores)
+- Node: Aurora x9017c3s5b0n0 (208 cores)
 
 ## Results
 
@@ -264,7 +264,7 @@ spin-wait threads. A controlled experiment disambiguates them.
 
 ## Experiment Design
 
-Three configs on the same node (x4304c6s6b0n0, 204 cores), all with service_time=0,
+Three configs on the same node (x9011c6s6b0n0, 204 cores), all with service_time=0,
 15M requests, rate=1M, max_active=80:
 
 | Config | Procs | Workers/proc | Spin-wait threads | Purpose |
@@ -524,7 +524,7 @@ error class `"port_exhaustion"` in per-request results.
 
 ## Raw Data
 
-- Single-proc sweep: `/home/wenyiw/agpt/data/bench_results/clientlab/client-dispatch-ceiling_20260401T235004Z/`
-- Multi-proc sweep: `/home/wenyiw/agpt/data/bench_results/clientlab/client-dispatch-scaling_20260402T013700Z/`
-- Profiling experiment: `/home/wenyiw/agpt/data/bench_results/clientlab/dispatch_profiling_20260402T024400Z/`
-- Safe zone re-run: `/home/wenyiw/agpt/data/bench_results/clientlab/client-safe-zone_20260405T000211Z/`
+- Single-proc sweep: `/home/YOUR_USER/agpt/data/bench_results/clientlab/client-dispatch-ceiling_20260401T235004Z/`
+- Multi-proc sweep: `/home/YOUR_USER/agpt/data/bench_results/clientlab/client-dispatch-scaling_20260402T013700Z/`
+- Profiling experiment: `/home/YOUR_USER/agpt/data/bench_results/clientlab/dispatch_profiling_20260402T024400Z/`
+- Safe zone re-run: `/home/YOUR_USER/agpt/data/bench_results/clientlab/client-safe-zone_20260405T000211Z/`

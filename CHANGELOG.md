@@ -2,14 +2,30 @@
 
 This records project changes, not an assertion that a deployment or release has
 passed hardware qualification. Exact artifacts and scope are recorded in
-[`doc/hardening/STATUS.md`](docs/hardening/STATUS.md) and the linked evidence.
+[`docs/hardening/STATUS.md`](docs/hardening/STATUS.md) and the linked evidence.
 
 ## Unreleased
+
+### Publication readiness
+
+- Name `AI-ModCon/exaserve` in package metadata, documentation and contribution
+  links, and record the transfer in the AI-ModCon checklist.
+- Redact maintainer account paths, compute-node names, allocation-internal
+  addresses and a reservation identifier from documentation, example and
+  hardening configurations, frozen evaluation specs and test fixtures; remove
+  the personal development scratchpad; regenerate the reference card.
+- Refresh the portable development lock with uv 0.13.4 and fixed releases of
+  Pillow, pytest, Pygments, fontTools, certifi, aiohttp and virtualenv. The lock
+  now resolves Python 3.11–3.13. Server extras and site runtime pins are
+  unchanged; remaining dependency advisories are dispositioned in the
+  AI-ModCon checklist.
+- Document deployment trust assumptions in `SECURITY.md` and the request fields
+  that reach vLLM in the API reference.
 
 ### Documentation paths
 
 - Consolidate architecture, hardening records and research findings under
-  `docs/`, and archive the original scratchpad at `docs/archive/note.txt`.
+  `docs/`.
 - Update documentation, analysis and reference-card paths; check local links in
   CI against tracked files. Historical ledger bytes and qualification/profile
   identities are preserved through documented legacy-reference resolution.

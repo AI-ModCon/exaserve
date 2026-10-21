@@ -18,7 +18,7 @@ matrix:
     expr: '"01:00:00"'
 trace:
   kind: azure_trace
-  input_trace_path: /lus/flare/projects/AuroraGPT/wenyiw/data/input_traces/BurstGPT_without_fails_1.csv
+  input_trace_path: /lus/flare/projects/YOUR_PROJECT/YOUR_USER/data/input_traces/BurstGPT_without_fails_1.csv
 workload:
   duration: 60.0
   input_len: 512

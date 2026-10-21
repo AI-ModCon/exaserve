@@ -63,7 +63,7 @@ deployment:
   # Base value when the matrix does not overwrite deployment.num_nodes.
   num_nodes: 1
   # Optional. If omitted, site_config.model_storage_path is used.
-  # model_storage_path: /lus/flare/projects/AuroraGPT/<user>/models
+  # model_storage_path: /lus/flare/projects/YOUR_PROJECT/YOUR_USER/models
   # Optional. If omitted, site_config.local_stage_path is used.
   # local_stage_path: /tmp/hf_home
   # This maps directly to Ray Serve's `max_ongoing_requests` for each replica.

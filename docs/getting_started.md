@@ -6,19 +6,20 @@ environment is not an installation recipe for Aurora's serving stack.
 ## Portable development
 
 Use a Linux workstation or a suitable CI runner with Git, Make, Python, and
-`uv==0.10.1` (install it with `python3 -m pip install uv==0.10.1`).
+`uv==0.13.4` (install it with `python3 -m pip install uv==0.13.4`).
 Package metadata accepts Python 3.10 or newer; current portable CI targets
 Python 3.12, matching Aurora's current Python 3.12.12 runtime. Use Python 3.12
 for development. Other interpreter versions are outside the current CI scope,
 and portable CI does not qualify any GPU runtime.
 
-The committed uv lock resolves Linux Python 3.10–3.13; the existing optional
-vLLM dependency excludes Python 3.14. Use a CI interpreter version above for
-development rather than assuming every version allowed by package metadata is
-covered by the lock or tested by CI.
+The committed uv lock resolves Linux Python 3.11–3.13; the existing optional
+vLLM dependency excludes Python 3.14, and the test group's Pillow 13.0.0 requires
+Python 3.11. Use a CI interpreter version above for development rather than
+assuming every version allowed by package metadata is covered by the lock or
+tested by CI.
 
 ```bash
-git clone https://github.com/globus-labs/exaserve.git
+git clone https://github.com/AI-ModCon/exaserve.git
 cd exaserve
 make install-dev
 ```

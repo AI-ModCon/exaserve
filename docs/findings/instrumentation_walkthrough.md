@@ -850,10 +850,10 @@ Layered together, these give the complete Stage 3 decomposition:
 
 ```bash
 module load frameworks go/1.25.3
-PYTHONPATH=/home/wenyiw/exaserve python3 -m eval.cli run materialize weakscaling_nullcompute_proxy
+PYTHONPATH=/home/YOUR_USER/exaserve python3 -m eval.cli run materialize weakscaling_nullcompute_proxy
 # retarget queue if using a reservation (leave as-is for prod at 256n)
 for s in 32 64 128; do
-    sed -i 's/#PBS -q debug-scaling/#PBS -q R8443082/' \
+    sed -i 's/#PBS -q debug-scaling/#PBS -q <reservation>/' \
         /lus/flare/.../runN/${s}-nodes/job/job.pbs
 done
 qsub /lus/flare/.../runN/32-nodes/job/job.pbs
@@ -905,7 +905,7 @@ Reference-only; every overlay patch can be recovered via
 `git -C <overlay> diff 2014298 HEAD -- <file>`.
 
 ### Data
-`/lus/flare/projects/AuroraGPT/wenyiw/data/experiments/runs/weakscaling_nullcompute_proxy/runN/*` for runs 16 through 21.
+`/lus/flare/projects/YOUR_PROJECT/YOUR_USER/data/experiments/runs/weakscaling_nullcompute_proxy/runN/*` for runs 16 through 21.
 - run16: baseline (no probes)
 - run17: §6 probes (per-call Lustre writes — **overhead artifact, superseded**)
 - run18: adds §6.1 (partial, with Lustre-per-call overhead)

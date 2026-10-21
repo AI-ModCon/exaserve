@@ -49,11 +49,11 @@ cleanup and then be explicitly reaped by its parent owner.
 The fresh proof children have been materialized, but not submitted or executed:
 
 - Happy path:
-  `/lus/flare/projects/AuroraGPT/wenyiw/data/experiments/runs/sc26workshop/smokes/nullcompute_haproxy_mpi_large_raw_2node/run1/n2/run.yaml`.
+  `/lus/flare/projects/YOUR_PROJECT/YOUR_USER/data/experiments/runs/sc26workshop/smokes/nullcompute_haproxy_mpi_large_raw_2node/run1/n2/run.yaml`.
   Two replays each schedule 3,072 requests, exercising multi-chunk MPI result
   aggregation on the exact two-node subset.
 - Cancellation:
-  `/lus/flare/projects/AuroraGPT/wenyiw/data/experiments/runs/nullcompute_haproxy_subset_cancel_2node/run0/n2/run.yaml`.
+  `/lus/flare/projects/YOUR_PROJECT/YOUR_USER/data/experiments/runs/nullcompute_haproxy_subset_cancel_2node/run0/n2/run.yaml`.
   Its 60-second replay supplies an unambiguous cancellation window. The spec was
   passed as an external input to the clean `0a83547` materializer, so the child
   runtime source remains unchanged; only this qualification workload differs.
@@ -77,7 +77,7 @@ will be stored in a fresh campaign output directory recorded here before submit.
 No worker reads the parent manifest or writes a shared-filesystem receipt.
 
 The first proof campaign has been materialized at
-`/lus/flare/projects/AuroraGPT/wenyiw/data/experiments/allocation_campaigns/subset-proof-20260909-a/campaign.json`.
+`/lus/flare/projects/YOUR_PROJECT/YOUR_USER/data/experiments/allocation_campaigns/subset-proof-20260909-a/campaign.json`.
 It requests exactly four capacity nodes for one hour, with an eight-minute
 execution deadline per child and separately reserved canonical cleanup budgets.
 Campaign hash:
@@ -86,7 +86,7 @@ Controller commit `8c59f5130e642cfc3d23619e8933b548e6aa2bae`, controller source
 hash `18603db557a3b663282a1c696603566f11857097f0a17f6c8f0e4a591da8f9a5`.
 Only the unrelated design drafts were explicitly excluded from its committed
 snapshot. Scheduler identity is `ac-67dfb2946f44`; native stdout/stderr are
-directed to `/home/wenyiw/aurora_rayserver/tmp/`. Per-child executor logs and
+directed to `/home/YOUR_USER/aurora_rayserver/tmp/`. Per-child executor logs and
 parent proof sidecars live in the campaign directory; canonical child evidence
 remains in the two original child bundle directories above.
 
@@ -116,7 +116,7 @@ later correction.
 ### Replacement proof candidate
 
 Campaign B is materialized at
-`/lus/flare/projects/AuroraGPT/wenyiw/data/experiments/allocation_campaigns/subset-proof-20260909-b/campaign.json`,
+`/lus/flare/projects/YOUR_PROJECT/YOUR_USER/data/experiments/allocation_campaigns/subset-proof-20260909-b/campaign.json`,
 hash `aafcfe1b37d839361ef4a4d7213b6d1b0773b06428226016371889dc88371607`.
 It retains the four-physical/two-logical-node, one-hour, eight-minute-per-child
 budgets and the two still-unexecuted frozen child bundles. Its controller is
@@ -139,7 +139,7 @@ or deleted, and neither A nor B is qualification evidence.
 ### Corrected-candidate regression and cold bootstrap
 
 On the validated one-node interactive session PBS `8814870`, head
-`x4217c7s0b0n0`, `/tmp/exaserve` was actually absent. The corrected validator
+`x9007c7s0b0n0`, `/tmp/exaserve` was actually absent. The corrected validator
 accepted the declared `/tmp` mount and created/removed a private temporary
 directory successfully, without requiring an existing ExaServe tree.
 
@@ -156,7 +156,7 @@ subset qualification remains pending; neither withdrawn request is a substitute.
 
 The corrected code is committed as `97e82838a7b0454b75b5a0abe500dbebbaa60855`.
 Campaign C:
-`/lus/flare/projects/AuroraGPT/wenyiw/data/experiments/allocation_campaigns/subset-proof-20260909-c/campaign.json`;
+`/lus/flare/projects/YOUR_PROJECT/YOUR_USER/data/experiments/allocation_campaigns/subset-proof-20260909-c/campaign.json`;
 campaign hash `dfc946575981150631f2e5bb059cfe84be1a960a06f3f40dbb4362a4bcc5c7bd`;
 controller source hash
 `7f7f864bcebcf5780f56a39cec8f9b12fd3437100207c60f0cd48cac915f6a08`.
@@ -168,14 +168,14 @@ result and cold-bootstrap check above cover this controller's code.
 
 PBS `8814899` was submitted at 23:08 UTC on 2026-09-09 and entered R at
 23:21:33 UTC. The approved start waiter confirmed native head
-`x4711c1s0b0n0`; PBS reports exactly four physical capacity nodes:
-`x4711c1s0b0n0`, `x4711c1s1b0n0`, `x4711c1s2b0n0`, and
-`x4711c1s4b0n0`, with `AuroraGPT` and one-hour walltime. The two children
+`x9025c1s0b0n0`; PBS reports exactly four physical capacity nodes:
+`x9025c1s0b0n0`, `x9025c1s1b0n0`, `x9025c1s2b0n0`, and
+`x9025c1s4b0n0`, with `AuroraGPT` and one-hour walltime. The two children
 remain logical two-node runs, not exact-size physical two-node jobs.
 
 The batch body sources `~/script/env_aurora` and invokes the sealed controller:
-`python3 -m eval.cli allocation execute /lus/flare/projects/AuroraGPT/wenyiw/data/experiments/allocation_campaigns/subset-proof-20260909-c/campaign.json`.
-Native output is directed to `/home/wenyiw/aurora_rayserver/tmp/`; campaign
+`python3 -m eval.cli allocation execute /lus/flare/projects/YOUR_PROJECT/YOUR_USER/data/experiments/allocation_campaigns/subset-proof-20260909-c/campaign.json`.
+Native output is directed to `/home/YOUR_USER/aurora_rayserver/tmp/`; campaign
 state, `child-0/executor.log`, and `child-1/executor.log` were actively monitored
 under the campaign directory through the terminal result.
 
@@ -200,7 +200,7 @@ bindings were revalidated without modifying them.
 | Independent happy-path child | SUCCEEDED | 1788996154633383398 | 156.146s | Two complete replays; each 3,072 scheduled, 3,072 completed, zero errors |
 | Independent cancellation child | CANCELLED_AFTER_READY | 1788996312031078850 | 70.254s | Identity-bound RUNNING/replaying plus canonical READY preceded the deliberate SIGINT; clean CANCELLED RunStatus, no `cleanup_error` key |
 
-Both bindings use exactly `x4711c1s0b0n0` and `x4711c1s1b0n0`, preserving the
+Both bindings use exactly `x9025c1s0b0n0` and `x9025c1s1b0n0`, preserving the
 native parent head and PBS job ID. The original child SchedulerPlans were not
 submitted. Exact binding hashes are
 `36ddc43f5d208ae61dcf433aee707c91fb08d227829f06a2f3f4cc851a6ee292`
@@ -225,7 +225,7 @@ and
 Native MPI placement returned exactly the two logical hosts with exit zero.
 The three-rank over-launch returned 127, empty stdout, and
 `Cannot place all ranks on node list`; no extra hostname was emitted.
-The excluded-node sentinel on `x4711c1s4b0n0`, PID `19242`, was witnessed
+The excluded-node sentinel on `x9025c1s4b0n0`, PID `19242`, was witnessed
 before child startup at sequence 0 and after each cleanup at sequences 158
 and 230. All witnesses retain the same campaign token/host/PID, fresh timing,
 and authenticated transcript prefixes. The sentinel survived both cleanups,
@@ -251,7 +251,7 @@ results, or convert the null-compute runs into paper throughput samples.
 ### Qualified production acquisition intent
 
 The finite middle-scale campaign is now materialized at
-`/lus/flare/projects/AuroraGPT/wenyiw/data/experiments/allocation_campaigns/pp405b-middle-20260909-a/campaign.json`.
+`/lus/flare/projects/YOUR_PROJECT/YOUR_USER/data/experiments/allocation_campaigns/pp405b-middle-20260909-a/campaign.json`.
 Campaign hash `524195253ba049155eca5614560f7efd24469e842f5798f3518b9af049cd0296`;
 scheduler identity `ac-524195253ba0`. It requests 256 physical production
 nodes for six hours and executes the existing `run11/n32`, `run11/n64`, and
@@ -283,7 +283,7 @@ paper measurement. No child standalone PBS request is submitted alongside it.
   ambiguous/duplicate submissions, failure gating, cancellation/lease guards,
   strict native PBS completion, sentinel identity/freshness, and contract budgets.
 - Full regression passed on interactive PBS `8814817`, exact node
-  `x4311c4s3b0n0`, after the approved `srundbg` fallback and fresh `env_aurora`
+  `x9014c4s3b0n0`, after the approved `srundbg` fallback and fresh `env_aurora`
   setup: **1,768 passed, 27 warnings, 165.99 seconds**, exit 0. The session was
   validated against its actual PBS job/nodefile before execution and released
   after the test. Pytest used a fresh short `/tmp/xs-regression.*` base directory.

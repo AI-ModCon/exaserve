@@ -27,13 +27,15 @@ and [API reference](docs/api.md). The unified `docs/` tree also contains the
 authoritative architecture plan, design notes, hardening records, and
 [research findings](docs/findings/index.md). The
 [path migration guide](docs/path_migrations.md) explains relocated historical
-references and the [archived scratchpad](docs/archive/README.md).
+references.
 
-This repository is being prepared for transfer to AI-ModCon. The
-[compliance and transfer checklist](docs/modcon_compliance.md) records the
+The repository is [`AI-ModCon/exaserve`](https://github.com/AI-ModCon/exaserve).
+It is published as development and research source, not as a
+production-qualified release; [hardening status](docs/hardening/STATUS.md)
+records what each candidate has and has not qualified. The
+[AI-ModCon compliance checklist](docs/modcon_compliance.md) records the
 BaseTemplate revision, implemented requirements, validation limits, and GitHub
-administrator steps. Repository links continue to identify the current
-`globus-labs/exaserve` location until the transfer is actually completed.
+administrator steps.
 
 ## Architecture
 
@@ -259,7 +261,7 @@ For a portable Linux development environment, use the pinned uv version and
 the repository's locked tooling. No server/GPU extras are selected by default:
 
 ```bash
-python3 -m pip install uv==0.10.1
+python3 -m pip install uv==0.13.4
 make install-dev
 make lock-check
 make lint
@@ -267,10 +269,12 @@ make format-check
 make type-check
 ```
 
-The uv resolution envelope is Linux with Python 3.10–3.13 because the existing
-optional vLLM version excludes Python 3.14. CI tests the portable core on Python
-3.12, matching the current Aurora Python 3.12.12 runtime. The published core
-minimum remains 3.10, but older interpreters are outside the current CI scope.
+The uv resolution envelope is Linux with Python 3.11–3.13: the existing
+optional vLLM version excludes Python 3.14, and Pillow 13.0.0, the first release
+without its known advisories, requires Python 3.11. CI tests the portable core
+on Python 3.12, matching the current Aurora Python 3.12.12 runtime. The
+published core minimum remains 3.10, but Python 3.10 is outside the lock and
+the current CI scope.
 This is not a claim that a GPU stack or every interpreter is qualified.
 `requirements/aurora-frameworks-2025.3.1.lock` remains the separate
 site runtime record. Do not use `uv sync --all-extras` to replace the Aurora

@@ -513,7 +513,7 @@ Rejected attempts remain on disk and are not counted above.
     failed before READY. The attempt was stopped immediately and completed
     bounded 2/2 teardown with no residuals. The feasible isolation is to keep
     the Ray parent and model actors in `env_aurora` and launch only the gateway
-    from the plan-bound `/home/wenyiw/venv/litellm/bin/litellm` executable.
+    from the plan-bound `/home/YOUR_USER/venv/litellm/bin/litellm` executable.
     This retains one authoritative Python control plane and prevents gateway
     packages from contaminating the model runtime.
 41. The isolated LiteLLM retry on `793a780` used an explicit 180-second gateway
@@ -630,7 +630,7 @@ Rejected attempts remain on disk and are not counted above.
     isolated gateway is runnable at 64 nodes when its deadlines reflect the
     actual dependency behavior. The mixed parent remained in `env_aurora`; the
     plan launched the hash-bound
-    `/home/wenyiw/venv/litellm/bin/litellm` executable with a 180-second bind
+    `/home/YOUR_USER/venv/litellm/bin/litellm` executable with a 180-second bind
     deadline, 300-second gateway request timeout, 420-second recovery deadline,
     120-second keepalive, offline tokenizer mode, and 3,600-second replay
     request budget. Exact canonical READY followed 696.55 seconds of backend

@@ -27,7 +27,7 @@ workload:
 deployment:
   validation_mode: true
   num_nodes: 4
-  model_storage_path: /lus/flare/projects/AuroraGPT/wenyiw/models
+  model_storage_path: /lus/flare/projects/YOUR_PROJECT/YOUR_USER/models
   local_stage_path: /tmp/pp2_shard_test
   models:
   - model_id: meta-llama/Meta-Llama-3-8B-Instruct

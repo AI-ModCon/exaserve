@@ -14,7 +14,7 @@ snapshot
 `8811810`; its accepted result is preserved unchanged.
 
 Run-group root:
-`/lus/flare/projects/AuroraGPT/wenyiw/data/experiments/runs/sc26workshop/full/pp405b_pp2_haproxy_nostream_v040/run11`.
+`/lus/flare/projects/YOUR_PROJECT/YOUR_USER/data/experiments/runs/sc26workshop/full/pp405b_pp2_haproxy_nostream_v040/run11`.
 
 | Cell | PBS job | Queue / walltime | Observed status | Expected requests per replay |
 |---|---|---|---|---:|
@@ -44,7 +44,7 @@ The n4 job was submitted once at `2026-09-09 20:02:22 UTC`, scheduler identity
 `es-43d2461f6ba1`; its durable state is now `SUCCEEDED`, phase `succeeded`, and
 `submit_attempt=1`. No duplicate submission was made by this monitor.
 
-The exact immutable job body sources `/home/wenyiw/script/env_aurora`, selects
+The exact immutable job body sources `/home/YOUR_USER/script/env_aurora`, selects
 the sealed snapshot, and invokes `python3 -m eval.cli run execute <cell>/run.yaml`
 inside its exact-size PBS compute allocation. Monitoring and small evidence
 reads occur on the login node; model, Ray, MPI and replay execution do not.
@@ -71,8 +71,8 @@ The root task separately owns investigation and qualification of that route.
 ## n4 live execution
 
 PBS `8814589` entered `R` at `2026-09-09 20:29:18 UTC`, with exactly four
-nodes and a two-hour allocation. The exact bound nodes are `x4312c4s4b0n0`,
-`x4312c6s1b0n0`, `x4312c6s5b0n0` and `x4312c7s3b0n0`. Generation is
+nodes and a two-hour allocation. The exact bound nodes are `x9015c4s4b0n0`,
+`x9015c6s1b0n0`, `x9015c6s5b0n0` and `x9015c7s3b0n0`. Generation is
 `1788985796180450420`; the logged allocation-binding prefix is `528fb16f0c6e`.
 
 By `20:30:01 UTC`, head-rooted source distribution and verification passed on
@@ -127,14 +127,14 @@ its source snapshot matches accepted n4. Exact deployment/scheduler size is
 8 nodes; the sealed job requests capacity and `02:00:00`, sources
 `env_aurora`, then unsets `ONEAPI_DEVICE_SELECTOR` before compute execution.
 Required bundle, trace, runtime, plan, profile and output-directory checks
-passed. `qstat -u wenyiw` showed no active user jobs; `subjob status` showed no
+passed. `qstat -u "$USER"` showed no active user jobs; `subjob status` showed no
 active leases and keepalive metadata reported no usable source.
 
 Submission command, from the clean frozen worktree after loading `frameworks`
 and `go` and unsetting `ONEAPI_DEVICE_SELECTOR`:
 
 ```bash
-PYTHONPATH=src python3 -m eval.cli run submit /lus/flare/projects/AuroraGPT/wenyiw/data/experiments/runs/sc26workshop/full/pp405b_pp2_haproxy_nostream_v040/run11/n8/run.yaml
+PYTHONPATH=src python3 -m eval.cli run submit /lus/flare/projects/YOUR_PROJECT/YOUR_USER/data/experiments/runs/sc26workshop/full/pp405b_pp2_haproxy_nostream_v040/run11/n8/run.yaml
 ```
 
 The canonical command submitted PBS
@@ -150,7 +150,7 @@ Queued time is expected; runtime/setup evidence will be checked after start.
 
 PBS entered `R` at `2026-09-09 22:05:53 UTC`, with exactly eight nodes and
 two hours (nominal allocation deadline `2026-09-10 00:05:53 UTC`). The approved
-wait helper returned `JOB_READY|8814766|x4115c3s4b0n0`. The first direct check at
+wait helper returned `JOB_READY|8814766|x9001c3s4b0n0`. The first direct check at
 `22:06:20 UTC` found PBS stdout/stderr files newly created but empty; canonical
 state was still `SUBMITTED` during initial shell startup. A live stdout/stderr
 tail is now following the sealed PBS job. No READY claim is made from PBS
@@ -168,9 +168,9 @@ Model staging has begun; no execution error was observed at this checkpoint.
 
 Generation is `1788991595757467635`; allocation-binding hash is
 `b26e32844e872a9d6ce0c8cf72b7260f802625b403eb616b92e4a1ac4f03bd7e`.
-Exact rank-order nodes are `x4115c3s4b0n0`, `x4209c5s7b0n0`,
-`x4302c6s7b0n0`, `x4312c0s5b0n0`, `x4401c0s3b0n0`, `x4401c1s6b0n0`,
-`x4201c3s2b0n0`, and `x4315c2s7b0n0`.
+Exact rank-order nodes are `x9001c3s4b0n0`, `x9006c5s7b0n0`,
+`x9009c6s7b0n0`, `x9015c0s5b0n0`, `x9018c0s3b0n0`, `x9018c1s6b0n0`,
+`x9004c3s2b0n0`, and `x9016c2s7b0n0`.
 
 At approximately `23:00 UTC`, model staging completed in 3192.6 seconds.
 Shared model validation took 786.37 seconds; PP stage 0 transferred
@@ -243,7 +243,7 @@ there was capacity queue headroom and no sixteen-node keepalive lease source.
 Neither unrelated job was changed by this monitor. Exact submission command:
 
 ```bash
-PYTHONPATH=src python3 -m eval.cli run submit /lus/flare/projects/AuroraGPT/wenyiw/data/experiments/runs/sc26workshop/full/pp405b_pp2_haproxy_nostream_v040/run11/n16/run.yaml
+PYTHONPATH=src python3 -m eval.cli run submit /lus/flare/projects/YOUR_PROJECT/YOUR_USER/data/experiments/runs/sc26workshop/full/pp405b_pp2_haproxy_nostream_v040/run11/n16/run.yaml
 ```
 
 Submitted once at `2026-09-09 23:25:33 UTC` as

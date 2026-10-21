@@ -17,7 +17,7 @@ achieved/target gap is client measurement overhead, not server saturation.
 sequences. Higher replica_max_ongoing_requests (256) improves queueing headroom.
 
 Spec: `eval/specs/server_char_llama8b_short_v2.yaml`
-Data: `/lus/flare/projects/AuroraGPT/wenyiw/data/experiments/runs/server_char_llama8b_short_v2/run1/`
+Data: `/lus/flare/projects/YOUR_PROJECT/YOUR_USER/data/experiments/runs/server_char_llama8b_short_v2/run1/`
 
 ## Weak-Scaling v2 Specs
 

@@ -98,7 +98,7 @@ evidence, not merely adding a cache file.
 ### VC-01 seed provenance and review
 
 The reviewed inputs were the pre-existing Aurora vLLM cache entries
-`/home/wenyiw/.cache/vllm/modelinfos/vllm-model_executor-models-llama-LlamaForCausalLM.json`
+`/home/YOUR_USER/.cache/vllm/modelinfos/vllm-model_executor-models-llama-LlamaForCausalLM.json`
 and
 `vllm-model_executor-models-gpt_oss-GptOssForCausalLM.json`, whose observed
 SHA-256 values were respectively

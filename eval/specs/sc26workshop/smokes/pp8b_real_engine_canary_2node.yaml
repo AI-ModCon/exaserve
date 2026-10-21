@@ -25,7 +25,7 @@ deployment:
   validation_mode: true
   num_nodes: 2
   num_gpus_per_node: 12
-  model_storage_path: /lus/flare/projects/AuroraGPT/wenyiw/models
+  model_storage_path: /lus/flare/projects/YOUR_PROJECT/YOUR_USER/models
   local_stage_path: /tmp/pp8b_canary_shard
   control:
     watchdog_cleanup_deadline_s: 600.0

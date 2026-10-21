@@ -411,8 +411,8 @@ no errors and no exhausted deadline.
 The accepted historical PP `eabf59c/run3` environment exposes the likely hidden
 dependency that these cold-cache canaries uncovered. At that revision the
 actor runtime did not project `HOME`, `XDG_CACHE_HOME` or `VLLM_CACHE_ROOT`, so
-Ray actors inherited `/home/wenyiw`; retained vLLM output explicitly names
-`/home/wenyiw/.config/vllm`. vLLM defaults its model-info cache to
+Ray actors inherited `/home/YOUR_USER`; retained vLLM output explicitly names
+`/home/YOUR_USER/.config/vllm`. vLLM defaults its model-info cache to
 `~/.cache/vllm`, and the current
 `vllm-model_executor-models-llama-LlamaForCausalLM.json` there predates the
 accepted run by more than five months. Its recorded module hash
@@ -651,7 +651,7 @@ buffers on failure; unfinished collectives prohibit retries and are retained
 until process teardown. Native replay failures also enable Python stack dumps.
 The focused transport/failure suite passed 98 tests.
 
-A differential compute probe on PBS `8811712`, node `x4613c1s6b0n0`, verified
+A differential compute probe on PBS `8811712`, node `x9022c1s6b0n0`, verified
 the old object receive at 16 KiB, reproduced `MPI.Exception: Message truncated`
 at 128 KiB, and verified a 1 MiB transfer with explicit `MPI.BYTE` buffers.
 The runs took approximately 0.62 seconds each; their return codes were 0, 1,

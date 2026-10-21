@@ -46,7 +46,7 @@ re-run — see §5 for what that leaves uncovered.
 | Item | Value |
 |---|---|
 | Interpreter | `/opt/aurora/default/frameworks/aurora_frameworks-2025.3.1/bin/python` (CPython 3.12.12) |
-| Env | `PYTHONUSERBASE=/home/wenyiw/.local/aurora` |
+| Env | `PYTHONUSERBASE=/home/YOUR_USER/.local/aurora` |
 | pytest | 8.3.5 |
 | ruff | 0.11.6 |
 | Revision | `e6958df`, `git status --porcelain --untracked-files=all` empty |

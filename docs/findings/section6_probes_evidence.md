@@ -191,5 +191,5 @@ remaining gap.
 
 - Overlay commit `9e0ac43` — Section 6 probes in router.py + common.py
 - Main repo commit with findings (to be added below)
-- Data: `/lus/flare/projects/AuroraGPT/wenyiw/data/experiments/runs/weakscaling_nullcompute_proxy/run17/{32,64,128,256}-nodes/`
+- Data: `/lus/flare/projects/YOUR_PROJECT/YOUR_USER/data/experiments/runs/weakscaling_nullcompute_proxy/run17/{32,64,128,256}-nodes/`
 - Analyzer: `eval/tools/analyze_probes.py`

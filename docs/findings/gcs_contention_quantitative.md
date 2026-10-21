@@ -49,7 +49,7 @@ Quantify the GCS-contention hypothesis from
   built-in per-RPC telemetry, dumped every 1s to the head's
   `gcs_server.out`.
 - **All runs**: null-compute mode, `startup_only=True` (no replay client),
-  12 replicas/node. 32/64/128n on reservation R8443082; 256n on `prod`
+  12 replicas/node. 32/64/128n on reservation <reservation>; 256n on `prod`
   queue.
 
 ## Results
@@ -229,7 +229,7 @@ O(N), a huge scaling win.
 ## Data
 
 All runs stored under:
-`/lus/flare/projects/AuroraGPT/wenyiw/data/experiments/runs/weakscaling_nullcompute_proxy/run16/{32,64,128,256}-nodes/`
+`/lus/flare/projects/YOUR_PROJECT/YOUR_USER/data/experiments/runs/weakscaling_nullcompute_proxy/run16/{32,64,128,256}-nodes/`
 
 Key artifacts per run:
 - `logs/backend/*_ray_runtime/scaling_trace.json` — phase timing

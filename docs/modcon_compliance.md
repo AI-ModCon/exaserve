@@ -1,24 +1,20 @@
-# AI-ModCon repository preparation and transfer checklist
+# AI-ModCon repository preparation checklist
 
 This checklist applies the **Required Elements for ModCon Base Public
 Repositories** in [AI-ModCon/BaseTemplate](https://github.com/AI-ModCon/BaseTemplate/blob/fcfc042ffe287af9526520dd3e10b88dcd127d3b/README.md),
 reviewed at commit `fcfc042ffe287af9526520dd3e10b88dcd127d3b` on 2026-09-23
 and checked against the same current template revision on 2026-10-20.
-It records repository preparation, not approval of a production release,
-completion of an organization transfer, or new hardware qualification.
+The public-readiness review of 2026-10-21 is recorded
+[below](#public-readiness-review-2026-10-21). This checklist records repository
+preparation, not approval of a production release or of public visibility, and
+not new hardware qualification.
 
-## Transfer destination and current preparation
+## Repository location
 
-The intended destination is **`AI-ModCon/exaserve`**. Prepare a transfer of the
-existing `globus-labs/exaserve` repository so its history, issues, branches,
-tags, and releases remain together. Do not create an empty destination from
-BaseTemplate or overwrite a different repository to simulate a transfer.
-The destination URL returned HTTP 404 to the preparation credentials on
-2026-10-20; that does not establish organization transfer authority or rule out
-an inaccessible private repository with the same name. An organization owner
-must confirm name availability, recipient permissions and transfer acceptance.
-Live clone, issue, documentation and package links continue to name the source
-repository until the transfer actually occurs.
+The repository was transferred from `globus-labs/exaserve` to
+**`AI-ModCon/exaserve`** with its history, issues, pull requests, branches and
+tags. On 2026-10-21 it was private in the AI-ModCon organization. Package
+metadata, documentation and contribution links name `AI-ModCon/exaserve`.
 
 The current integration adds the plan-derived dense real-engine
 single-application layout from `afb0349` and repairs portable CI's site
@@ -30,7 +26,7 @@ changes do not create new hardware or scale qualification.
 ### Validation evidence (2026-10-20)
 
 The runtime/CI repair candidate is `67253ade6c3b9689f335bf51bf1473696467a9a8`.
-Its [GitHub CI run](https://github.com/globus-labs/exaserve/actions/runs/39469369504)
+Its [GitHub CI run](https://github.com/AI-ModCon/exaserve/actions/runs/39469369504)
 records the exact source identity and individual check results:
 
 - Python 3.12 fixed-order coverage suite: **1,720 passed, 42 skipped**;
@@ -42,8 +38,8 @@ records the exact source identity and individual check results:
   formatting, lint, typed-core and security checks passed.
 
 The optional Serve tests were also exercised with their real import-time
-dependencies in one allocated Aurora node (PBS `8948216`, host
-`x4605c5s4b0n0`): **152 focused unit tests passed**. The command was:
+dependencies in one allocated Aurora node (PBS job `8948216`):
+**152 focused unit tests passed**. The command was:
 
 ```bash
 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
@@ -57,10 +53,10 @@ This used the current site framework (Python 3.12.12, Ray 2.56.1,
 pytest 9.0.3), with no live model, GPU, MPI or serving-cluster launch.
 The older 2025.3.1 framework could not load because its module dependencies no
 longer resolved in the current site hierarchy. These are unit-test results,
-not qualification of either serving stack. The focused log is retained at
-`/home/wenyiw/aurora_rayserver/tmp/exaserve-modcon-20261020-focused-default.log`;
-the two failed module-setup attempts have separate logs alongside it. The
-temporary lease and test allocation were released after testing.
+not qualification of either serving stack. The focused log and the logs of
+the two failed module-setup attempts are kept in the maintainer's run area,
+outside the repository. The temporary lease and test allocation were released
+after testing.
 
 At the owner's request, current CI targets Python 3.12, matching Aurora's
 current Python 3.12.12. The earlier Python 3.10 job is superseded and is not a
@@ -76,17 +72,89 @@ neither this record nor a checked-in JSON file substitutes for those checks.
 | Open-source license and package declaration | [LICENSE](../LICENSE), [NOTICE](../NOTICE), Apache-2.0 metadata in [pyproject.toml](../pyproject.toml) | Maintainers retain responsibility for contribution and third-party rights |
 | `docs/`, README, onboarding and examples | [Documentation index](index.md), [getting started](getting_started.md), [usage](usage.md), [API](api.md), [FAQ](faq.md), [README](../README.md) | Maintain links and examples as the project evolves |
 | pytest suite and coverage | Existing three test trees; explicit coverage configuration and CI reports | Run and review the updated CI; coverage is not hardware evidence |
-| CI/CD test integration | Existing hermetic, randomized-order, installed-wheel, Go, ledger and static jobs retained; portable lock lane added | Require these checks in the destination repository rules |
+| CI/CD test integration | Existing hermetic, randomized-order, installed-wheel, Go, ledger and static jobs retained; portable lock lane added | Require these checks with branch protection (step 3 below) |
 | Contribution and AI-assistance policy | [CONTRIBUTING](../CONTRIBUTING.md), [PR template](../.github/pull_request_template.md) | A human must review and approve changes |
 | Conduct policy and issue procedures | [CODE_OF_CONDUCT](../CODE_OF_CONDUCT.md), [issue templates](../.github/ISSUE_TEMPLATE), [SECURITY](../SECURITY.md) | Maintain the private contact and triage reports |
-| Main-branch protection | Administrator instructions below | **Requires GitHub settings; repository files do not enforce this** |
-| Project, author/contact, dependency and Python metadata | [pyproject.toml](../pyproject.toml); Wenyi Wang, `wenyiw@uchicago.edu` | Update URLs and contacts when the transfer occurs |
+| Main-branch protection | Administrator instructions below | **Requires GitHub settings; not applied on `AI-ModCon/exaserve` as of 2026-10-21** |
+| Project, author/contact, dependency and Python metadata | [pyproject.toml](../pyproject.toml); Wenyi Wang, `wenyiw@uchicago.edu` | Update contacts whenever ownership changes |
 | Development automation and lock | [Makefile](../Makefile), [uv.lock](../uv.lock), [dependency profiles](../requirements/README.md) | Run the locked portable CI on the current Aurora Python minor version (3.12) |
 | Genesis Mission acknowledgment | [README acknowledgment](../README.md#acknowledgments) credits support for the ModCon Base collaboration | Confirm project-specific wording if an institution requires it |
 
 The additional changelog and private security policy follow the template's
 repository conventions. No automatic PyPI publication, external coverage
 service, new access token, or unreviewed deployment workflow is enabled.
+
+## Public-readiness review (2026-10-21)
+
+Issue [#2](https://github.com/AI-ModCon/exaserve/issues/2) reviewed `main` at
+`34870417` against BaseTemplate. It listed three blockers for public
+visibility, operational details, dependency alerts and unenforced review and
+CI policy, plus outdated repository links and disabled security features.
+
+| Review item | Repository change | Still required |
+|---|---|---|
+| Operational details | Maintainer account paths, compute-node names, allocation-internal addresses and a reservation identifier redacted ([publication redaction](path_migrations.md#publication-redaction)); personal development scratchpad removed; reference card regenerated | Institutional decision on the details kept below |
+| Dependency alerts | Development lock refreshed; 45 of the 92 alerts close when the change reaches `main` | Dismiss the other 47 with the reasons below |
+| Review and CI enforcement | The [protection payload](../.github/main-branch-protection.json) already names the seven current CI checks and the required review settings | Apply it (step 3 below) and read it back |
+| Repository links | Package metadata, README, documentation and this checklist name `AI-ModCon/exaserve` | — |
+| Security features | Trust assumptions documented in [SECURITY.md](../SECURITY.md#deployment-trust-assumptions) | Enable them (step 5 below) |
+| Release description | README describes the repository as development and research source, not a production-qualified release | Describe the visibility change the same way |
+
+### Operational details kept for the disclosure decision
+
+These remain because code or evidence depends on them, or because they are the
+published contact:
+
+- Aurora site constants used by the reference `SiteProfile`, launchers and
+  evidence loaders: the `/home` and `/lus/flare` shared-filesystem roots, the
+  `.hsn.cm.aurora.alcf.anl.gov` high-speed-network domain, the
+  `aurora-pbs-0001.hostmgmt.cm.aurora.alcf.anl.gov` PBS server name, the
+  `aurora-uan-*` login-node pattern and the shared model-weights path
+  `/lus/flare/projects/datasets/model-weights`.
+- The allocation name `AuroraGPT` as the default PBS account and project root
+  in `src/exaserve/config.py`, `src/exaserve/site.py`, `eval/site_config.py`,
+  `eval/lib/spec_io.py`, `eval/lib/models.py` and
+  `eval/lib/allocation_campaign.py`, and in tests and one example spec.
+- PBS job identifiers in historical records and in the paper-evidence loader
+  (`eval/lib/pp405b_evidence.py`, `eval/plot/pp405b_legacy_evidence.yaml`),
+  whose selections `eval/tests/test_spec_footguns.py` hashes.
+- Default home-directory layouts without an account name: `~/agpt/...` and
+  `~/script/env_aurora` in `eval/site_config.py`, and `~/aurora_rayserver/tmp`
+  in `eval/lib/allocation_campaign.py`.
+- The maintainer contact `wenyiw@uchicago.edu` in package metadata,
+  SECURITY.md and the Code of Conduct.
+
+### Dependency alerts
+
+All 92 open alerts came from `uv.lock`. The development lock is now generated
+with uv 0.13.4 and resolves Python 3.11–3.13. The test group pins Pillow 13.0.0,
+pytest 9.0.3, Pygments 2.20.0 and fontTools 4.60.2, also in
+`requirements/ci.lock`, and the transitive certifi (2026.10.19), aiohttp
+(3.14.5) and virtualenv (21.14.5) resolutions were refreshed. This closes 45
+alerts.
+
+The other 47 cannot be closed by upgrading without changing the qualified
+serving stack or the audited build tools. Each was checked against the code
+paths that ExaServe uses and against the request surface in the
+[API reference](api.md#inference-http-surface):
+
+| Package | Alerts | Locked | Why it stays | Disposition |
+|---|---:|---|---|---|
+| vllm | 31, one critical | 0.15.0 | Exact pin of the qualified `frameworks/2025.3.1` stack | 30 unreachable: ExaServe does not run vLLM's OpenAI server, passes only a text prompt and six validated sampling fields, and serves text-only Llama and GPT-OSS checkpoints; five of the 30 concern code that vLLM 0.15.0 does not contain. 1 accepted: a low-severity KV-block reuse defect |
+| transformers | 5 | 4.57.6 | Exact pin of the qualified stack and the `paper` extra | 4 unreachable: no Trainer, `save_pretrained`, custom generation or Hub kernels. 1 accepted: a malicious model configuration, covered by the trusted-model rule in SECURITY.md |
+| ray | 3 | 2.53.0 | Exact pin of the qualified stack | Unreachable: no Ray Data, no Ray Jobs, dashboard disabled |
+| torch | 2 | 2.9.1 | Pinned by vLLM 0.15.0 | Unreachable: neither affected API is called |
+| xgrammar | 1 | 0.1.29 | Pinned by vLLM 0.15.0 | Unreachable: no structured-output request reaches vLLM |
+| diskcache | 1 | 5.6.3 | Pinned by vLLM 0.15.0; no fixed release | Unreachable: vLLM's outlines cache is never used |
+| datasets | 1 | 4.8.5 | The `paper` extra requires `<5` | Unreachable: no folder-based builder is used |
+| fsspec | 1 | 2026.2.0 | Capped by datasets 4.x | Unreachable: no reference filesystem is opened |
+| virtualenv | 1 | 21.14.5 | 21.14.7 needs packaging 26.3; the test group pins 25.0 | Unreachable: no virtualenv is created or activated |
+| setuptools | 1 | 78.1.1 | Audited build backend; vLLM 0.15.0 requires `<81` | Accepted: needs non-ASCII exclusions built on macOS APFS/HFS+; releases are built on Linux by the audited builder, which rejects unexpected sdist members |
+
+Dismiss each of the 47 alerts in GitHub with its reason and a comment that
+cites the code or document it relies on. Review the list again whenever the
+lock or the site stack changes. Requalifying on a newer site stack would close
+most of the vLLM alerts by upgrade.
 
 ## Adaptations that preserve ExaServe's contracts
 
@@ -96,8 +164,9 @@ service, new access token, or unreviewed deployment workflow is enabled.
   research findings are consolidated in `docs/`; the
   [path migration guide](path_migrations.md) explains historical aliases.
 - Preserve Python `>=3.10` package metadata while targeting Python 3.12 in CI,
-  as requested by the owner. The uv resolution envelope is Linux and Python 3.10–3.13 because
-  the existing optional vLLM extra excludes Python 3.14. This does not qualify
+  as requested by the owner. The uv resolution envelope is Linux and Python 3.11–3.13 because
+  the existing optional vLLM extra excludes Python 3.14 and Pillow 13.0.0, the
+  first release without its known advisories, requires Python 3.11. This does not qualify
   another interpreter, operating system, engine or accelerator.
 - Preserve existing server extras and site runtime pins. The default uv groups
   install portable development/test tools, not Ray, vLLM or PyTorch. The lock
@@ -140,18 +209,18 @@ After checking successful CI and the authenticated administrator's authority,
 apply it with GitHub CLI (or the equivalent authenticated REST request):
 
 ```bash
-gh api --method PUT repos/globus-labs/exaserve/branches/main/protection \
+gh api --method PUT repos/AI-ModCon/exaserve/branches/main/protection \
   --input .github/main-branch-protection.json
-gh api repos/globus-labs/exaserve/branches/main/protection
+gh api repos/AI-ModCon/exaserve/branches/main/protection
 ```
 
 The JSON file is a configuration input, not proof that protection is active.
-After transfer, read the destination's live settings and organization rules;
-reapply/reconcile the payload there if necessary, using the destination path.
+On 2026-10-21 `AI-ModCon/exaserve` had no branch protection and no rulesets,
+so the payload still has to be applied there.
 
-1. Confirm the destination repository name and transfer authority. Preserve
-   commit history, branches, tags, releases, issues and evidence links; do not
-   create a replacement history by copying files into an empty template repo.
+1. Done: the repository was transferred with its commit history, branches,
+   tags, issues and evidence links. Do not create a replacement history by
+   copying files into an empty template repository.
 2. Confirm the destination's Actions policy permits the pinned third-party
    actions in [CI](../.github/workflows/ci.yml). Use read-only workflow token
    permissions and do not expose privileged credentials to untrusted PR code.
@@ -167,16 +236,25 @@ reapply/reconcile the payload there if necessary, using the destination path.
    `packaged wheel test (not an editable checkout)`,
    `findings ledger validator`, and `format + lint + type + security`.
    Reconcile these names with the actual runs before enforcing the rule.
-5. Enable private vulnerability reporting if the organization uses it. The
-   published email route works independently of that GitHub feature; confirm
-   a responsible maintainer monitors it. Do not publish reports as issues.
-6. Update the live repository/documentation/issue URLs in `pyproject.toml`,
-   README, docs and community guidance to the confirmed destination. Current
-   links intentionally point to `globus-labs/exaserve`, not a presumed future
-   repository. Update maintainer contact details whenever ownership changes.
+5. Enable Dependabot security updates, secret scanning with push protection
+   and non-provider patterns, code security with CodeQL default setup, and
+   private vulnerability reporting. On 2026-10-21 all of these were disabled.
+   Dependabot security updates work on a private repository; the other features
+   are free on public repositories and need the organization's Secret Protection
+   or Code Security licenses while the repository is private. Let secret
+   scanning scan the full history before or immediately after the visibility
+   change and resolve its alerts. The published email route in
+   [SECURITY.md](../SECURITY.md) works independently of private reporting;
+   confirm a responsible maintainer monitors it. Do not publish reports as issues.
+6. Done: package metadata, README, documentation and community guidance name
+   `AI-ModCon/exaserve`. Update maintainer contact details whenever ownership
+   changes.
 7. Review any future package publishing separately: registry ownership, release
    evidence, protected environments and trusted publishing are distinct actions.
    Do not introduce a publish token or deploy-on-push workflow as part of transfer.
+8. Before changing visibility, review every branch and tag, not only `main`:
+   all of them become public with the repository. Delete branches that are no
+   longer needed, and record which tag, if any, is described as a release.
 
 ## Historical validation boundary (2026-09-23)
 
