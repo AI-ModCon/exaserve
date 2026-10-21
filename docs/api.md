@@ -146,9 +146,10 @@ parts; image, audio, video and token-ID inputs are rejected with HTTP 400. Only
 `temperature` (0 to 2), `top_p` (0 to 1), `max_tokens`, `min_tokens`, `stop` and
 `ignore_eos` are passed to vLLM's sampling parameters; other fields, such as
 `n`, `logprobs`, `response_format`, `structured_outputs`, `tools`, `cache_salt`
-and `prompt_embeds`, are ignored. A chat request may set `chat_template` and
-`chat_template_kwargs`, which the replica's tokenizer renders. The server
-generates every engine request ID. ExaServe does not run vLLM's
+and `prompt_embeds`, are ignored. A chat request cannot supply its own
+`chat_template` (HTTP 400); `chat_template_kwargs` may set variables for the
+served model's own template, except the arguments the server sets itself. The
+server generates every engine request ID. ExaServe does not run vLLM's
 OpenAI-compatible server.
 
 ## Installed command reference

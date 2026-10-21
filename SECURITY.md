@@ -52,11 +52,10 @@ trust; ExaServe does not check this.
 Model weights, `config.json`, tokenizer and chat-template files are trusted
 input and are treated like code. ExaServe loads them with
 `trust_remote_code=False`, Hugging Face offline mode and an architecture
-allowlist (`LlamaForCausalLM`, `GptOssForCausalLM`), but these checks are not
-a sandbox. Stage only models from sources you trust, and keep
-`model_storage_path` writable only by the operator. A chat request may also
-carry its own `chat_template`, which the serving replica renders; it is part
-of the trusted request surface.
+allowlist (`LlamaForCausalLM`, `GptOssForCausalLM`) that also pins each
+architecture's `model_type`, but these checks are not a sandbox. Stage only models from sources you trust, and keep
+`model_storage_path` writable only by the operator. Requests cannot supply
+their own chat template.
 
 Ray, vLLM, PyTorch and Transformers come from the qualified Aurora
 `frameworks/2025.3.1` module (see

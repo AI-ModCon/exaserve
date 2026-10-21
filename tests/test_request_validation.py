@@ -70,15 +70,28 @@ def test_messages_validation():
 
 def test_chat_template_options_are_typed_before_backend_expansion():
     validate_chat_options({})
-    validate_chat_options(
-        {"chat_template": "{{ messages }}", "chat_template_kwargs": {"tools": []}}
-    )
+    validate_chat_options({"chat_template": None, "chat_template_kwargs": {"tools": []}})
     for bad in (
-        {"chat_template": 7},
         {"chat_template_kwargs": []},
+        {"chat_template_kwargs": {1: "x"}},
     ):
         with pytest.raises(RequestValidationError):
             validate_chat_options(bad)
+
+
+def test_request_supplied_chat_templates_are_rejected():
+    for template in ("{{ messages }}", "", 7):
+        with pytest.raises(RequestValidationError, match="chat_template is not accepted"):
+            validate_chat_options({"chat_template": template})
+    for reserved in (
+        "conversation",
+        "chat_template",
+        "tokenize",
+        "add_generation_prompt",
+        "continue_final_message",
+    ):
+        with pytest.raises(RequestValidationError, match=f"cannot set {reserved}"):
+            validate_chat_options({"chat_template_kwargs": {reserved: "{{ messages }}"}})
 
 
 def test_completion_prompt_rejects_unimplemented_batch_forms():

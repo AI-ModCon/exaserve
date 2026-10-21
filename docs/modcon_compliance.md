@@ -38,7 +38,7 @@ records the exact source identity and individual check results:
   formatting, lint, typed-core and security checks passed.
 
 The optional Serve tests were also exercised with their real import-time
-dependencies in one allocated Aurora node (PBS job `8948216`):
+dependencies in one allocated Aurora node (PBS job `J095`):
 **152 focused unit tests passed**. The command was:
 
 ```bash
@@ -93,8 +93,8 @@ CI policy, plus outdated repository links and disabled security features.
 
 | Review item | Repository change | Still required |
 |---|---|---|
-| Operational details | Maintainer account paths, compute-node names, allocation-internal addresses and a reservation identifier redacted ([publication redaction](path_migrations.md#publication-redaction)); personal development scratchpad removed; reference card regenerated | Institutional decision on the details kept below |
-| Dependency alerts | Development lock refreshed; 45 of the 92 alerts close when the change reaches `main` | Dismiss the other 47 with the reasons below |
+| Operational details | Maintainer account paths, compute-node names, allocation-internal addresses, a reservation identifier and PBS job identifiers redacted ([publication redaction](path_migrations.md#publication-redaction)); the allocation name removed, with no default PBS account or project root left in code; personal development scratchpad removed; reference card regenerated | Institutional confirmation of the details kept below |
+| Dependency alerts | Development lock refreshed; 45 of the 92 alerts close when the change reaches `main`; request chat templates rejected and model types pinned | Dismiss the other 47 with the reasons below |
 | Review and CI enforcement | The [protection payload](../.github/main-branch-protection.json) already names the seven current CI checks and the required review settings | Apply it (step 3 below) and read it back |
 | Repository links | Package metadata, README, documentation and this checklist name `AI-ModCon/exaserve` | — |
 | Security features | Trust assumptions documented in [SECURITY.md](../SECURITY.md#deployment-trust-assumptions) | Enable them (step 5 below) |
@@ -102,27 +102,27 @@ CI policy, plus outdated repository links and disabled security features.
 
 ### Operational details kept for the disclosure decision
 
-These remain because code or evidence depends on them, or because they are the
-published contact:
+These remain because the reference `SiteProfile` needs them, or because they
+are the published contact:
 
-- Aurora site constants used by the reference `SiteProfile`, launchers and
-  evidence loaders: the `/home` and `/lus/flare` shared-filesystem roots, the
+- Aurora site names that ALCF's public user guides
+  ([argonne-lcf/user-guides](https://github.com/argonne-lcf/user-guides))
+  also print: the `/home` and `/lus/flare` shared-filesystem roots, the
   `.hsn.cm.aurora.alcf.anl.gov` high-speed-network domain, the
   `aurora-pbs-0001.hostmgmt.cm.aurora.alcf.anl.gov` PBS server name, the
   `aurora-uan-*` login-node pattern and the shared model-weights path
   `/lus/flare/projects/datasets/model-weights`.
-- The allocation name `AuroraGPT` as the default PBS account and project root
-  in `src/exaserve/config.py`, `src/exaserve/site.py`, `eval/site_config.py`,
-  `eval/lib/spec_io.py`, `eval/lib/models.py` and
-  `eval/lib/allocation_campaign.py`, and in tests and one example spec.
-- PBS job identifiers in historical records and in the paper-evidence loader
-  (`eval/lib/pp405b_evidence.py`, `eval/plot/pp405b_legacy_evidence.yaml`),
-  whose selections `eval/tests/test_spec_footguns.py` hashes.
 - Default home-directory layouts without an account name: `~/agpt/...` and
   `~/script/env_aurora` in `eval/site_config.py`, and `~/aurora_rayserver/tmp`
   in `eval/lib/allocation_campaign.py`.
 - The maintainer contact `wenyiw@uchicago.edu` in package metadata,
   SECURITY.md and the Code of Conduct.
+
+Hardening found while triaging the alerts, also part of this change: a request
+can no longer supply its own Jinja chat template (the resource-exhaustion
+pattern of CVE-2025-61620, which vLLM's own server refuses by default); staging
+rejects a model configuration whose `model_type` is not the reviewed type for
+its architecture; and the evaluation tools load tokenizers without remote code.
 
 ### Dependency alerts
 
@@ -141,7 +141,7 @@ paths that ExaServe uses and against the request surface in the
 | Package | Alerts | Locked | Why it stays | Disposition |
 |---|---:|---|---|---|
 | vllm | 31, one critical | 0.15.0 | Exact pin of the qualified `frameworks/2025.3.1` stack | 30 unreachable: ExaServe does not run vLLM's OpenAI server, passes only a text prompt and six validated sampling fields, and serves text-only Llama and GPT-OSS checkpoints; five of the 30 concern code that vLLM 0.15.0 does not contain. 1 accepted: a low-severity KV-block reuse defect |
-| transformers | 5 | 4.57.6 | Exact pin of the qualified stack and the `paper` extra | 4 unreachable: no Trainer, `save_pretrained`, custom generation or Hub kernels. 1 accepted: a malicious model configuration, covered by the trusted-model rule in SECURITY.md |
+| transformers | 5 | 4.57.6 | Exact pin of the qualified stack and the `paper` extra | Unreachable: no Trainer, `save_pretrained`, custom generation or Hub kernels, and staging rejects a configuration whose `model_type` would select another model class |
 | ray | 3 | 2.53.0 | Exact pin of the qualified stack | Unreachable: no Ray Data, no Ray Jobs, dashboard disabled |
 | torch | 2 | 2.9.1 | Pinned by vLLM 0.15.0 | Unreachable: neither affected API is called |
 | xgrammar | 1 | 0.1.29 | Pinned by vLLM 0.15.0 | Unreachable: no structured-output request reaches vLLM |

@@ -152,7 +152,7 @@ def fetch_sharegpt_natural(
         _log("sharegpt_natural: ERROR — `transformers` not importable (need frameworks env).")
         raise
     _log(f"sharegpt_natural: loading tokenizer {tokenizer_id}")
-    tok = AutoTokenizer.from_pretrained(tokenizer_id, trust_remote_code=True)
+    tok = AutoTokenizer.from_pretrained(tokenizer_id, trust_remote_code=False)
     tok.model_max_length = 100_000_000
     _log(f"sharegpt_natural: reading bank {sharegpt_path} (large; node-only)")
     with open(sharegpt_path, "r", encoding="utf-8") as fh:
