@@ -3,10 +3,10 @@
 - Follow [CONTRIBUTING.md](CONTRIBUTING.md) for development and review.
   [Getting started](docs/getting_started.md) owns environment preparation;
   do not assume maintainer-private scripts or home-directory layouts exist.
-- The [production-hardening plan](doc/PRODUCTION_HARDENING_EXECUTION_PLAN.md)
+- The [production-hardening plan](docs/PRODUCTION_HARDENING_EXECUTION_PLAN.md)
   is the architecture and implementation authority. Audits, TODOs and design
   drafts are context, not overrides. This file governs agent execution safety.
-- Check [hardening status](doc/hardening/STATUS.md) before making support claims.
+- Check [hardening status](docs/hardening/STATUS.md) before making support claims.
   Tests and historical runs do not qualify a changed artifact, platform or scale.
 - Preserve unrelated changes and historical evidence. Do not delete or overwrite
   logs, checkpoints or results without approval; use unique run directories.

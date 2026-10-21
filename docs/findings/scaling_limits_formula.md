@@ -78,7 +78,7 @@ For very fast models (latency < 10ms), the dispatch ceiling becomes the bottlene
 
 ## Data sources
 
-- Connection characterization: `clientlab/findings/client_dispatch_ceiling.md`
-- Multi-node profiling: `clientlab/findings/bottleneck_profiling.md`
-- Phase 0 server characterization: `clientlab/findings/phase0_server_characterization.md`
-- Weak-scaling results: `clientlab/findings/weakscaling_llama8b_v2.md`
+- Connection characterization: `docs/findings/client_dispatch_ceiling.md`
+- Multi-node profiling: `docs/findings/bottleneck_profiling.md`
+- Phase 0 server characterization: `docs/findings/phase0_server_characterization.md`
+- Weak-scaling results: `docs/findings/weakscaling_llama8b_v2.md`

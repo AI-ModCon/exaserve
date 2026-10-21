@@ -84,7 +84,7 @@ stale prose:
 - one scheduler abstraction and declared PSI/J dependency-when-selected;
 - removal of the legacy Bash lifecycle/readiness path; and
 - documented, path-independent, atomic reference-card regeneration. The
-  ignored template and two figure prerequisites are listed in `doc/exaserve.md`.
+  ignored template and two figure prerequisites are listed in `docs/exaserve.md`.
 
 For current release state, see `hardening/STATUS.md` and
 `hardening/FINAL_AUDIT.md`.

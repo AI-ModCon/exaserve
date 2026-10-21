@@ -30,8 +30,8 @@ single-controller bottleneck. ExaServe's final readiness processing is indexed,
 bounded, and does not fleet-poll, but it cannot remove or claim to solve
 upstream Ray behavior. Measure the exact release-v0.4.0 candidate at the approved
 boundary tier before setting a larger supported maximum. Refs:
-`findings/gcs_contention_quantitative.md` and
-`findings/proxyactor_death_cascade_256n.md`. Ledger: `KI-A3`, `IN_PROGRESS`.
+`docs/findings/gcs_contention_quantitative.md` and
+`docs/findings/proxyactor_death_cascade_256n.md`. Ledger: `KI-A3`, `IN_PROGRESS`.
 
 ### A7 / D2. Residual source-import and MPI activation cost — scale proof missing
 
@@ -91,7 +91,7 @@ about 0.04% errors and an explicitly bounded client topology. It replaced the
 confounded result in which one client per node hammered a single proxy. This is
 regression context, not final43 scale qualification and not evidence about
 streaming. Refs: `eval/specs/sc26workshop/FINDINGS_haproxy_256n.md` and
-`findings/weakscaling_short_v3_progress.md`.
+`docs/findings/weakscaling_short_v3_progress.md`.
 
 ### B3. LiteLLM fake streaming — resolved by typed timing semantics
 

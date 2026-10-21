@@ -15,7 +15,7 @@ engine ``create()`` methods:
   compiled-DAG env lives here, gated to XPU so it never leaks to CUDA/ROCm).
 - **GPUs-per-node default** (a site may override).
 
-Design doc: doc/design/vendor_site_abstraction.md
+Design doc: docs/design/vendor_site_abstraction.md
 
 IMPORTANT: only Intel XPU is validated (Aurora). CUDA and ROCm backends are
 implemented from vendor conventions but UNTESTED — see the per-class notes.

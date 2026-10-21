@@ -106,6 +106,7 @@ LOCAL_PREFIXES = (
     "artifacts/",
     "clientlab/",
     "doc/",
+    "docs/",
     "eval/",
     "examples/",
     "findings/",
@@ -145,6 +146,24 @@ def _local_reference_path(reference: str) -> str | None:
     value = value.split("::", 1)[0].split("#", 1)[0]
     value = re.sub(r":\d+(?::\d+)?$", "", value)
     return value
+
+
+def _resolve_local_reference(repo_root: Path, local_path: str) -> Path:
+    """Locate relocated documentation without rewriting historical evidence.
+
+    Ledger and qualification records retain their original paths and hashes.
+    Only the documentation roots moved; missing source/artifact references
+    must still fail the existing validation policy.
+    """
+    original = repo_root / local_path
+    if original.exists():
+        return original
+    if local_path == "findings/direct_stream_window_analysis.py":
+        return repo_root / "eval/scripts/direct_stream_window_analysis.py"
+    for old, new in (("doc/", "docs/"), ("findings/", "docs/findings/")):
+        if local_path.startswith(old):
+            return repo_root / (new + local_path[len(old) :])
+    return original
 
 
 def _validate_approval(record: Mapping[str, Any], rid: str, problems: list[str]) -> None:
@@ -190,7 +209,7 @@ def _validate_reference(
     value = reference.strip()
     local_path = _local_reference_path(value)
     if local_path is not None:
-        if not (repo_root / local_path).exists():
+        if not _resolve_local_reference(repo_root, local_path).exists():
             externally_retained = allow_missing_external_artifacts and local_path.startswith(
                 EXTERNAL_ARTIFACT_PREFIX
             )
@@ -427,7 +446,7 @@ def load_yaml_unique(stream) -> Any:
     return yaml.load(stream, Loader=UniqueKeyLoader)
 
 
-def main(path: str = "doc/hardening/FINDINGS.yaml") -> int:
+def main(path: str = "docs/hardening/FINDINGS.yaml") -> int:
     import yaml
 
     ledger_path = Path(path)

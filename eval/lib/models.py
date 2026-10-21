@@ -156,7 +156,7 @@ class ClientSpec:
     #   local  — its OWN node only. This is what "direct" means: no routing
     #            layer, no cross-node hop. THE DEFAULT.
     #   mesh   — hash-route across all N nodes. This was the accidental
-    #            historical behaviour (see doc/ and the direct_topology spec);
+    #            historical behaviour (see docs/ and the direct_topology spec);
     #            it makes every node stream to N remote peers and is a
     #            *different experiment*, kept only for studying that effect.
     #   paired — exactly one remote node (permutation): one peer, still remote.

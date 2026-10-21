@@ -1,5 +1,7 @@
 # Instrumentation Walkthrough — What's Patched, How It Fires, What It Measures
 
+Historical local paths below identify the original source/captures; those external or retired files are not distributed in this repository.
+
 Goal: step through the exact code paths our instrumentation touches so the
 numbers in [corrected_scaling_measurements.md](corrected_scaling_measurements.md),
 [section6_probes_evidence.md](section6_probes_evidence.md),
@@ -165,12 +167,12 @@ Both upstream `serve.run(target)` and this repo's decomposed
 `exaserve_serve.py` path wait for ingress deployment creation and
 application RUNNING by default. That waiting is controlled by the
 internal `_blocking: bool = True` parameter on
-[`_run(...)`](/opt/aurora/26.26.0/frameworks/exaserve_frameworks-2025.3.1/lib/python3.12/site-packages/ray/serve/api.py#L614),
+`_run(...)` (recorded local source: `/opt/aurora/26.26.0/frameworks/exaserve_frameworks-2025.3.1/lib/python3.12/site-packages/ray/serve/api.py#L614`),
 which `_run` passes through as `wait_for_applications_running=_blocking`
 to `client.deploy_applications`. The public `blocking: bool = False`
 parameter on `serve.run(...)` controls something **different** — whether,
 after the application is RUNNING, the call should `wait_for_interrupt()`
-and loop logging status until Ctrl-C'd ([api.py:732-733](/opt/aurora/26.26.0/frameworks/exaserve_frameworks-2025.3.1/lib/python3.12/site-packages/ray/serve/api.py#L732-L733)).
+and loop logging status until Ctrl-C'd (api.py:732-733 (recorded local source: `/opt/aurora/26.26.0/frameworks/exaserve_frameworks-2025.3.1/lib/python3.12/site-packages/ray/serve/api.py#L732-L733`)).
 So the readiness wait is **independent of the public `blocking`
 parameter**.
 
@@ -412,7 +414,7 @@ exaserve_serve.py driver process (head node, Python process #A)
 
 1. Allocate a new Python process (honoring `num_cpus=0` +
    `head_node_resource` from the `@ray.remote(...)` decorator —
-   [default_impl.py:225-235](/opt/aurora/26.26.0/frameworks/exaserve_frameworks-2025.3.1/lib/python3.12/site-packages/ray/serve/_private/default_impl.py#L225-L235)).
+   default_impl.py:225-235 (recorded local source: `/opt/aurora/26.26.0/frameworks/exaserve_frameworks-2025.3.1/lib/python3.12/site-packages/ray/serve/_private/default_impl.py#L225-L235`)).
 2. Start that process.
 3. Instantiate `ServeController(*args)` inside it. Because `__init__` is
    declared `async def`, Ray creates an asyncio event loop and runs
@@ -434,7 +436,7 @@ run_background_task(self.run_control_loop())     # ← kickoff
 ```
 
 `run_background_task(coro)`
-([ray/_common/utils.py:103](/opt/aurora/26.26.0/frameworks/exaserve_frameworks-2025.3.1/lib/python3.12/site-packages/ray/_common/utils.py#L103))
+(ray/_common/utils.py:103 (recorded local source: `/opt/aurora/26.26.0/frameworks/exaserve_frameworks-2025.3.1/lib/python3.12/site-packages/ray/_common/utils.py#L103`))
 is a thin wrapper around:
 
 ```python
@@ -447,7 +449,7 @@ So `run_control_loop` becomes a **background `asyncio.Task` on the same
 event loop** the controller uses for everything else. It runs
 concurrently with inbound RPC handlers.
 
-#### What the control loop does — [controller.py:416](../../.local/aurora/frameworks/2025.3.1/lib/python3.12/site-packages/ray/serve/_private/controller.py#L416)
+#### What the control loop does — controller.py:416 (recorded local source: `../../.local/aurora/frameworks/2025.3.1/lib/python3.12/site-packages/ray/serve/_private/controller.py#L416`)
 
 ```python
 async def run_control_loop(self) -> None:
@@ -521,8 +523,8 @@ probes is mediated by this one mechanism.
 
 **Two classes:**
 
-- **`LongPollHost`** ([long_poll.py:228](/opt/aurora/26.26.0/frameworks/exaserve_frameworks-2025.3.1/lib/python3.12/site-packages/ray/serve/_private/long_poll.py#L228)) — the publisher. Single instance inside the controller actor (created in [controller.py:147](../../.local/aurora/frameworks/2025.3.1/lib/python3.12/site-packages/ray/serve/_private/controller.py#L147)). Holds `object_snapshots: Dict[key, Any]`, `snapshot_ids: Dict[key, int]`, and a set of waiters per key. Methods: `notify_changed({key: new_value})` bumps the snapshot id and wakes waiters; `listen_for_change(snapshot_ids)` is the async RPC subscribers block on.
-- **`LongPollClient`** ([long_poll.py:71](/opt/aurora/26.26.0/frameworks/exaserve_frameworks-2025.3.1/lib/python3.12/site-packages/ray/serve/_private/long_poll.py#L71)) — the subscriber. Each instance takes a dict of `{key: callback}`, calls `host.listen_for_change.remote(my_snapshot_ids)` in a loop, and invokes the registered callback whenever the corresponding key updates. A proxy process can have more than one instance: the `ProxyActor` creates one for `ROUTE_TABLE` / `GLOBAL_LOGGING_CONFIG`, and router creation adds dedicated/shared clients for `DEPLOYMENT_TARGETS` / `DEPLOYMENT_CONFIG`.
+- **`LongPollHost`** (long_poll.py:228 (recorded local source: `/opt/aurora/26.26.0/frameworks/exaserve_frameworks-2025.3.1/lib/python3.12/site-packages/ray/serve/_private/long_poll.py#L228`)) — the publisher. Single instance inside the controller actor (created in controller.py:147 (recorded local source: `../../.local/aurora/frameworks/2025.3.1/lib/python3.12/site-packages/ray/serve/_private/controller.py#L147`)). Holds `object_snapshots: Dict[key, Any]`, `snapshot_ids: Dict[key, int]`, and a set of waiters per key. Methods: `notify_changed({key: new_value})` bumps the snapshot id and wakes waiters; `listen_for_change(snapshot_ids)` is the async RPC subscribers block on.
+- **`LongPollClient`** (long_poll.py:71 (recorded local source: `/opt/aurora/26.26.0/frameworks/exaserve_frameworks-2025.3.1/lib/python3.12/site-packages/ray/serve/_private/long_poll.py#L71`)) — the subscriber. Each instance takes a dict of `{key: callback}`, calls `host.listen_for_change.remote(my_snapshot_ids)` in a loop, and invokes the registered callback whenever the corresponding key updates. A proxy process can have more than one instance: the `ProxyActor` creates one for `ROUTE_TABLE` / `GLOBAL_LOGGING_CONFIG`, and router creation adds dedicated/shared clients for `DEPLOYMENT_TARGETS` / `DEPLOYMENT_CONFIG`.
 
 "*A proxy subscribes to `DEPLOYMENT_TARGETS`*" means: its `LongPollClient`
 has an entry like `{(DEPLOYMENT_TARGETS, deployment_id): some_callback}`
@@ -530,14 +532,14 @@ in its key listeners, so its outstanding `listen_for_change` RPC will
 return whenever the controller publishes a new `DeploymentTargetInfo`
 for that deployment.
 
-**The four namespaces** ([long_poll.py:42-49](/opt/aurora/26.26.0/frameworks/exaserve_frameworks-2025.3.1/lib/python3.12/site-packages/ray/serve/_private/long_poll.py#L42-L49)) are just enum keys:
+**The four namespaces** (long_poll.py:42-49 (recorded local source: `/opt/aurora/26.26.0/frameworks/exaserve_frameworks-2025.3.1/lib/python3.12/site-packages/ray/serve/_private/long_poll.py#L42-L49`)) are just enum keys:
 
 | Namespace | Payload | Who owns/publishes | Who subscribes |
 |---|---|---|---|
-| `ROUTE_TABLE` | `Dict[DeploymentID, EndpointInfo]` — ingress deployment → HTTP route | `EndpointState` inside the controller ([endpoint_state.py:48](/opt/aurora/26.26.0/frameworks/exaserve_frameworks-2025.3.1/lib/python3.12/site-packages/ray/serve/_private/endpoint_state.py#L48)) | `ProxyActor` ([proxy.py:1178](../../.local/aurora/frameworks/2025.3.1/lib/python3.12/site-packages/ray/serve/_private/proxy.py#L1178)) |
-| `DEPLOYMENT_TARGETS` | `DeploymentTargetInfo(is_available, running_replicas)` per deployment; key is compound `(DEPLOYMENT_TARGETS, deployment_id)` | `DeploymentState` inside the controller ([deployment_state.py:2252](../../.local/aurora/frameworks/2025.3.1/lib/python3.12/site-packages/ray/serve/_private/deployment_state.py#L2252), fired from `dsm.update()`'s s7_broadcast step) | `AsyncioRouter` instances per handle ([router.py:600, 1116](../../.local/aurora/frameworks/2025.3.1/lib/python3.12/site-packages/ray/serve/_private/router.py#L600)) |
-| `DEPLOYMENT_CONFIG` | `DeploymentConfig` (autoscaling, timeouts) per deployment | same as DEPLOYMENT_TARGETS ([deployment_state.py:2282](../../.local/aurora/frameworks/2025.3.1/lib/python3.12/site-packages/ray/serve/_private/deployment_state.py#L2282)) | same `AsyncioRouter` instances ([router.py:604](../../.local/aurora/frameworks/2025.3.1/lib/python3.12/site-packages/ray/serve/_private/router.py#L604)) |
-| `GLOBAL_LOGGING_CONFIG` | single cluster-wide `LoggingConfig` | `ServeController` directly ([controller.py:253](../../.local/aurora/frameworks/2025.3.1/lib/python3.12/site-packages/ray/serve/_private/controller.py#L253)) | `ProxyActor` ([proxy.py:1177](../../.local/aurora/frameworks/2025.3.1/lib/python3.12/site-packages/ray/serve/_private/proxy.py#L1177)) |
+| `ROUTE_TABLE` | `Dict[DeploymentID, EndpointInfo]` — ingress deployment → HTTP route | `EndpointState` inside the controller (endpoint_state.py:48 (recorded local source: `/opt/aurora/26.26.0/frameworks/exaserve_frameworks-2025.3.1/lib/python3.12/site-packages/ray/serve/_private/endpoint_state.py#L48`)) | `ProxyActor` (proxy.py:1178 (recorded local source: `../../.local/aurora/frameworks/2025.3.1/lib/python3.12/site-packages/ray/serve/_private/proxy.py#L1178`)) |
+| `DEPLOYMENT_TARGETS` | `DeploymentTargetInfo(is_available, running_replicas)` per deployment; key is compound `(DEPLOYMENT_TARGETS, deployment_id)` | `DeploymentState` inside the controller (deployment_state.py:2252 (recorded local source: `../../.local/aurora/frameworks/2025.3.1/lib/python3.12/site-packages/ray/serve/_private/deployment_state.py#L2252`), fired from `dsm.update()`'s s7_broadcast step) | `AsyncioRouter` instances per handle (router.py:600, 1116 (recorded local source: `../../.local/aurora/frameworks/2025.3.1/lib/python3.12/site-packages/ray/serve/_private/router.py#L600`)) |
+| `DEPLOYMENT_CONFIG` | `DeploymentConfig` (autoscaling, timeouts) per deployment | same as DEPLOYMENT_TARGETS (deployment_state.py:2282 (recorded local source: `../../.local/aurora/frameworks/2025.3.1/lib/python3.12/site-packages/ray/serve/_private/deployment_state.py#L2282`)) | same `AsyncioRouter` instances (router.py:604 (recorded local source: `../../.local/aurora/frameworks/2025.3.1/lib/python3.12/site-packages/ray/serve/_private/router.py#L604`)) |
+| `GLOBAL_LOGGING_CONFIG` | single cluster-wide `LoggingConfig` | `ServeController` directly (controller.py:253 (recorded local source: `../../.local/aurora/frameworks/2025.3.1/lib/python3.12/site-packages/ray/serve/_private/controller.py#L253`)) | `ProxyActor` (proxy.py:1177 (recorded local source: `../../.local/aurora/frameworks/2025.3.1/lib/python3.12/site-packages/ray/serve/_private/proxy.py#L1177`)) |
 
 The long-poll snapshots live **inside the controller actor process**.
 Checkpointed target state, endpoint routes, and controller config are
@@ -664,8 +666,8 @@ separate thread or process.
 
 The closest thing to a "spawning event" is:
 
-1. `controller_impl.remote(...)` at [api.py:94](/opt/aurora/26.26.0/frameworks/exaserve_frameworks-2025.3.1/lib/python3.12/site-packages/ray/serve/_private/api.py#L94) — spawns the controller **process** (Ray raylet side).
-2. `run_background_task(self.run_control_loop())` at [controller.py:230](../../.local/aurora/frameworks/2025.3.1/lib/python3.12/site-packages/ray/serve/_private/controller.py#L230) — schedules the control loop **coroutine** onto the process's existing event loop.
+1. `controller_impl.remote(...)` at api.py:94 (recorded local source: `/opt/aurora/26.26.0/frameworks/exaserve_frameworks-2025.3.1/lib/python3.12/site-packages/ray/serve/_private/api.py#L94`) — spawns the controller **process** (Ray raylet side).
+2. `run_background_task(self.run_control_loop())` at controller.py:230 (recorded local source: `../../.local/aurora/frameworks/2025.3.1/lib/python3.12/site-packages/ray/serve/_private/controller.py#L230`) — schedules the control loop **coroutine** onto the process's existing event loop.
 
 ## 5. Mapping the timing numbers to code lines (clean, run21)
 
@@ -784,7 +786,7 @@ Event stats:
 - **Execution time** = handler code duration.
 - **Queueing time** = how long the RPC waited in the dispatch queue before the handler started.
 
-Our [parse_gcs_event_stats.py](../eval/tools/parse_gcs_event_stats.py) parses
+Our [parse_gcs_event_stats.py](../../eval/tools/parse_gcs_event_stats.py) parses
 these into a time-series CSV and peak summary. Because the stats are
 collected by Ray itself (not by us), this view has **zero instrumentation
 overhead** and is available in every run including run16 baseline.

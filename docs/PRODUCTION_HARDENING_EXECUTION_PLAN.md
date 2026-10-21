@@ -5,7 +5,7 @@
 **Last reconciled:** 2026-08-07 after completion-claim audit and cutover-question
 adjudication
 
-**Companion audit:** `doc/PRODUCTION_READINESS_AUDIT.md`
+**Companion audit:** `docs/PRODUCTION_READINESS_AUDIT.md`
 
 **Scope:** Core serving, cluster launch, readiness, compatibility patches,
 model staging, gateways, schedulers, evaluation, ClientLab, observability,
@@ -24,19 +24,19 @@ the documents have the following precedence:
    permissions, allocation acquisition, and where commands may run.
 2. This execution plan governs architecture, work ordering, acceptance gates,
    fallback selection, evidence, and the definition of completion.
-3. After WP0 creates it, `doc/hardening/FINDINGS.yaml` is the authoritative
+3. After WP0 creates it, `docs/hardening/FINDINGS.yaml` is the authoritative
    status/evidence ledger. It may track disposition but may not weaken an
    invariant or gate in this plan.
-4. `doc/PRODUCTION_READINESS_AUDIT.md` is the corrected finding/evidence
-   register. `doc/PRODUCTION_READINESS_CLAUDE_AUDIT.md` is historical
-   adjudication; `doc/KNOWN_ISSUES.md`, `doc/TODO.md`, and `findings/` are
+4. `docs/PRODUCTION_READINESS_AUDIT.md` is the corrected finding/evidence
+   register. `docs/PRODUCTION_READINESS_CLAUDE_AUDIT.md` is historical
+   adjudication; `docs/KNOWN_ISSUES.md`, `docs/TODO.md`, and `docs/findings/` are
    empirical/backlog inputs, not implementation-order instructions.
-5. `doc/PLAN_FEASIBILITY_CLAUDE.md` is advisory sizing and program-risk
+5. `docs/PLAN_FEASIBILITY_CLAUDE.md` is advisory sizing and program-risk
    commentary only. It cannot waive, reorder, narrow, or replace a requirement
    in this plan.
 
 If two documents disagree, the higher-precedence document wins. The worker
-must record the conflict in `doc/hardening/MIGRATION_LOG.md`; it must not
+must record the conflict in `docs/hardening/MIGRATION_LOG.md`; it must not
 silently choose the easier interpretation. A safety rule always wins over an
 implementation rule.
 Audit line numbers are revision-local evidence hints: before editing, relocate
@@ -371,7 +371,7 @@ runtime.
 #### 3.2.1 Binding cutover resolutions (2026-08-07)
 
 This subsection resolves every question in
-`doc/hardening/QUESTIONS_FOR_CODEX_2026-08-07.md`. These are implementation
+`docs/hardening/QUESTIONS_FOR_CODEX_2026-08-07.md`. These are implementation
 requirements, not alternative designs from which the worker may choose. The
 worker must continue the ordered cutover without waiting for another
 architecture answer. Evidence-derived production timeout values, the current
@@ -1244,8 +1244,8 @@ execution instructions, not optional advice:
    configuration, or error protocol to consumers.
 7. Run targeted tests and the cumulative login-node-safe suite after every
    slice. Test work starts in WP0; WP11 completes the global packaging/CI gate.
-8. Update `doc/hardening/FINDINGS.yaml`, the relevant ADR,
-   `doc/hardening/MIGRATION_LOG.md`, and evidence links in the same slice. Do
+8. Update `docs/hardening/FINDINGS.yaml`, the relevant ADR,
+   `docs/hardening/MIGRATION_LOG.md`, and evidence links in the same slice. Do
    not defer documentation until the end.
 9. Advance only when the slice and work-package gates pass. A failed preferred
    option means continue down the recorded fallback ladder, not silently retain
@@ -1257,7 +1257,7 @@ execution instructions, not optional advice:
     validation.
 
 Every temporary migration switch is registered in
-`doc/hardening/MIGRATION_LOG.md` with its owner, old and new paths, default
+`docs/hardening/MIGRATION_LOG.md` with its owner, old and new paths, default
 state, two-state tests, introduction slice, cutover gate, and mandatory WP13
 removal. Until the user confirms an evaluation
 campaign/data-freeze boundary, existing eval result schemas and the legacy path
@@ -1383,7 +1383,7 @@ mark the underlying mechanism `FIXED` merely because the larger tier is
 excluded, and—after the scope is approved—do not leave it `IN_PROGRESS` solely
 awaiting hardware outside that approved envelope.
 
-Deliverable: `doc/hardening/decisions/ADR-000-production-envelope.md`.
+Deliverable: `docs/hardening/decisions/ADR-000-production-envelope.md`.
 
 #### S01 — Process boundary and supervisor
 
@@ -1407,7 +1407,7 @@ two-node proof must kill a worker Ray child, a worker supervisor, and the contro
 connection in turn, then verify nonzero terminal status, bounded cleanup,
 watchdog behavior, and causal evidence.
 
-Deliverable: `doc/hardening/decisions/ADR-001-process-boundaries.md`.
+Deliverable: `docs/hardening/decisions/ADR-001-process-boundaries.md`.
 
 #### S02 — Readiness authority
 
@@ -1427,7 +1427,7 @@ implementation. Reject any design that polls `nodes * replicas`, performs one
 external canary per replica through load balancing, or lets a replica-local
 `/health` response certify the fleet.
 
-Deliverable: `doc/hardening/decisions/ADR-002-readiness-authority.md`.
+Deliverable: `docs/hardening/decisions/ADR-002-readiness-authority.md`.
 
 #### S03 — Compatibility delivery across process lifecycles
 
@@ -1453,7 +1453,7 @@ process. The two-node proof must show matching supervisor, Ray head/worker,
 affected Serve actor, and replica receipts, plus fail-closed behavior for a
 missing or mismatched receipt.
 
-Deliverable: `doc/hardening/decisions/ADR-003-compatibility-delivery.md`.
+Deliverable: `docs/hardening/decisions/ADR-003-compatibility-delivery.md`.
 
 The security boundary and initial supported compatibility envelope are WP0
 decisions because WP1 must encode them in the immutable plan schema.
@@ -2276,7 +2276,7 @@ zero or more validation packages.
 Maintain these artifacts throughout the pass:
 
 ```text
-doc/hardening/
+docs/hardening/
   BASELINE.md
   FINDINGS.yaml
   COMPATIBILITY_MATRIX.md

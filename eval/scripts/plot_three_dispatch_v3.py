@@ -478,7 +478,7 @@ def main() -> int:
     out = (
         sys.argv[1]
         if len(sys.argv) > 1
-        else str(REPO_ROOT / "findings/weakscaling_three_dispatch_v3.png")
+        else str(REPO_ROOT / "docs/findings/weakscaling_three_dispatch_v3.png")
     )
     fig.savefig(out, dpi=200, bbox_inches="tight", facecolor="white", edgecolor="none")
     plt.close(fig)

@@ -16,12 +16,9 @@ include src/exaserve/py.typed
 prune benchmarks
 prune clientlab
 prune eval
-prune findings
+prune docs
 prune plot
 prune tools
 exclude .codex
 exclude .gitignore
 exclude AGENTS.md
-exclude doc/OBJECTIVES.md
-exclude doc/TODO.md
-exclude note.txt

@@ -23,7 +23,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 
-LEDGER = ROOT / "doc/hardening/FINDINGS.yaml"
+LEDGER = ROOT / "docs/hardening/FINDINGS.yaml"
 
 CANONICAL_FIELDS = (
     "id",
@@ -268,7 +268,7 @@ STATIC_EVIDENCE = {
         "tests/test_generated_overlay.py",
         "tests/test_compat_activation.py",
         "tests/test_receipt_chain.py",
-        "doc/hardening/decisions/ADR-003-compatibility-delivery.md",
+        "docs/hardening/decisions/ADR-003-compatibility-delivery.md",
     ],
     "AC-RDY-01": [
         "tests/test_plan_readiness.py",
@@ -333,8 +333,8 @@ STATIC_EVIDENCE = {
         "tests/test_no_readiness_marker_consumers.py",
     ],
     "AC-SCALE-01": [
-        "doc/hardening/decisions/ADR-000-production-envelope.md",
-        "doc/hardening/COMPATIBILITY_MATRIX.md",
+        "docs/hardening/decisions/ADR-000-production-envelope.md",
+        "docs/hardening/COMPATIBILITY_MATRIX.md",
         "tests/test_scale_qualification_harness.py",
         "tests/test_scale_adjudication.py",
     ],
@@ -1901,7 +1901,7 @@ def _normalize(record: dict[str, Any]) -> dict[str, Any]:
         regions = (
             [str(regions).strip()]
             if str(regions or "").strip()
-            else ["doc/PRODUCTION_READINESS_AUDIT.md"]
+            else ["docs/PRODUCTION_READINESS_AUDIT.md"]
         )
     acceptance = record.get("acceptance_tests")
     if not isinstance(acceptance, list):

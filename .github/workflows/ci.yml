@@ -220,6 +220,8 @@ jobs:
         with:
           python-version: "3.12"
       - run: python -m pip install pip==26.2.1 && pip install -r requirements/ci.lock
+      - name: Check documentation links against tracked repository paths
+        run: python scripts/check_documentation_links.py
       - name: Ruff format (release-gating)
         run: ruff format --check .
       - name: Ruff (correctness-critical rules — release-gating)

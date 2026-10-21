@@ -145,7 +145,7 @@ def require(capability: str) -> Any:
                     f"capability {capability!r} is unavailable: "
                     f"{symbol.module}.{symbol.attr} is missing on this stack. "
                     f"ExaServe needs it because {symbol.why} "
-                    "Pin a supported version (doc/hardening/COMPATIBILITY_MATRIX.md) "
+                    "Pin a supported version (docs/hardening/COMPATIBILITY_MATRIX.md) "
                     "or declare a new compatibility profile."
                 )
             return resolved
@@ -170,7 +170,7 @@ def verify(strict: bool = True) -> dict:
         raise PrivateApiUnavailable(
             "private API drift detected; ExaServe cannot run on this stack. "
             f"Missing: {sorted(missing_required)}. "
-            "See doc/hardening/COMPATIBILITY_MATRIX.md."
+            "See docs/hardening/COMPATIBILITY_MATRIX.md."
         )
     return results
 

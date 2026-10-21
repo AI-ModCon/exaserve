@@ -85,6 +85,60 @@ def test_fixed_requires_existing_durable_evidence(tmp_path):
     assert any("local reference does not exist" in p for p in problems)
 
 
+@pytest.mark.parametrize(
+    ("reference", "destination"),
+    [
+        ("docs/hardening/proof.md", "docs/hardening/proof.md"),
+        ("doc/hardening/proof.md:12", "docs/hardening/proof.md"),
+        ("doc/hardening/proof.md#result", "docs/hardening/proof.md"),
+        ("findings/proof.md", "docs/findings/proof.md"),
+        (
+            "findings/direct_stream_window_analysis.py",
+            "eval/scripts/direct_stream_window_analysis.py",
+        ),
+    ],
+)
+def test_relocated_documentation_resolves_without_rewriting_evidence(
+    tmp_path, reference, destination
+):
+    proof = tmp_path / destination
+    proof.parent.mkdir(parents=True)
+    proof.write_text("retained evidence\n")
+    record = _record(affected_regions=[reference], evidence=[reference])
+    before = deepcopy(record)
+
+    assert _problems(record, tmp_path=tmp_path) == []
+    assert record == before
+
+
+@pytest.mark.parametrize("reference", ["doc/missing.md", "findings/missing.md", "docs/missing.md"])
+def test_relocated_documentation_still_requires_an_existing_target(tmp_path, reference):
+    problems = _problems(
+        _record(affected_regions=[reference], evidence=[reference]), tmp_path=tmp_path
+    )
+    assert any("local reference does not exist" in problem for problem in problems)
+
+
+def test_documentation_relocation_never_substitutes_for_a_source_file(tmp_path):
+    impostor = tmp_path / "docs/src/missing.py"
+    impostor.parent.mkdir(parents=True)
+    impostor.write_text("not source evidence\n")
+
+    problems = _problems(_record(evidence=["src/missing.py"]), tmp_path=tmp_path)
+    assert any("local reference does not exist" in problem for problem in problems)
+
+
+def test_original_documentation_reference_remains_valid(tmp_path):
+    original = tmp_path / "doc/proof.md"
+    original.parent.mkdir()
+    original.write_text("original checkout\n")
+
+    assert (
+        _problems(_record(affected_regions=["doc/proof.md"], evidence=["doc/proof.md"]), tmp_path)
+        == []
+    )
+
+
 def _external_archive_document(record):
     return {
         "meta": {

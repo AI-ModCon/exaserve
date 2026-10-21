@@ -1,7 +1,7 @@
 # API reference
 
 This is a manual reference to the public planning and status boundaries. The
-[execution plan](../doc/PRODUCTION_HARDENING_EXECUTION_PLAN.md) remains the
+[execution plan](PRODUCTION_HARDENING_EXECUTION_PLAN.md) remains the
 architecture contract. Private helpers and process-supervisor internals are not
 alternate extension points.
 

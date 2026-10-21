@@ -112,7 +112,7 @@ unset ONEAPI_DEVICE_SELECTOR
 The serving profile records Python 3.12.12, Ray 2.53.0 and vLLM 0.15.0+xpu.
 Compare the loaded module with the
 [site dependency record](../requirements/aurora-frameworks-2025.3.1.lock) and
-[compatibility matrix](../doc/hardening/COMPATIBILITY_MATRIX.md). The unversioned
+[compatibility matrix](hardening/COMPATIBILITY_MATRIX.md). The unversioned
 module name can change; a version mismatch requires an approved runtime update,
 not bypassing compatibility checks. These are site-built distributions, not
 a public-PyPI installation recipe.
@@ -225,7 +225,7 @@ qualified.
 
 ### Before the first run
 
-Read [usage](usage.md) and [hardening status](../doc/hardening/STATUS.md).
+Read [usage](usage.md) and [hardening status](hardening/STATUS.md).
 Production admission is fail-closed; `production execution is not qualified`
 is a qualification gate, not a request to bypass checks. Only predeclared,
 authorized validation work may enable `validation_mode`.

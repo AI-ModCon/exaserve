@@ -79,7 +79,7 @@ def test_release_builder_stages_only_declared_inputs(tmp_path):
     observed = {path.relative_to(staged).as_posix() for path in staged.rglob("*") if path.is_file()}
     assert observed == set(expected)
     assert not (staged / "src/exaserve.egg-info").exists()
-    assert not (staged / "doc").exists()
+    assert not (staged / "docs").exists()
     assert not (staged / "scripts").exists()
     assert (staged / "src/exaserve/resources/vllm_modelinfo/manifest.json").is_file()
     for name in ("LICENSE", "NOTICE", "uv.lock", "CONTRIBUTING.md", "SECURITY.md"):

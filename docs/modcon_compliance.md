@@ -91,8 +91,10 @@ service, new access token, or unreviewed deployment workflow is enabled.
 ## Adaptations that preserve ExaServe's contracts
 
 - Keep `src/exaserve`, rather than moving the package to match the example
-  layout. Keep `doc/PRODUCTION_HARDENING_EXECUTION_PLAN.md` authoritative and
-  retain historical artifact paths. `docs/` is an onboarding/navigation layer.
+  layout. Keep `docs/PRODUCTION_HARDENING_EXECUTION_PLAN.md` authoritative and
+  retain historical artifact identities. Guides, design, hardening records and
+  research findings are consolidated in `docs/`; the
+  [path migration guide](path_migrations.md) explains historical aliases.
 - Preserve Python `>=3.10` package metadata while targeting Python 3.12 in CI,
   as requested by the owner. The uv resolution envelope is Linux and Python 3.10–3.13 because
   the existing optional vLLM extra excludes Python 3.14. This does not qualify

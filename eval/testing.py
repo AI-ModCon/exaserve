@@ -4,7 +4,7 @@ These are referenced by dotted path from experiment specs (e.g.
 ``trace.tokenizer_builder: eval.testing:whitespace_tokenizer_map``) so that
 hermetic tests never load real tokenizers or touch the network, including
 inside forkserver trace-materialization workers (WP0 baseline repair; see
-doc/hardening/BASELINE.md F-01..F-06).
+docs/hardening/BASELINE.md F-01..F-06).
 """
 
 from __future__ import annotations

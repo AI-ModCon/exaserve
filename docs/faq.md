@@ -54,7 +54,7 @@ not fabricated interactive sessions. See [usage](usage.md).
 The configuration is subject to the selected `SiteProfile` and exact-candidate
 qualification gates. Installation, portable tests, an implemented adapter, or a
 historical hardware run do not satisfy those gates. Read
-[hardening status](../doc/hardening/STATUS.md), including supersession notices.
+[hardening status](hardening/STATUS.md), including supersession notices.
 Only authorized, predeclared validation may use `validation_mode: true`; it is
 not a general workaround for an admission failure.
 
@@ -65,8 +65,8 @@ results, and a production-qualified envelope are different things. Qualification
 is tied to the exact artifact, site/runtime profile, topology, exposure, and
 workload dimensions. A different platform or backend requires its own evidence
 and admission profile. See the
-[site/vendor design](../doc/design/vendor_site_abstraction.md) and
-[unsupported-platform qualification guide](../doc/deploy_slurm_amd.md).
+[site/vendor design](design/vendor_site_abstraction.md) and
+[unsupported-platform qualification guide](deploy_slurm_amd.md).
 
 ## Why is my scheduler job running but ExaServe is not READY?
 
@@ -112,11 +112,11 @@ ExaServe is distributed under the [Apache License 2.0](../LICENSE). See
 [NOTICE](../NOTICE) for project attribution information. Dependencies remain
 subject to their own licenses.
 
-## Why are there both docs/ and doc/ directories?
+## Why are there both docs/ and docs/ directories?
 
 `docs/` is the public getting-started, usage, and API entry point. The existing
-`doc/` directory retains architecture, hardening decisions, audits, and evidence
-context. The [execution plan](../doc/PRODUCTION_HARDENING_EXECUTION_PLAN.md) is
+`docs/` directory retains architecture, hardening decisions, audits, and evidence
+context. The [execution plan](PRODUCTION_HARDENING_EXECUTION_PLAN.md) is
 the sole architecture and implementation specification, while
 [AGENTS.md](../AGENTS.md) controls operational safety. The two directories are
 linked rather than competing specifications.

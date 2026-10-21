@@ -3,7 +3,7 @@
 This directory contains offline validation and release-evidence utilities. It
 does **not** contain a deployment launcher. Production lifecycle ownership is
 entirely in the typed Python composition root and supervisors described in
-`doc/PRODUCTION_HARDENING_EXECUTION_PLAN.md`.
+`docs/PRODUCTION_HARDENING_EXECUTION_PLAN.md`.
 
 ## Intentional shell boundary
 

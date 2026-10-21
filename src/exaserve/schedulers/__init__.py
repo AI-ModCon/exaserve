@@ -12,7 +12,7 @@ available. Install PSI/J with the ``scheduler`` extra
 (``pip install exaserve[scheduler]``). To add a scheduler, implement
 ``SchedulerBackend`` (base.py) and register it below.
 
-Design doc: doc/design/scheduler_abstraction.md
+Design doc: docs/design/scheduler_abstraction.md
 """
 
 from __future__ import annotations
