@@ -61,7 +61,7 @@ and backend logs at `<cell>/logs/backend`; accepted output is under
 `<cell>/results`. No queue, walltime, source, node-count or frozen-bundle
 override is permitted.
 
-Queued starts use the Aurora skill's `wait_for_job.sh` with explicit limits:
+Queued starts are watched by a job-wait helper with explicit limits:
 10,800 seconds for debug-scaling and 604,800 seconds for prod. While running,
 inspect stdout/stderr and canonical state for early failure and walltime
 margin; queued time itself is not failure.

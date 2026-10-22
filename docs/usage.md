@@ -173,7 +173,7 @@ a finite physical allocation campaign. It currently has
 [operator-specific bootstrap limitations](getting_started.md#current-bootstrap-limitations)
 and does not honor the ordinary eval environment override. Its WP12 isolation proof and
 qualification requirements still apply. Report physical allocation nodes and
-logical child nodes separately; this is not a keepalive or fabricated lease.
+logical child nodes separately; this is not a held or fabricated lease.
 
 ## ClientLab studies
 

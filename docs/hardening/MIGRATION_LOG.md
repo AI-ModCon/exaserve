@@ -115,8 +115,8 @@ allocation lease).
   to files); failure scenarios need an acting-rank parameter.
 - `exaserve/control/transport.py` — added `wait_disconnected()` /
   `drop_connection()` (rank watchdog inputs).
-- Compute: no keepalive running → self-allocated 2-node debug sleep job
-  **J035** (skill fallback recipe); WP12 gate rows recorded in
+- Compute: no held allocation available → 2-node debug allocation
+  **J035**; WP12 gate rows recorded in
   `artifacts/hardening/EXPERIMENT_PLAN.md` (S01-2N, S02-2N, S03-1N-SPAWN,
   S03-2N-RECEIPTS) before any gate runs.
 

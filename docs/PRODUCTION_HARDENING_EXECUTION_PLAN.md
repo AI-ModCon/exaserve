@@ -2123,7 +2123,7 @@ small isolation proof below passes.
   controller's sealed source identity, exact child artifact hashes, finite
   budgets, and required qualification evidence. Its scheduler body only prepares
   the environment and execs the Python controller. Do not start or manage
-  keepalive, disguise a data job as `debug-*`, or create SSH launch fan-out.
+  allocation-holding jobs, disguise a data job as `debug-*`, or create SSH launch fan-out.
 - The native batch head is the sole controller and shared-filesystem reader.
   Preserve the original PBS job/PALS environment and physical node inventory;
   select an explicit exact subset containing that same head, and supply its

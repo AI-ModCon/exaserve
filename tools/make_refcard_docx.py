@@ -376,7 +376,7 @@ blocks.append(
     body_par(
         "One-time extras: build HAProxy with scripts/build_haproxy.sh for the production "
         "gateway; build the evaluation load generator with "
-        "module load go && bash eval/go_client/build.sh."
+        "module load go && make -C eval/go_client."
     )
 )
 
@@ -631,7 +631,7 @@ blocks.append(
         "The deployment exposes the standard OpenAI API, so any compatible client works unchanged "
         "— LangChain’s ChatOpenAI, Academy LLM agents, litellm, or the openai SDK — "
         "by pointing the usual environment variables at the service URL. This makes the framework "
-        "the self-hosted, on-machine complement to a hosted gateway such as MAG: the same agent "
+        "the self-hosted, on-machine complement to a hosted inference gateway: the same agent "
         "code runs against either.",
         after=60,
     )

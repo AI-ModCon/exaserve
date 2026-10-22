@@ -531,7 +531,7 @@ exactly what the plan forbids, the substitution was checked directly:
 | final42 vs final43 campaign `result.json` (7 cells) | all 7 distinct files |
 | wheel hash recorded *inside* each final43 receipt | `1041be53eb5b` in all 7 — the new wheel, not the old |
 | campaign start times | final42 ≈ `1786304154–1786305012`; final43 ≈ `1786311948–1786312807` (~2h10m later, sequential over ~14 min) |
-| two-node real receipt physical hosts | `x4303c4s1b0`, `x4310c4s0b0`; verdict `true` |
+| two-node real receipt physical hosts | `node-10-4-1`, `node-13-4-0`; verdict `true` |
 | experiment plan predeclared before first result | `21:45:05` vs `21:47:02` |
 
 These are new hardware runs against the new wheel, not renamed final42

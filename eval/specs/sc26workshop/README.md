@@ -1,8 +1,8 @@
 # SC26 workshop — experiment suite
 
 The complete spec set for the paper's Performance Characterization section.
-Cross-references `~/sc26workshop/plan/plan_exp.md` §9 (the experiment checklist);
-every checklist run-item has exactly one spec here.
+Every run item of the paper's experiment checklist, which is kept with the
+paper's planning notes rather than in this repository, has exactly one spec here.
 
 ## Layout
 
@@ -139,7 +139,7 @@ cell ≈ bring-up + 13.5 min. Each cell is its own PBS job (no cluster reuse).
 | **Total** | **~300 node·h** | **~1 k node·h ex-Set 3; 3–5 k with Set 3** |
 
 Queue routing actually used (per-user limits: capacity max 5 queued / 2 run,
-debug & debug-scaling max 1 run each, **global ~5 queued cap across queues**):
+debug & debug-scaling max 1 run each):
 **N≤16 → capacity** (2 parallel), **N=64,128 → debug-scaling** (1h, serialized),
 **N≥256 → prod**. 256n streaming with `num_runs=3` ≈ 50–60 min, so **2:30 walltime**
 acquires far faster than 6h on a congested prod. NOTE: 256n runs are

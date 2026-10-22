@@ -522,7 +522,7 @@ def test_worker_descriptor_rejects_shared_argv_and_missing_no_user_site(tmp_path
             environment={
                 "PYTHONNOUSERSITE": "1",
                 "PYTHONSAFEPATH": "1",
-                "PBS_NODEFILE": "/home/user/.aurora_leases/nodes",
+                "PBS_NODEFILE": "/home/user/allocation/nodes",
             },
             policy=_plan(),
         )

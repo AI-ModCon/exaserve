@@ -618,7 +618,7 @@ def _validated_scale_nodes(expected: int, *, acquisition_source: str) -> tuple[s
     if not job_id or not nodefile or not os.path.isfile(nodefile):
         raise RuntimeError("a readable PBS_NODEFILE and PBS_JOBID are required")
     if os.environ.get("AURORA_SUBJOB") == "1":
-        raise RuntimeError("batch_pbs was declared inside a subjob lease")
+        raise RuntimeError("batch_pbs was declared inside an allocation lease")
     if os.environ.get("PBS_ENVIRONMENT") != "PBS_BATCH":
         raise RuntimeError("batch_pbs qualification requires PBS_ENVIRONMENT=PBS_BATCH")
     with open(nodefile, encoding="utf-8") as handle:

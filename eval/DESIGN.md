@@ -40,7 +40,7 @@ python3 -m eval.cli run execute <run.yaml> [--dry-run]
 ```
 
 Materialized scheduler scripts invoke `run execute` directly. Old
-`run_exp.sh`, sequential submission shells, keepalive scripts, and duplicated
+`run_exp.sh`, sequential submission shells, allocation-holding scripts, and duplicated
 eval scheduler classes have been removed.
 
 ## Runtime rules

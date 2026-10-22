@@ -51,7 +51,7 @@ reads occur on the login node; model, Ray, MPI and replay execution do not.
 Logs are under `<cell>/logs/pbs/{stdout,stderr}` and outputs under
 `<cell>/results`.
 
-The provided Aurora `wait_for_job.sh` is monitoring PBS `J083` with the
+A job-wait helper is monitoring PBS `J083` with the
 explicit capacity start-wait bound of 604800 seconds. Queued time is not an
 execution failure. Once running, stdout/stderr, canonical state and remaining
 walltime are inspected for early failures.
@@ -142,15 +142,15 @@ The canonical command submitted PBS
 `2026-09-09 21:50:53 UTC`; the scheduler name is `es-d6c3ff1f758b`.
 Post-submit canonical state is `SUBMITTED`, revision 2, `submit_attempt=1`.
 At `21:51:42 UTC`, PBS was `Q` with exactly eight requested nodes and two
-hours. The skill's `wait_for_job.sh J086 604800` monitor is live and printed
-`WAITING|job=J086|queue=capacity|max_wait=7d|started=2026-09-09T21:51:45+00:00`.
+hours. A job-wait monitor with a 604,800-second bound has been live since
+2026-09-09 21:51:45 UTC.
 Queued time is expected; runtime/setup evidence will be checked after start.
 
 ## n8 live execution
 
 PBS entered `R` at `2026-09-09 22:05:53 UTC`, with exactly eight nodes and
 two hours (nominal allocation deadline `2026-09-10 00:05:53 UTC`). The approved
-wait helper returned `JOB_READY|J086|node-1-3-4`. The first direct check at
+wait helper reported the job ready, with head node `node-1-3-4`. The first direct check at
 `22:06:20 UTC` found PBS stdout/stderr files newly created but empty; canonical
 state was still `SUBMITTED` during initial shell startup. A live stdout/stderr
 tail is now following the sealed PBS job. No READY claim is made from PBS
@@ -239,7 +239,7 @@ exist. The submission worktree remains clean at `0a83547`.
 
 At the `23:24:16 UTC` scheduler check, only the root task's separate four-node
 capacity proof was running, with its independent debug-scaling job queued;
-there was capacity queue headroom and no sixteen-node keepalive lease source.
+there was capacity queue headroom and no sixteen-node held allocation to lease from.
 Neither unrelated job was changed by this monitor. Exact submission command:
 
 ```bash

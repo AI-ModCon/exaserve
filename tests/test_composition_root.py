@@ -191,11 +191,11 @@ def test_post_source_head_utility_keeps_scheduler_state_only_for_nested_launcher
         name="model_bcast",
         argv=[sys.executable, "-c", script, str(marker)],
         result_paths=(str(marker),),
-        env={**os.environ, "PBS_NODEFILE": "/home/user/.aurora_leases/nodes"},
+        env={**os.environ, "PBS_NODEFILE": "/home/user/allocation/nodes"},
     )
     root.run_staging([step])
     observed = json.loads(marker.read_text())
-    assert observed["nodefile"] == "/home/user/.aurora_leases/nodes"
+    assert observed["nodefile"] == "/home/user/allocation/nodes"
     assert observed["pythonpath"].split(os.pathsep)[-1] == str(root.local_runtime_paths.python_root)
 
 
