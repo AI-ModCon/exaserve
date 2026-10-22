@@ -38,7 +38,7 @@ historical hardware results to the current code.
 
 ### Publication redaction
 
-Before the repository was opened, operational details were redacted from
+The current tree redacts operational details from
 documentation, example and hardening configurations, frozen evaluation specs
 and test fixtures. A maintainer's home or project directory appears as
 `/home/YOUR_USER/...` or `/lus/flare/projects/YOUR_PROJECT/YOUR_USER/...`.
@@ -52,7 +52,7 @@ helpers appear generically: the site environment script
 (`EXASERVE_ENV_SCRIPT_AURORA`), allocation leases (recorded in qualification
 evidence as `acquisition_source: subjob`, with the `AURORA_SUBJOB` session
 marker) and the interactive-allocation fallback. The allocation
-name is not published, and the code has no default PBS account or project root
+name is absent from the current tree, and the code has no default PBS account or project root
 ([getting started](getting_started.md#configure-evaluation-environment-preparation)).
 
 The legacy paper-evidence ledger
@@ -62,13 +62,15 @@ the retained PBS stdout file whose bytes match the pinned SHA-256 (a cell can
 keep several from resubmissions) and reads the job identifier and server from
 that file's name. Measurements, evidence hashes and the findings ledger bytes
 are unchanged. The original text remains at each record's source commit.
+This redaction applies to the current tree; Git history is not rewritten
+([disclosure decision](modcon_compliance.md#operational-details-kept-for-the-disclosure-decision)).
 
 ## Retired branches
 
-Before the repository was opened, every branch except `main` was removed; the
-tags `v0.1.0`, `v0.2.0` and `v0.4.0-rc2` remain. Historical records may still
-name these branches. Issues that recurred on them and that no other document
-describes are in
+The repository is published with `main` only: the 15 branches below, audited on
+2026-10-21, and the tags `v0.1.0`, `v0.2.0` and `v0.4.0-rc2` are removed before
+the visibility change. Historical records may still name these branches.
+Concise summaries of recurring issues found during the branch audit are in
 [known issues](KNOWN_ISSUES.md#lessons-kept-from-retired-branches).
 
 | Branch | Final commit | Relation to `main` |

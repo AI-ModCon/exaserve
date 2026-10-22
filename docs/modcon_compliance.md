@@ -93,8 +93,8 @@ CI policy, plus outdated repository links and disabled security features.
 
 | Review item | Repository change | Still required |
 |---|---|---|
-| Operational details | Maintainer account paths, compute-node names, allocation-internal addresses, a reservation identifier and PBS job identifiers redacted ([publication redaction](path_migrations.md#publication-redaction)); the allocation name removed, with no default PBS account or project root left in code; personal development scratchpad removed; reference card regenerated | Institutional confirmation of the details kept below |
-| Dependency alerts | Development lock refreshed; 45 of the 92 alerts close when the change reaches `main`; request chat templates rejected and model types pinned | Dismiss the other 47 with the reasons below |
+| Operational details | Current-tree account paths, compute-node names, allocation-internal addresses, a reservation identifier and PBS job identifiers redacted ([publication redaction](path_migrations.md#publication-redaction)); the allocation name removed from the current tree, with no default PBS account or project root left in code; personal development scratchpad removed; reference card regenerated | Remove the three pre-publication tags and the 15 non-main branches before the visibility change ([decision](#operational-details-kept-for-the-disclosure-decision)) |
+| Dependency alerts | Development lock refreshed; upgrades are expected to resolve 45 of the 92 reviewed alerts once integrated; request chat templates rejected and model types pinned | Verify the upgrade results and review and record the remaining 47 proposed dispositions below |
 | Review and CI enforcement | The [protection payload](../.github/main-branch-protection.json) already names the seven current CI checks and the required review settings | Apply it (step 3 below) and read it back |
 | Repository links | Package metadata, README, documentation and this checklist name `AI-ModCon/exaserve` | — |
 | Security features | Trust assumptions documented in [SECURITY.md](../SECURITY.md#deployment-trust-assumptions) | Enable them (step 5 below) |
@@ -102,8 +102,11 @@ CI policy, plus outdated repository links and disabled security features.
 
 ### Operational details kept for the disclosure decision
 
-These remain because the reference `SiteProfile` needs them, or because they
-are the published contact:
+On 2026-10-22 the project decided that Git history is not rewritten, that
+the current tree must carry none of the identifiers listed under
+[publication redaction](path_migrations.md#publication-redaction), and that the
+tags `v0.1.0`, `v0.2.0` and `v0.4.0-rc2` and the 15 non-main branches are
+removed before the visibility change. The current tree retains:
 
 - Aurora site names that ALCF's public user guides
   ([argonne-lcf/user-guides](https://github.com/argonne-lcf/user-guides))
@@ -112,8 +115,18 @@ are the published contact:
   `aurora-pbs-0001.hostmgmt.cm.aurora.alcf.anl.gov` PBS server name, the
   `aurora-uan-*` login-node pattern and the shared model-weights path
   `/lus/flare/projects/datasets/model-weights`.
+- Aurora's platform name, platform-specific tuning, and standard queue names
+  remain part of the reference deployment. The queue names are documented in
+  [ALCF's public running-jobs guide](https://docs.alcf.anl.gov/aurora/running-jobs-aurora/).
 - The maintainer contact `wenyiw@uchicago.edu` in package metadata,
   SECURITY.md and the Code of Conduct.
+- Research records retain performance measurements, dated run narratives,
+  queue-wait observations, and failure analyses. Anonymized node labels preserve
+  rack/chassis relationships, as described in
+  [publication redaction](path_migrations.md#publication-redaction).
+
+Earlier commits keep their original content; removing the branches and tags does
+not change what `main`'s history holds.
 
 Hardening found while triaging the alerts, also part of this change: a request
 can no longer supply its own Jinja chat template (the resource-exhaustion
@@ -123,12 +136,13 @@ its architecture; and the evaluation tools load tokenizers without remote code.
 
 ### Dependency alerts
 
-All 92 open alerts came from `uv.lock`. The development lock is now generated
+The 92 alerts recorded in the 2026-10-21 review came from `uv.lock`. The
+development lock is now generated
 with uv 0.13.4 and resolves Python 3.11–3.13. The test group pins Pillow 13.0.0,
 pytest 9.0.3, Pygments 2.20.0 and fontTools 4.60.2, also in
 `requirements/ci.lock`, and the transitive certifi (2026.10.19), aiohttp
-(3.14.5) and virtualenv (21.14.5) resolutions were refreshed. This closes 45
-alerts.
+(3.14.5) and virtualenv (21.14.5) resolutions were refreshed. These upgrades are
+expected to resolve 45 of the reviewed alerts; verify the result after integration.
 
 The other 47 cannot be closed by upgrading without changing the qualified
 serving stack or the audited build tools. Each was checked against the code
@@ -148,10 +162,13 @@ paths that ExaServe uses and against the request surface in the
 | virtualenv | 1 | 21.14.5 | 21.14.7 needs packaging 26.3; the test group pins 25.0 | Unreachable: no virtualenv is created or activated |
 | setuptools | 1 | 78.1.1 | Audited build backend; vLLM 0.15.0 requires `<81` | Accepted: needs non-ASCII exclusions built on macOS APFS/HFS+; releases are built on Linux by the audited builder, which rejects unexpected sdist members |
 
-Dismiss each of the 47 alerts in GitHub with its reason and a comment that
-cites the code or document it relies on. Review the list again whenever the
-lock or the site stack changes. Requalifying on a newer site stack would close
-most of the vLLM alerts by upgrade.
+Have the responsible maintainer review each of the 47 proposed dispositions.
+Record the resolution or justified dismissal with its reason and a comment
+citing the supporting code or document. Every critical and serving-stack
+finding needs an explicit disposition; an empty alert list alone does not
+establish that triage is complete. Review the list again whenever the lock or
+the site stack changes. Requalifying on a newer site stack would close most of
+the vLLM alerts by upgrade.
 
 ## Adaptations that preserve ExaServe's contracts
 
@@ -236,11 +253,13 @@ so the payload still has to be applied there.
 5. Enable Dependabot security updates, secret scanning with push protection
    and non-provider patterns, code security with CodeQL default setup, and
    private vulnerability reporting. On 2026-10-21 all of these were disabled.
-   Dependabot security updates work on a private repository; the other features
-   are free on public repositories and need the organization's Secret Protection
-   or Code Security licenses while the repository is private. Let secret
-   scanning scan the full history before or immediately after the visibility
-   change and resolve its alerts. The published email route in
+   Dependabot security updates work on a private repository. Secret scanning
+   and CodeQL/code scanning on private repositories depend on the organization's
+   applicable licenses. Private vulnerability reporting is a
+   [public-repository feature](https://docs.github.com/en/code-security/how-tos/report-and-fix-vulnerabilities/configure-vulnerability-reporting/configure-for-a-repository);
+   enable it as part of the visibility change. Arrange platform secret scanning
+   of the full history before or as part of that change and resolve its alerts.
+   The published email route in
    [SECURITY.md](../SECURITY.md) works independently of private reporting;
    confirm a responsible maintainer monitors it. Do not publish reports as issues.
 6. Done: package metadata, README, documentation and community guidance name
@@ -249,12 +268,12 @@ so the payload still has to be applied there.
 7. Review any future package publishing separately: registry ownership, release
    evidence, protected environments and trusted publishing are distinct actions.
    Do not introduce a publish token or deploy-on-push workflow as part of transfer.
-8. Before changing visibility, delete every branch except `main`; all branches
-   and tags become public with the repository. The
-   [retired branches](path_migrations.md#retired-branches) and the lessons kept
-   from them ([known issues](KNOWN_ISSUES.md#lessons-kept-from-retired-branches))
-   are recorded. Keep the tags, and record which tag, if any, is described as a
-   release.
+8. Before changing visibility, remove the tags `v0.1.0`, `v0.2.0` and
+   `v0.4.0-rc2` and the 15 non-main branches, then the cleanup pull request's
+   branch once it is merged. The
+   [audited branches](path_migrations.md#retired-branches) and their recurring
+   lessons ([known issues](KNOWN_ISSUES.md#lessons-kept-from-retired-branches))
+   are recorded.
 
 ## Historical validation boundary (2026-09-23)
 

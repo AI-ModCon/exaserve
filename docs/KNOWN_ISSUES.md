@@ -168,10 +168,10 @@ fail plan capability checks rather than proceeding with ambiguous placement.
 
 ## Lessons kept from retired branches
 
-These issues recurred during development on branches that were removed before
-the repository was opened ([retired branches](path_migrations.md#retired-branches)).
-They are recorded here because no other document describes them; the findings
-ledger does not track them.
+These issues recurred during development on branches that are not published
+([retired branches](path_migrations.md#retired-branches)). The summaries keep
+the lessons from the branch audit; the findings ledger does not track them
+separately.
 
 ### L1. Ray Serve request-router crash loop when queue-length probes time out — mitigated
 
