@@ -116,7 +116,7 @@ allocation lease).
 - `exaserve/control/transport.py` — added `wait_disconnected()` /
   `drop_connection()` (rank watchdog inputs).
 - Compute: no keepalive running → self-allocated 2-node debug sleep job
-  **J033** (skill fallback recipe); WP12 gate rows recorded in
+  **J035** (skill fallback recipe); WP12 gate rows recorded in
   `artifacts/hardening/EXPERIMENT_PLAN.md` (S01-2N, S02-2N, S03-1N-SPAWN,
   S03-2N-RECEIPTS) before any gate runs.
 
@@ -124,7 +124,7 @@ allocation lease).
 
 ## 2026-08-05 — Slice P00.4: S01 two-node proof PASSED; S02 probe iterating
 
-**Gate S01-2N (allocation 8734762, node-3-0-7 + node-3-4-3): PASS —
+**Gate S01-2N (allocation J035, node-3-0-7 + node-3-4-3): PASS —
 all 4 scenarios.** Evidence in `artifacts/hardening/s01-2n/verdict_*.json`,
 decision in `decisions/ADR-001-process-boundaries.md`. Facts proven: PALS
 propagates the secret env (2/2 authenticated registrations in ≤0.4s); typed
@@ -146,7 +146,7 @@ is dashboard-dependent and unavailable on this stack; canaries must strip
 proxy env (http_proxy → corporate-proxy 502s, runs 1-2). Harness iterations:
 run 2 = state-API dependency found; run 3 = enum-compare false positive
 fixed + proxy-env fix verified (Q1-Q4,Q6 OK); run 4 = detection-latency
-measurement. Allocation J033 released after the battery (qdel).
+measurement. Allocation J035 released after the battery (qdel).
 
 ## 2026-08-05 — Slice P01.1 (WP2.1/WP2.2 start): atomic primitives + first conversions
 
@@ -467,7 +467,7 @@ the 7 defect classes.
 
 ## 2026-08-06 — Slice P06.3: 64-NODE weak-scaling smoke — PASS. Scaling ladder COMPLETE.
 
-Job J039 (64-node debug-scaling batch). Direct-MPI probe, 64/64 shards.
+Job J041 (64-node debug-scaling batch). Direct-MPI probe, 64/64 shards.
 
 **Result: 43,207 requests, 0 errors, aggregate 1373.9 RPS, per-node 21.47 RPS,
 p50 1.469s, p99 1.585s. Deploy READY in 300s** (768 replicas = 64×12).
@@ -505,7 +505,7 @@ holds flat.
 
 ## 2026-08-06 — Slice P06.2: 16-node weak-scaling smoke — PASS (hardened code)
 
-Job J038 (16-node debug-scaling batch, self-contained). Direct-MPI probe
+Job J040 (16-node debug-scaling batch, self-contained). Direct-MPI probe
 (16 client ranks, 16/16 shards collected).
 
 **Result: 10,821 requests, 0 errors, aggregate 344.4 RPS, per-node 21.5 RPS,
@@ -522,7 +522,7 @@ Scale-invariance evidence (the headline weak-scaling criterion):
 - Staging: 29.93 GiB bcast in 49s (flat vs 2-node — KI-A7 MPI staging holds
   at 16n). A2 port race handled by Serve retries (deploy still reached READY).
 
-64-node smoke (job J039) queued behind it.
+64-node smoke (job J041) queued behind it.
 
 ---
 
@@ -557,7 +557,7 @@ style), which the recorded baseline showed plateaus on the head client, not
 the server, at high N (findings #4). The comparable metric across scales is
 therefore per-node RPS at fixed concurrency, not the peak aggregate (that
 needs the Direct-MPI go client = eval harness = committed HEAD). 16-node
-(job J038) + 64-node smokes submitted.
+(job J040) + 64-node smokes submitted.
 
 ---
 
@@ -578,7 +578,7 @@ changes) at 2 → 16 → 64 nodes; per-node RPS should stay flat vs the recorded
   unbounded; (3) proxy health is a predicate: any unhealthy proxy OR a
   status-collection failure raises before `CLUSTER FULLY READY`
   (opt-in `EXASERVE_ALLOW_DEGRADED_PROXIES=1`). This is the D1 false-ready
-  class, closed. **Compute-validated (2-node lease from J036): a HEALTHY
+  class, closed. **Compute-validated (2-node lease from J038): a HEALTHY
   deploy still reaches READY** — "All 24/24 GPUs registered" → "CLUSTER FULLY
   READY" → working canary → SIGTERM drain. The fail-closed changes did NOT
   false-negative healthy startup (the critical regression risk).
@@ -666,7 +666,7 @@ PR-007, PR-011, PR-023 (+ PR-001/002/004/005/010/012/014/016/028 earlier).
 
 ---
 
-## 2026-08-06 — P04 COMPUTE BATTERY: 5/5 PASS on 2 nodes (lease from J037)
+## 2026-08-06 — P04 COMPUTE BATTERY: 5/5 PASS on 2 nodes (lease from J039)
 
 `artifacts/hardening/p04-battery/`. All verdicts PASS:
 - **bcast_roundtrip** — hardened bcast.c mpiexec round-trip of a
@@ -717,7 +717,7 @@ canary, SIGTERM drain evidence.
   Harness lessons: routes must be discovered not guessed; process scans must
   not assume `python` titles (`VLLM::EngineCore` retitles); auto-planning
   now deploys multi-replica PP (stale KI-D4 assumption).
-- Allocations J033/J034/J035 all released. Total compute spend for
+- Allocations J035/J036/J037 all released. Total compute spend for
   P00: ≲ 3 node-hours.
 - **P01 open:** WP1 immutable plan contracts + WP2 atomic state (login-node).
 
@@ -1999,7 +1999,7 @@ sources that define the cache and RPC protocols. Compatibility receipts and
 schema-3 source evidence now enforce those exact identities and installation
 counts. Archived schema-2 evidence remains readable.
 
-Canary `run4/n2` (PBS `J072`) proved VC-01 removed the registry crash, then
+Canary `run4/n2` (PBS `J074`) proved VC-01 removed the registry crash, then
 failed in `backend_create` because vLLM appended a UUID to the legacy 86-byte
 temporary-directory base, creating a 123-byte ZMQ path against libzmq's
 107-byte maximum. The selected correction combines two measures:
@@ -2023,7 +2023,7 @@ user-supplied state path is accepted.
 
 ## PP replay qualification after VC-01 and IPC compaction (2026-09-07)
 
-Real-engine canary `pp8b_real_engine_canary_2node/run5/n2` (PBS `J073`)
+Real-engine canary `pp8b_real_engine_canary_2node/run5/n2` (PBS `J075`)
 qualified the combined VC-01 and compact IPC-state implementation from commit
 `23c6822`, source snapshot
 `e8b9861b1434878be609369771a05ff637b721810e36e80cd4a59adffb71ecfd`.
@@ -2040,7 +2040,7 @@ published clean `STOPPED` after 2/2 DRAIN and GOODBYE. This is accepted
 startup-only qualification evidence, not a 405B replay or paper result.
 
 The follow-on 405B non-streaming PP attempt
-`pp405b_pp2_haproxy_nostream_v040/run9/n4` (PBS `J074`) used the same source
+`pp405b_pp2_haproxy_nostream_v040/run9/n4` (PBS `J076`) used the same source
 snapshot. It proved 4/4 exact source/VC-01 staging in 6.6 seconds, 909.69-second
 head-only model verification, and shard-aware distribution of the 380.68-GiB
 stage 0 only to ranks 0 and 2 and the 379.61-GiB stage 1 only to ranks 1 and 3.
@@ -2083,7 +2083,7 @@ The common site-profile hash is
 `ca45bed2369f6c9d5ffa39c04ad1bb0063d328e756bab213cd3eba96ed140614`.
 
 The dedicated two-rank full-replay canary
-`nullcompute_haproxy_mpi_summary_2node/run0/n2` ran as PBS `J075` and is
+`nullcompute_haproxy_mpi_summary_2node/run0/n2` ran as PBS `J077` and is
 accepted **qualification evidence, not a 405B paper result**. Its exact source
 capsule manifest is
 `9afdb594b11ab91e5aeaf04f943f725dd0217f308b2e3a797fbd1f57adeb2dbd`;
@@ -2100,7 +2100,7 @@ and GOODBYE, with no errors or exhausted deadline. This closes the live MPI
 aggregation gate independently of the expensive model workload.
 
 The fresh 405B gate `pp405b_pp2_haproxy_nostream_v040/run10/n4`, PBS
-`J076`, is accepted **paper evidence**. Its source capsule manifest is
+`J078`, is accepted **paper evidence**. Its source capsule manifest is
 `9053759c51d99ffff5945d608e904e707be670433eddae05db3a3551b24aee58`.
 Source staging passed on 4/4 ranks in 3.678914 seconds (4.7 seconds at the
 composition boundary). Head-only source-model verification took 855.90
@@ -2125,14 +2125,14 @@ PBS exited 0 after 01:08:50; shutdown published clean `STOPPED` after 4/4 DRAIN
 and GOODBYE, with no errors or exhausted deadline.
 
 The MPI canary and n4 paper gate are complete. The same immutable `run10`
-group's n256 cell ran as PBS `J077`; its deployment-plan hash is
+group's n256 cell ran as PBS `J079`; its deployment-plan hash is
 `344e3591c8a0dfc6853e7cead2a409e64b6808db81691a9f155729f5f8d8527b`
 and run-semantic hash is
 `d748a4d24176cb806a305eae45d3e4e3576d5dd3148bccfbc4808ad2ce3bd848`.
 
 ## 256-node service success and rejected replay aggregation (2026-09-08)
 
-PBS `J077` started at `2026-09-07 15:50:38 UTC`, finished at `17:03:09
+PBS `J079` started at `2026-09-07 15:50:38 UTC`, finished at `17:03:09
 UTC`, and records terminal state `F`, exit 143 and used walltime `01:11:08`.
 The exact deployment generation is `1788796285881926827` and allocation
 binding is
@@ -2202,13 +2202,13 @@ buffers on failure; unfinished collectives prohibit retries and are retained
 until process teardown. Native replay failures also enable Python stack dumps.
 The focused transport/failure suite passed 98 tests.
 
-A differential compute probe on PBS `J078`, node `node-22-1-6`, verified
+A differential compute probe on PBS `J080`, node `node-22-1-6`, verified
 the old object receive at 16 KiB, reproduced `MPI.Exception: Message truncated`
 at 128 KiB, and verified a 1 MiB transfer with explicit `MPI.BYTE` buffers.
 The runs took approximately 0.62 seconds each; their return codes were 0, 1,
 and 0 respectively. This proves the size-dependent API failure on Aurora;
 it does not retroactively prove the precise native SIGSEGV mechanism in
-`J077`. Probe source, logs, and hashed observations are retained under
+`J079`. Probe source, logs, and hashed observations are retained under
 `artifacts/diagnostics/mpi_receive_20260908/`.
 
 The full compute-node suite then passed 1,701 tests in 157.51 seconds.
@@ -2219,7 +2219,7 @@ so assertion reporting restores its guards. Log SHA-256:
 `05e710af9538be4fabad8b99011300d884bfb4706bfe66ec993492104d35323e`.
 
 The application-level large-message canary
-`nullcompute_haproxy_mpi_large_raw_2node/run0/n2`, PBS `J079`, is now
+`nullcompute_haproxy_mpi_large_raw_2node/run0/n2`, PBS `J081`, is now
 **accepted qualification evidence, not a 405B paper measurement**. It uses
 commit `0a83547`, source snapshot
 `5d85794f26a54596dc4ddb237996652171b9cd78d21751c8235bf0e25f8d365f`.
@@ -2236,7 +2236,7 @@ hashes match. PBS finished with state `F`, exit 0 and used walltime
 published `STOPPED`, with clean shutdown, no errors and no exhausted
 deadline. This closes the large-message application qualification gate.
 
-Fresh 405B `run11/n256` was submitted as PBS `J080` at
+Fresh 405B `run11/n256` was submitted as PBS `J082` at
 `2026-09-08T20:45:34.856363+00:00`, scheduler identity `es-f95c91077a52`,
 from the same `0a83547` source snapshot. Its deployment-plan hash is
 `6d766b70b742eaec6006460d0953638bd1baf47cffb620bdf0eaa835b6573464`
@@ -2249,7 +2249,7 @@ node-count ladder.
 
 ## Accepted 256-node 405B replay and clean terminal evidence (2026-09-09)
 
-PBS `J080`, immutable `pp405b_pp2_haproxy_nostream_v040/run11/n256`,
+PBS `J082`, immutable `pp405b_pp2_haproxy_nostream_v040/run11/n256`,
 started at `2026-09-09 07:43:42 UTC` and finished at `08:59:32 UTC` with
 state `F`, exit 0 and used walltime `01:14:28`. Its source remains commit
 `0a83547`, snapshot

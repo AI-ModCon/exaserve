@@ -15,7 +15,7 @@ Comparison reference: an April run that achieved 26.9k rps.
 2. **Non-streaming HAProxy 256n is healthy: 27.1k rps, 0.04% err, ~2s drain** —
    matches April. (Confirmed with `client.num_nodes=4`, current code.)
 3. **Streaming HAProxy 256n: degraded-but-stable, plus a RARE stochastic death.**
-   (a) Common case = degraded-but-stable: ~100% success, **E2E p50 ~5.7s** (6-run job 8548562,
+   (a) Common case = degraded-but-stable: ~100% success, **E2E p50 ~5.7s** (6-run job J027,
    every run consistent) — slow, SLO attain ~0, but completes. (b) Rare total proxy death
    (100% `ECONNREFUSED`), observed in 2 early runs but **~1/12 prod ramps** — NOT reproduced in
    11 consecutive instrumented prod ramps. The death is **NOT resource exhaustion or leak**: a
@@ -31,9 +31,9 @@ ceiling"; accept-queue overflow; TIME_WAIT/port exhaustion; CPU saturation.
 > **NOTE (correction in progress):** the sections below analyze the *surviving degraded*
 > streaming runs as congestion collapse — that still holds. But the **100%-ECONNREFUSED runs
 > are HAProxy PROCESS DEATHS**, not "stochastic congestion variance" (see TL;DR #3). The death
-> cause is under instrumented investigation (job 8548202, prod). The n1 baseline already rules
+> cause is under instrumented investigation (job J025, prod). The n1 baseline already rules
 > out HAProxy's own fd limit (compute-node `Max open files`=1,048,575 ≫ ~200k conns). This
-> body will be rewritten with the confirmed death mechanism once J023 lands; treat §"client
+> body will be rewritten with the confirmed death mechanism once J025 lands; treat §"client
 > count variance" below as SUPERSEDED for the 100% runs.
 
 ## Measured root cause of the streaming-256n collapse
@@ -144,7 +144,7 @@ Recipe with no-delay off: TTFT client-side (note the bounded ~150 ms offset), TB
 - Spec knob fixed: `client.num_nodes: min(num_nodes, 4)` for `dest=proxy` serving
   specs (proxycmp_{haproxy,envoy,litellm,rayserve}, oat_8b_*, oat_120b). `direct`
   specs keep `num_nodes` (one client per local replica). `nullcompute` left as-is.
-- Jobs: non-stream client=4 → J011 (27.1k); stream client=4 → J012 (100%
-  fail), J013 (diag, ~5k, the table above).
+- Jobs: non-stream client=4 → J012 (27.1k); stream client=4 → J013 (100%
+  fail), J014 (diag, ~5k, the table above).
 - Branch `haproxy-no-delay-knob`: `http_no_delay` option + diag sampler (both
   default-safe).

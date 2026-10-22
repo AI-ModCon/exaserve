@@ -80,11 +80,11 @@ generation and run-provenance hashes must differ.
 
 | Cell | PBS job | Status | READY / trace / deploy / stage3 seconds | Generation |
 |---|---|---|---|---|
-| run12/n32 | J082 | ACCEPTED; PBS F, exit 0, used 00:01:32 | 28.961413 / 23.5403 / 19.8505 / 19.8576 | 1788985796176521479 |
-| run13/n32 | J083 | ACCEPTED; PBS F, exit 0, used 00:01:33 | 29.888999 / 23.4858 / 19.7354 / 19.7419 | 1788987869969436504 |
-| run12/n64 | J085 | ACCEPTED; PBS F, exit 0, used 00:01:45 | 39.743597 / 33.3837 / 29.5892 / 29.5984 | 1788991595698760076 |
-| run13/n64 | J086 | ACCEPTED; PBS F, exit 0, used 00:01:49 | 39.892151 / 32.8885 / 29.1468 / 29.1561 | 1788994137184423338 |
-| run12/n128 | J091 | SUBMITTED after accepted run13/n64; attempt 1 | pending | pending |
+| run12/n32 | J084 | ACCEPTED; PBS F, exit 0, used 00:01:32 | 28.961413 / 23.5403 / 19.8505 / 19.8576 | 1788985796176521479 |
+| run13/n32 | J085 | ACCEPTED; PBS F, exit 0, used 00:01:33 | 29.888999 / 23.4858 / 19.7354 / 19.7419 | 1788987869969436504 |
+| run12/n64 | J087 | ACCEPTED; PBS F, exit 0, used 00:01:45 | 39.743597 / 33.3837 / 29.5892 / 29.5984 | 1788991595698760076 |
+| run13/n64 | J088 | ACCEPTED; PBS F, exit 0, used 00:01:49 | 39.892151 / 32.8885 / 29.1468 / 29.1561 | 1788994137184423338 |
+| run12/n128 | J093 | SUBMITTED after accepted run13/n64; attempt 1 | pending | pending |
 | run13/n128 | none | PLANNED; gated on accepted run12/n128 | pending | pending |
 | run12/n256 | none | PLANNED; gated on accepted run13/n128 | pending | pending |
 | run13/n256 | none | PLANNED; gated on accepted run12/n256 | pending | pending |
@@ -126,7 +126,7 @@ not prevent complete hash-bound startup evidence or clean shutdown. Launcher
 143 and HAProxy -15 are controlled shutdown outcomes, not the PBS exit status.
 
 After the preceding point passed every acceptance gate, canonical submission
-of fresh `run13/n32` succeeded as PBS `J083`, scheduler identity
+of fresh `run13/n32` succeeded as PBS `J085`, scheduler identity
 `es-e0046ddec140`. Its preflight confirmed PLANNED revision 0, no scheduler
 job ID, no prior ResultManifest and the exact final source hash. A dedicated
 Aurora start monitor uses the explicit 10,800-second debug-scaling bound.
@@ -159,7 +159,7 @@ remains stopped with no source allocation. Canonical batch fallback therefore re
 the acquisition path. The clean frozen checkout remains at `0a83547`.
 
 Canonical `python3 -m eval.cli run submit .../run12/n64/run.yaml` succeeded
-as PBS `J085`, scheduler identity `es-579a4ab7bb1c`, after the n32 gates.
+as PBS `J087`, scheduler identity `es-579a4ab7bb1c`, after the n32 gates.
 The submission preflight verified fresh PLANNED revision 0, no scheduler ID
 or prior PBS/result output, and the exact final source. The sealed job requests
 exactly 64 nodes in debug-scaling for one hour; no overrides were applied.
@@ -186,7 +186,7 @@ Run-provenance hash:
 `9dc23220bb93688d4c332f0425bc88342b5a0473eedacce293c9ec90a4719f31`.
 
 After acceptance, canonical submission of fresh `run13/n64` returned PBS
-`J086`. Preflight again proved PLANNED revision 0, no prior PBS/result
+`J088`. Preflight again proved PLANNED revision 0, no prior PBS/result
 output or scheduler ID, exact final source and the clean frozen checkout.
 The queued-start helper uses the explicit 10,800-second bound.
 
@@ -215,7 +215,7 @@ and the identical frozen source. Their READY times are 39.743597 and
 39.892151 seconds.
 
 After acceptance, canonical submission of fresh `run12/n128` returned PBS
-`J091`. Preflight verified PLANNED revision 0, no prior PBS/result output,
+`J093`. Preflight verified PLANNED revision 0, no prior PBS/result output,
 no scheduler ID, exact final source and a clean frozen checkout. The sealed
 job requests exactly 128 nodes in debug-scaling for one hour. Its dedicated
 start helper uses the explicit 10,800-second bound.

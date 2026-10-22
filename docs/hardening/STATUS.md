@@ -36,13 +36,13 @@ multi-snapshot preview remains diagnostic and paper evidence only.
 
 | Gate | Result |
 |---|---|
-| Full source suite in validated one-node PBS job `J043` | PASS — 1,323 passed, 19 skipped |
+| Full source suite in validated one-node PBS job `J045` | PASS — 1,323 passed, 19 skipped |
 | Focused release-contract integration | PASS — 200 passed |
 | Ruff and compileall | PASS |
 | Findings ledger | PASS — 93 FIXED / 8 IN_PROGRESS / 1 EXTERNAL_BLOCKER / 3 OUT_OF_PRODUCTION_SCOPE |
 | Scale harness/adjudicator regression | PASS — 30 passed, 9 skipped |
 | Go formatting, vet, and tests | PASS |
-| Clean installed-wheel gate in validated PBS job `J044` | PASS — 1,302 passed, 31 skipped; resources present; typed-core mypy clean |
+| Clean installed-wheel gate in validated PBS job `J046` | PASS — 1,302 passed, 31 skipped; resources present; typed-core mypy clean |
 
 The owner-approved hardware scale ladder remains a release gate; package
 success does not predeclare that result.

@@ -45,10 +45,10 @@ editing the sealed source or prior bundles.
 
 | Series | Final campaign selection | Execution disposition |
 |---|---|---|
-| Null startup, two independent lifecycles at each of 32/64/128/256 nodes | `run12` and `run13`, all eight cells | n32 and n64 pairs accepted; `run12/n128` submitted as PBS `J091`; later trials gated on acceptance |
-| 405B non-stream, 4/8/16 nodes | Existing `run11` cells | n4 and n8 accepted; n16 submitted as PBS `J093` |
-| 405B non-stream, 32/64/128 nodes | Existing `run11` cells | Qualified 256-physical-node parent submitted as PBS `J094`; sequential exact logical subsets |
-| 405B non-stream, 256 nodes | Accepted `run11/n256`, PBS `J080` | Reuse unchanged; no redundant n256 405B rerun is planned |
+| Null startup, two independent lifecycles at each of 32/64/128/256 nodes | `run12` and `run13`, all eight cells | n32 and n64 pairs accepted; `run12/n128` submitted as PBS `J093`; later trials gated on acceptance |
+| 405B non-stream, 4/8/16 nodes | Existing `run11` cells | n4 and n8 accepted; n16 submitted as PBS `J095` |
+| 405B non-stream, 32/64/128 nodes | Existing `run11` cells | Qualified 256-physical-node parent submitted as PBS `J096`; sequential exact logical subsets |
+| 405B non-stream, 256 nodes | Accepted `run11/n256`, PBS `J082` | Reuse unchanged; no redundant n256 405B rerun is planned |
 
 The older accepted null `run10`/`run11` n32/n256 pairs remain valid evidence
 for their own `7298aef...` snapshot, not cells in the final `5d85794f...` curve.
@@ -101,7 +101,7 @@ cancellation proof must pass before the production parent may be submitted.
 Current evidence, budgets and exact proof child paths are recorded in
 `doc/hardening/ALLOCATION_SUBSET_QUALIFICATION_20260909.md`.
 
-The gate is now satisfied by proof C, PBS `J092` (native F, explicit exit 0):
+The gate is now satisfied by proof C, PBS `J094` (native F, explicit exit 0):
 controller commit `97e8283`, source
 `7f7f864bcebcf5780f56a39cec8f9b12fd3437100207c60f0cd48cac915f6a08`,
 with unchanged child source `5d85794f...`. Both logical two-node lifecycles
@@ -115,7 +115,7 @@ Its qualification JSON SHA-256 is
 The corrected controller also passed the complete 1,773-test compute regression
 suite. No larger subset measurement is claimed until its own result passes.
 
-The resulting finite production parent is PBS `J094`, requesting 256 physical
+The resulting finite production parent is PBS `J096`, requesting 256 physical
 nodes for six hours. It owns the ordered `run11/n32`, `run11/n64`, and
 `run11/n128` executions, with exact active membership and fresh lifecycle
 evidence per child. Accepted `run11/n256` is not rerun. The acquisition manifest
@@ -133,8 +133,8 @@ The first post-fan-out snapshot, commit `4d204ce` with source snapshot hash
 `bbbd13550a0c42d9cc8e740c97dd50a588140e4a44d4679aafb58e936fe93802`,
 was exercised at the two smallest campaign gates:
 
-- PP2 `run5/n4`, PBS `J058`, and
-- null-compute `run8/n32`, PBS `J059`.
+- PP2 `run5/n4`, PBS `J060`, and
+- null-compute `run8/n32`, PBS `J061`.
 
 Both jobs are rejected negative evidence. Native source broadcast succeeded on
 every allocated rank (4/4 and 32/32 respectively), but the verifier then failed
@@ -159,8 +159,8 @@ same defective snapshot and must not be submitted.
 
 Commit `6816440`, source snapshot
 `7298aefce67c5b1a7a820dc0f20e5135abc6a967a3d33ea3edc6239bd4d2aa6b`,
-was exercised as PP2 `run6/n4` (PBS `J060`) and null-compute
-`run10/n32` (PBS `J061`).
+was exercised as PP2 `run6/n4` (PBS `J062`) and null-compute
+`run10/n32` (PBS `J063`).
 
 Null-compute `run10/n32` is accepted as the first corrected-snapshot n32
 trial. Its complete seven-entry ResultManifest hash is
@@ -171,7 +171,7 @@ exact receipt slots; READY-after-trace-start was 29.369265 seconds,
 seconds. All ranks acknowledged DRAIN and GOODBYE and terminal publication was
 clean `STOPPED`.
 
-The independently materialized `run11/n32`, PBS `J062`, is accepted as the
+The independently materialized `run11/n32`, PBS `J064`, is accepted as the
 second corrected-snapshot n32 trial. Its complete seven-entry ResultManifest
 hash is
 `d9c4361b1e7d08f00e520533be7581a4516494cda4e853c132e46e17119b7609`.
@@ -198,7 +198,7 @@ snapshot.
 
 ### Third PP low-node attempt and constructor diagnosis
 
-The follow-on PP2 `run7/n4`, PBS `J063`, used source snapshot
+The follow-on PP2 `run7/n4`, PBS `J065`, used source snapshot
 `270e59c1516b39f82310afa5ed9faf2a044baeb8d4be3a8d7b4b79332214db92`
 and is rejected negative evidence. The source capsule completed on 4/4 ranks
 in 4.3 seconds. Head-rooted shard-aware model distribution then sent stage 0
@@ -249,7 +249,7 @@ and `meta/run_group.json`: it has no RunPlan, PBS submission, compute execution,
 READY evidence, result manifest or measurement. It must not be repaired or
 submitted under the same identity.
 
-The corrected nonempty-trace identity, canary `run1/n2`, ran as PBS `J066`
+The corrected nonempty-trace identity, canary `run1/n2`, ran as PBS `J068`
 from commit `58d5524` and source snapshot
 `a8ed2c2d7165e5547cb96e8a20076537832b28301759b3b066e38160059f2670`.
 It is accepted **only as live compatibility/lifecycle qualification evidence**,
@@ -272,7 +272,7 @@ model staging, vLLM/EngineCore initialization, replay, or throughput.
 
 The full PP2 paper campaign was then materialized as `run8` from the same
 `a8ed2c2d...59f2670` source snapshot. Its n4/n8/n16/n32/n64/n128/n256 cells
-are immutable distinct plans. The n4 gate ran as PBS `J067` in the
+are immutable distinct plans. The n4 gate ran as PBS `J069` in the
 capacity queue and is rejected negative evidence. Source capsule distribution
 and verification passed on 4/4 ranks in 4.5 seconds. Head-owned source-model
 verification took 974.94 seconds. Shard-aware distribution then sent the
@@ -321,7 +321,7 @@ exposed are recorded below; neither constitutes paper evidence.
 The real-engine canary was materialized as
 `pp8b_real_engine_canary_2node/run0/n2` from commit `ec48442`, source snapshot
 `8f668a112c46974e332f1ac8e62b068a4b0193c878ade7a0fd87d9769e6c93d8`,
-and submitted as PBS `J068` in the debug queue. It is rejected diagnostic
+and submitted as PBS `J070` in the debug queue. It is rejected diagnostic
 evidence, not a paper workload result.
 
 All finite staging gates passed. Source-capsule distribution and verification
@@ -357,7 +357,7 @@ snapshot. This is a proven coverage bug, not evidence about the underlying
 actor failure. Commit `c5dd69a` routes both `serve.run` branches and both
 `serve.run_many` branches through the same bounded public-status diagnostic.
 Fresh canary `run1/n2` was materialized from that commit and submitted as PBS
-`J069`. It is now terminal and rejected as described below. Rejected
+`J071`. It is now terminal and rejected as described below. Rejected
 `run0/n2` remains immutable and must not be rerun.
 
 Canary `run1/n2`, source snapshot
@@ -376,7 +376,7 @@ Commit `f201923` then attached a bounded handler to the exact vLLM model-registr
 logger around `AsyncEngineArgs` construction. Fresh canary `run2/n2`, source
 snapshot
 `fa856a1e8f7e65166a0867b896aec884dbe77d09d010c8119bb31e29dd92ef0c`,
-ran as PBS `J070` and is also rejected. It reproduced three actor-start
+ran as PBS `J072` and is also rejected. It reproduced three actor-start
 attempts and retained the same final `backend_create`/`ModelConfig`
 architecture-inspection failure. The registry hook demonstrably fired, but
 its logger record was rendered into text and then passed through nested
@@ -391,7 +391,7 @@ rank-launcher code 143, no cleanup errors and no exhausted deadline.
 Commit `a970d38` replaced that nested text with a versioned structured
 diagnostic carrying the registry exception, its immediate subprocess cause,
 return code/signal, and separately bounded stderr head and tail. Fresh canary
-`run3/n2`, PBS `J071`, used source snapshot
+`run3/n2`, PBS `J073`, used source snapshot
 `9198863dea1eb1b4bdcfa0691d631151d96c5f18cd32a146a37ebe1bd55ec8a7`.
 Its exact model-broadcast result was again healthy (80.7057 seconds total;
 9,987,887,987 bytes to rank 0 and 11,095,244,439 bytes to rank 1), after which
@@ -437,7 +437,7 @@ existing MPI transaction, installed in each generation-local vLLM cache, and
 verified before registration and again immediately before Ray. Fresh canary
 `run4/n2`, source snapshot
 `26bfcada75642d1fb09c708aa0cadd76cc3dc00e7cf5a033d1462882a0d6b54b`,
-ran as PBS `J072`. Both ranks reported the exact VC-01 manifest, two seeded
+ran as PBS `J074`. Both ranks reported the exact VC-01 manifest, two seeded
 architectures and deterministic install-report hash; both pre-Ray
 reverifications passed. The former registry subprocess `SIGSEGV` did not recur
 in run4. Serve exhausted three actor starts; the retained final attempt entered
@@ -466,7 +466,7 @@ is required for qualification.
 
 ### Compact-state PP qualification and first 405B replay attempt
 
-Fresh real-engine canary `run5/n2`, PBS `J073`, was materialized from commit
+Fresh real-engine canary `run5/n2`, PBS `J075`, was materialized from commit
 `23c6822` with source snapshot
 `e8b9861b1434878be609369771a05ff637b721810e36e80cd4a59adffb71ecfd`.
 It is **accepted startup-only qualification evidence**, not a 405B paper
@@ -484,7 +484,7 @@ creation. PBS exited 0 after 13:33; teardown published clean `STOPPED` with 2/2
 DRAIN and GOODBYE, no errors and no exhausted deadline.
 
 The first full 405B attempt from that same source snapshot was
-`pp405b_pp2_haproxy_nostream_v040/run9/n4`, PBS `J074`. Source staging
+`pp405b_pp2_haproxy_nostream_v040/run9/n4`, PBS `J076`. Source staging
 completed on 4/4 ranks in 6.6 seconds with exact VC-01 verification. Head-only
 model verification took 909.69 seconds. Shard-aware distribution sent the
 380.68-GiB stage 0 only to ranks 0 and 2 in 345.07 seconds and the 379.61-GiB
@@ -532,7 +532,7 @@ nonblocking point-to-point messages for summary evidence; it retains one
 absolute deadline and fails closed on missing or malformed rank evidence.
 
 The dedicated full-replay qualification
-`nullcompute_haproxy_mpi_summary_2node/run0/n2`, PBS `J075`, is **accepted
+`nullcompute_haproxy_mpi_summary_2node/run0/n2`, PBS `J077`, is **accepted
 qualification evidence only, not a 405B paper result**. Its exact source
 capsule manifest is
 `9afdb594b11ab91e5aeaf04f943f725dd0217f308b2e3a797fbd1f57adeb2dbd`;
@@ -550,7 +550,7 @@ and GOODBYE, with no error or exhausted deadline. This closes the live MPI
 dispatch-end and sum-only summary qualification gate that `run9` lacked.
 
 Fresh 405B paper cell `pp405b_pp2_haproxy_nostream_v040/run10/n4`, PBS
-`J076`, is **accepted paper evidence**. Its exact source capsule manifest is
+`J078`, is **accepted paper evidence**. Its exact source capsule manifest is
 `9053759c51d99ffff5945d608e904e707be670433eddae05db3a3551b24aee58`.
 Source staging completed on 4/4 ranks in 3.678914 seconds (4.7 seconds at the
 composition-step boundary), with the exact profile and manifest above on every
@@ -578,7 +578,7 @@ DRAIN and GOODBYE, with no errors or exhausted deadline.
 
 ### Rejected n256 replay attempt after successful full-scale service startup
 
-The same immutable `run10` group's n256 cell ran as PBS `J077` on
+The same immutable `run10` group's n256 cell ran as PBS `J079` on
 2026-09-07. It binds the same commit, source snapshot, compatibility profile
 and compatibility manifest; its deployment-plan hash is
 `344e3591c8a0dfc6853e7cead2a409e64b6808db81691a9f155729f5f8d8527b`
@@ -651,13 +651,13 @@ buffers on failure; unfinished collectives prohibit retries and are retained
 until process teardown. Native replay failures also enable Python stack dumps.
 The focused transport/failure suite passed 98 tests.
 
-A differential compute probe on PBS `J078`, node `node-22-1-6`, verified
+A differential compute probe on PBS `J080`, node `node-22-1-6`, verified
 the old object receive at 16 KiB, reproduced `MPI.Exception: Message truncated`
 at 128 KiB, and verified a 1 MiB transfer with explicit `MPI.BYTE` buffers.
 The runs took approximately 0.62 seconds each; their return codes were 0, 1,
 and 0 respectively. This proves the size-dependent API failure on Aurora;
 it does not retroactively prove the precise native SIGSEGV mechanism in
-`J077`. Probe source, logs, and hashed observations are retained under
+`J079`. Probe source, logs, and hashed observations are retained under
 `artifacts/diagnostics/mpi_receive_20260908/`.
 
 The full compute-node suite then passed 1,701 tests in 157.51 seconds.
@@ -668,7 +668,7 @@ so assertion reporting restores its guards. Log SHA-256:
 `05e710af9538be4fabad8b99011300d884bfb4706bfe66ec993492104d35323e`.
 
 The application-level large-message canary
-`nullcompute_haproxy_mpi_large_raw_2node/run0/n2`, PBS `J079`, is now
+`nullcompute_haproxy_mpi_large_raw_2node/run0/n2`, PBS `J081`, is now
 **accepted qualification evidence, not a 405B paper measurement**. It uses
 commit `0a83547`, source snapshot
 `5d85794f26a54596dc4ddb237996652171b9cd78d21751c8235bf0e25f8d365f`.
@@ -685,7 +685,7 @@ hashes match. PBS finished with state `F`, exit 0 and used walltime
 `STOPPED`, with clean shutdown, no errors and no exhausted deadline. This
 closes the application-level large-message qualification gate.
 
-Fresh 405B `run11/n256` was submitted as PBS `J080` at
+Fresh 405B `run11/n256` was submitted as PBS `J082` at
 `2026-09-08T20:45:34.856363+00:00`, with scheduler identity
 `es-f95c91077a52`. It binds the same `0a83547` source snapshot as the accepted
 canary. Its deployment-plan hash is
@@ -697,7 +697,7 @@ It completed successfully on 2026-09-09 and is accepted below. The rejected
 
 ### Accepted 256-node 405B replay after the MPI receive correction
 
-PBS `J080` started at `2026-09-09 07:43:42 UTC` and finished at
+PBS `J082` started at `2026-09-09 07:43:42 UTC` and finished at
 `08:59:32 UTC`, with terminal state `F`, exit 0 and reported used walltime
 `01:14:28`. The exact generation is `1788939883350530388`; its allocation
 binding is
@@ -772,10 +772,10 @@ homogeneous intermediate-node curve and final figure work remain below.
 
 | Trial | PBS job | Result-manifest SHA-256 |
 |---|---|---|
-| run10/n32 | J061 | `ae4415f0d11234ad55fba4cc62a3569d75a8f3f6049101c1eee573df591cb863` |
-| run11/n32 | J062 | `d9c4361b1e7d08f00e520533be7581a4516494cda4e853c132e46e17119b7609` |
-| run10/n256 | J064 | `c8ff5f822f08cf63086781a55e213a9ee5e4af8b2145aed5ca62ccdacf41496d` |
-| run11/n256 | J065 | `2b80b62078ad94a50568886e8365379d0806e97c6d0d369217bb633194f4e82c` |
+| run10/n32 | J063 | `ae4415f0d11234ad55fba4cc62a3569d75a8f3f6049101c1eee573df591cb863` |
+| run11/n32 | J064 | `d9c4361b1e7d08f00e520533be7581a4516494cda4e853c132e46e17119b7609` |
+| run10/n256 | J066 | `c8ff5f822f08cf63086781a55e213a9ee5e4af8b2145aed5ca62ccdacf41496d` |
+| run11/n256 | J067 | `2b80b62078ad94a50568886e8365379d0806e97c6d0d369217bb633194f4e82c` |
 
 All four rows use source snapshot
 `7298aefce67c5b1a7a820dc0f20e5135abc6a967a3d33ea3edc6239bd4d2aa6b`.
@@ -783,7 +783,7 @@ Both corrected n256 lifecycles passed the fail-closed paper consumer and proved
 256/256 ranks, 3,072/3,072 replicas, 512 exact Serve applications and
 3,586/3,586 receipt slots. Each published all seven required result entries,
 clean `STOPPED` terminal evidence and a shutdown report with 256/256 DRAIN and
-GOODBYE, no errors and no exhausted deadline. PBS jobs `J064` and `J065`
+GOODBYE, no errors and no exhausted deadline. PBS jobs `J066` and `J067`
 exited 0 after 16:02 and 16:24, respectively. Corrected-snapshot n64 and n128
 pairs remain unrun and remain necessary for a homogeneous final curve. The
 largest-scale bring-up objective is now complete.
@@ -818,20 +818,20 @@ versus roughly 26 seconds in trial B. Both waited for and sealed the complete
 
 | Trial | PBS job | Result-manifest SHA-256 |
 |---|---|---|
-| run6/n32 | J045 | `11fdff87cff014a8fae3df643db92a0998af1fb7f420b60b15895db7139c8e16` |
-| run7/n32 | J046 | `6b1f76f5273e85575aaa7ed1a67962aa0f2053f2f1354853d15d5d96510e551c` |
-| run6/n64 | J047 | `3320cff6e7d3e4301d5a453ad32ce2255ec8fc835f2a62e7a1edb4b3ccc98f6f` |
-| run7/n64 | J048 | `6dce8249dbb42473d9c485ea08f59caffec664ffdf9a536fbdab6f8e7bd5bb9a` |
-| run6/n128 | J051 | `5b5c4fdff5c14e172d7236069ea14959775a5b4f147a999cf6c24923b45f2adf` |
-| run7/n128 | J052 | `d4f2250283fb1162902e85bfd5f3d4c9a43e762fa791d54d9463cf00e31350b0` |
-| run6/n256 | J054 | `c2b54ceb793e1b14b11012c10a6a714c403b8c666a82f550f3c927c1e024b3d5` |
+| run6/n32 | J047 | `11fdff87cff014a8fae3df643db92a0998af1fb7f420b60b15895db7139c8e16` |
+| run7/n32 | J048 | `6b1f76f5273e85575aaa7ed1a67962aa0f2053f2f1354853d15d5d96510e551c` |
+| run6/n64 | J049 | `3320cff6e7d3e4301d5a453ad32ce2255ec8fc835f2a62e7a1edb4b3ccc98f6f` |
+| run7/n64 | J050 | `6dce8249dbb42473d9c485ea08f59caffec664ffdf9a536fbdab6f8e7bd5bb9a` |
+| run6/n128 | J053 | `5b5c4fdff5c14e172d7236069ea14959775a5b4f147a999cf6c24923b45f2adf` |
+| run7/n128 | J054 | `d4f2250283fb1162902e85bfd5f3d4c9a43e762fa791d54d9463cf00e31350b0` |
+| run6/n256 | J056 | `c2b54ceb793e1b14b11012c10a6a714c403b8c666a82f550f3c927c1e024b3d5` |
 
 These trials share source snapshot
 `a6e383094c6320e83fa0f290298ca0510be5f21a2ffcb358868d8eb5aa8a82e1`
 from commit `4d009c1` and use collision-resistant deployment identities.
 
 The accepted n256 trial A started after 13:14:55 of eligible queue time and
-completed as PBS job `J054` (exit 0, walltime 16:54). Its canonical READY
+completed as PBS job `J056` (exit 0, walltime 16:54). Its canonical READY
 time is 582.279 seconds, including a 553.095-second `serve.run_many` phase and a
 565.570-second canonical deploy phase. The complete manifest binds all seven
 expected artifacts; teardown published clean `STOPPED` after DRAIN and GOODBYE
@@ -851,7 +851,7 @@ accepted cell.
 | 32 | 16 | 768/768 | 0 | 5.339415 | 15.106 | 29.495 | accepted |
 | 64 | 32 | 1,536/1,536 | 0 | 10.750777 | 14.785 | 24.624 | accepted |
 | 128 | 64 | 3,072/3,072 | 0 | 20.739459 | 15.071 | 31.018 | accepted |
-| 256 | 128 | 6,144/6,144 | 0 | 40.049510 | 15.096 | 29.848 | accepted current-snapshot `run11`, PBS `J080` |
+| 256 | 128 | 6,144/6,144 | 0 | 40.049510 | 15.096 | 29.848 | accepted current-snapshot `run11`, PBS `J082` |
 
 The accepted n4 cell is now the immutable `run10` artifact from source snapshot
 `7efc01f898e51f72c73f84bc6c044d29516c02cfd8780a7cfc393dd041cb5059`
@@ -865,7 +865,7 @@ snapshot
 at commit `eabf59c`. The accepted n32 through n128 cells are pinned to
 `run4`, snapshot
 `a6e383094c6320e83fa0f290298ca0510be5f21a2ffcb358868d8eb5aa8a82e1`
-at commit `4d009c1`. The accepted n256 replacement is `run11`, PBS `J080`,
+at commit `4d009c1`. The accepted n256 replacement is `run11`, PBS `J082`,
 from commit `0a83547`, source snapshot
 `5d85794f26a54596dc4ddb237996652171b9cd78d21751c8235bf0e25f8d365f`.
 Its complete ResultManifest hash is
@@ -891,18 +891,18 @@ zero errors at 0.717452 successful RPS (p50 16.613 seconds, p99 26.965
 seconds). Reported replay 1 completed 96/96 with zero errors at 0.717952
 successful RPS (p50 14.384 seconds, p99 15.713 seconds). Canonical READY
 contained six Serve applications, two TP8 x PP2 replicas, four healthy
-proxies and 46/46 exact receipt slots. PBS job `J076` exited 0 after
+proxies and 46/46 exact receipt slots. PBS job `J078` exited 0 after
 01:08:50, and teardown published clean `STOPPED` after DRAIN and GOODBYE from
 all four ranks.
 
-The accepted n32 cell is PBS job `J049` (exit 0, walltime 47:24) with
+The accepted n32 cell is PBS job `J051` (exit 0, walltime 47:24) with
 result-manifest hash
 `211bd3088e9a8dea7e48280ebed2efd1444763bb71402a7279eb714710d84fbb`.
 Both 768-request replays completed without errors. Canonical READY contained 48
 Serve applications, 16 PP2 replicas, and 354/354 exact receipt slots; teardown
 published a clean `STOPPED` report after DRAIN and GOODBYE from all 32 ranks.
 
-The accepted n64 cell is PBS job `J050` (exit 0, walltime 47:29) with
+The accepted n64 cell is PBS job `J052` (exit 0, walltime 47:29) with
 result-manifest hash
 `ae7e1bf0cf57ed755095f7269a661548ab624fabbd8cefdcb6b3deff9dcedc13`.
 Its warmup replay completed 1,536/1,536 requests with zero errors at 9.287877
@@ -912,7 +912,7 @@ RPS. Canonical READY contained 96 Serve applications, 32 PP2 replicas, and
 GOODBYE from all 64 ranks. Reported throughput is 2.013x the accepted n32
 throughput for a 2x node/replica increase.
 
-The accepted n128 cell is PBS job `J053` (exit 0, walltime 47:12) with
+The accepted n128 cell is PBS job `J055` (exit 0, walltime 47:12) with
 result-manifest hash
 `0672c06711b531577965660f58640c7e3346567d137544be181e44a99afd5aa0`.
 Its warmup replay completed 3,072/3,072 requests with zero errors at 21.083153
@@ -969,7 +969,7 @@ throughput for a 2x node/replica increase.
    4/8/16/32/64/128/256 ladder. The Figure 7 x-axis
    is therefore **active serving/Ray nodes**, not necessarily the containing PBS
    allocation: direct n64 and HAProxy n32/n64 used explicit 256-node `allocfix`
-   subsets, while HAProxy n128 job `J029` used the explicit 256-to-128
+   subsets, while HAProxy n128 job `J031` used the explicit 256-to-128
    `prod256` subset. All other selected legacy points used exact-size
    allocations.
 
@@ -991,9 +991,9 @@ throughput for a 2x node/replica increase.
    described as one homogeneous rerun.
 
    The corrected post-allocation reruns are explicitly `result1.json`: direct
-   n64 is job `J032` at 10.299334 successful RPS (89.476% efficiency),
-   HAProxy n32 is job `J031` at 4.682119 RPS (81.353%), and HAProxy n64 is
-   job `J030` at 8.665885 RPS (75.286%). Historical HAProxy streaming error
+   n64 is job `J034` at 10.299334 successful RPS (89.476% efficiency),
+   HAProxy n32 is job `J033` at 4.682119 RPS (81.353%), and HAProxy n64 is
+   job `J032` at 8.665885 RPS (75.286%). Historical HAProxy streaming error
    rates over reported (non-warmup) iterations are exactly 0% through n32,
    29/7,680 = 0.377604% at n64, 60/15,360 = 0.390625% at n128, and 77/30,720 =
    0.250651% at n256; all historical direct points are 0%. These errors reduce
@@ -1006,7 +1006,7 @@ throughput for a 2x node/replica increase.
    `eval/plot/pp405b_legacy_evidence.yaml`; fixing that generator does not by
    itself update any checked-in or copied paper artifact.
 9. **The 256-node pre-START control path is load-sensitive.** Null-compute
-   `run7/n256` (PBS `J055`) used the same sealed plan and control limits as
+   `run7/n256` (PBS `J057`) used the same sealed plan and control limits as
    accepted `run6/n256`, but source distribution took 43.9 seconds instead of
    9.8 seconds and durable supervisor registration took 69.9 seconds for only
    238 ranks instead of 21.8 seconds for all 256. The first 75 established
@@ -1041,8 +1041,8 @@ throughput for a 2x node/replica increase.
     mpi4py 4.1.1 is profile-bound, supported typed reductions and bounded
     identity-checked point-to-point summary evidence replace the nonexistent
     calls, and the implementation retains a shared absolute deadline. Live
-    canary `run0/n2` (PBS `J075`) exercised the two-rank sum-only path, then
-    405B `run10/n4` (PBS `J076`) completed both four-rank raw-result
+    canary `run0/n2` (PBS `J077`) exercised the two-rank sum-only path, then
+    405B `run10/n4` (PBS `J078`) completed both four-rank raw-result
     aggregations. Both runs are accepted in their distinct qualification and
     paper-evidence roles above.
 
@@ -1056,51 +1056,51 @@ throughput for a 2x node/replica increase.
   cancelled before walltime; it has no paper result.
 - PP2 `run2/n16` deterministically failed KV-cache initialization at 0.90 and
   has no accepted result.
-- Null-compute `run7/n256`, PBS job `J055`, failed before Ray startup. Its
+- Null-compute `run7/n256`, PBS job `J057`, failed before Ray startup. Its
   exact 256-node allocation and source staging were valid, but only 238/256
   supervisor bindings were ever journaled, 75 established ranks reported
   pre-START heartbeat timeouts, and `results/` is empty. Its clean shutdown
   report proves bounded failure cleanup only: it has no DRAIN, GOODBYE,
   canonical READY, startup metric, or result manifest and contributes no paper
   number.
-- PP2 `run7/n4`, PBS job `J063`, completed exact source and shard-aware
+- PP2 `run7/n4`, PBS job `J065`, completed exact source and shard-aware
   model distribution and formed the exact four-node Ray cluster, but both
   `EngineWorker` applications exhausted three actor-start attempts. It never
   reached READY or replay and `results/` is empty. Its clean 4/4
   DRAIN/GOODBYE shutdown is failure evidence only. The retained application
   error omitted Ray's detailed constructor message; absence of ordinary actor
   stdout cannot narrow the failure to a pre-vLLM or compatibility phase.
-- PP2 `run8/n4`, PBS job `J067`, again completed exact source/model
+- PP2 `run8/n4`, PBS job `J069`, again completed exact source/model
   distribution and four-node Ray formation before both PP applications failed
   after three actor attempts each. Its status serializer retained the Ray
   traceback prefix but truncated the causal tail. It has no READY, replay or
   result artifact and exited 1, although 4/4 DRAIN/GOODBYE cleanup was clean.
   All larger unsubmitted `run8` cells are operationally superseded with it.
-- The real 8B PP canary `run0/n2`, PBS job `J068`, completed exact source
+- The real 8B PP canary `run0/n2`, PBS job `J070`, completed exact source
   and approximately 21.1 GB shard-aware staging before its one application
   exhausted three actor-start attempts. It has no READY or result artifact and
   exited 1 with clean 2/2 DRAIN/GOODBYE. Its single-replica `serve.run` branch
   bypassed the new causal-tail serializer, so it diagnoses a coverage defect
   but does not establish the actor's root-cause phase.
-- Real 8B PP canary `run1/n2`, PBS job `J069`, proved the shared Serve
+- Real 8B PP canary `run1/n2`, PBS job `J071`, proved the shared Serve
   wrapper and retained exact phase `backend_create` plus vLLM `ModelConfig`'s
   `LlamaForCausalLM` architecture-inspection failure. The swallowed registry
   cause is absent; it has no READY/result and clean 2/2 DRAIN/GOODBYE only.
-- Real 8B PP canary `run2/n2`, PBS job `J070`, proved the registry logging
+- Real 8B PP canary `run2/n2`, PBS job `J072`, proved the registry logging
   hook ran, but nested truncation retained only a nonfatal
   `TRANSFORMERS_CACHE` warning instead of subprocess exit/cause. It likewise
   has no READY/result and ended with clean 2/2 DRAIN/GOODBYE.
-- Real 8B PP canary `run3/n2`, PBS job `J071`, retained the structured
+- Real 8B PP canary `run3/n2`, PBS job `J073`, retained the structured
   native cause: vLLM's cold `LlamaForCausalLM` registry helper died with
   `returncode=-11`/`SIGSEGV` during `backend_create`. It has no READY/result
   and ended with clean 2/2 DRAIN/GOODBYE.
-- PP2 `run9/n4`, PBS job `J074`, proved exact four-node 405B READY and clean
+- PP2 `run9/n4`, PBS job `J076`, proved exact four-node 405B READY and clean
   service shutdown, but failed during replay 0 on nonexistent mpi4py method
   `Intracomm.ireduce`. It published no replay result or ResultManifest; replay 1
   never ran. The locally saved rank-0 request records and READY evidence are
   diagnostic only, not a paper measurement. All unsubmitted larger `run9`
   cells bind the same defective source snapshot and are superseded.
-- PP2 `run10/n256`, PBS job `J077`, proved exact 256-node 405B READY and
+- PP2 `run10/n256`, PBS job `J079`, proved exact 256-node 405B READY and
   clean 256/256 DRAIN/GOODBYE shutdown. Its 16 Go subprocesses each logged
   384 completed local rows during replay 0, but MPI rank 0 died from signal 11
   before global result publication. Replay 1 never ran, `results/` is empty,
@@ -1112,34 +1112,34 @@ throughput for a 2x node/replica increase.
   low-node values come from `run3` at 0.95.
 - Three historical streaming PP2 cells were produced while their nominal
   32/64-node deployment was attached to a 256-node Ray cluster and must never
-  enter the figure: direct `run3/n64` job `J028`, HAProxy `run5/n32` job
-  `J026`, and HAProxy `run5/n64` job `J027`. Their pre-fix result bytes are
+  enter the figure: direct `run3/n64` job `J030`, HAProxy `run5/n32` job
+  `J028`, and HAProxy `run5/n64` job `J029`. Their pre-fix result bytes are
   retained only as `result0.json.preallocfix_20260726T014708Z.bak` evidence; the
   strict ledger cannot select a `*.bak` filename.
 
 ## Remaining execution order
 
-PBS job `J054`, the exact `run6/n256` null-compute trial A bundle, completed
-successfully and is accepted above. PBS job `J055`, the independently
+PBS job `J056`, the exact `run6/n256` null-compute trial A bundle, completed
+successfully and is accepted above. PBS job `J057`, the independently
 materialized `run7/n256` trial B bundle, failed before Ray startup and is
 rejected above. The failed bundle is immutable negative evidence and must not
 be reset, resubmitted, or silently replaced in the paper consumer.
 
 The corrected-snapshot null-compute n32 and n256 pairs are now complete as
 `run10`/`run11`; both n256 jobs passed strict paper acceptance. Real-engine
-canary `run5/n2`, PBS `J073`, remains accepted PP startup qualification, but
+canary `run5/n2`, PBS `J075`, remains accepted PP startup qualification, but
 it deliberately has no replay and is not a paper cell. Rejected 405B
-`run9/n4`, PBS `J074`, remains the immutable record of the invalid mpi4py
+`run9/n4`, PBS `J076`, remains the immutable record of the invalid mpi4py
 collective. Its replacement gates are now complete: full-replay MPI canary
-`run0/n2`, PBS `J075`, passed as qualification evidence, and fresh 405B
-`run10/n4`, PBS `J076`, passed as an accepted paper cell. Rejected `run7`,
+`run0/n2`, PBS `J077`, passed as qualification evidence, and fresh 405B
+`run10/n4`, PBS `J078`, passed as an accepted paper cell. Rejected `run7`,
 `run8` and `run9` identities remain immutable and must not be reset or reused.
 
-The fresh 405B `run11/n256`, PBS `J080`, is now accepted after exact READY,
+The fresh 405B `run11/n256`, PBS `J082`, is now accepted after exact READY,
 both complete replays, authenticated results and clean terminal evidence.
 Together with the corrected null-compute n256 pair, this closes the request
 to run until both largest-scale targets work. The failed `run10/n256`, PBS
-`J077`, remains immutable negative evidence.
+`J079`, remains immutable negative evidence.
 
 1. Complete the final-snapshot selections in the 2026-09-09 continuation above:
    all eight null-compute cells in `run12`/`run13`, and PP `run11`

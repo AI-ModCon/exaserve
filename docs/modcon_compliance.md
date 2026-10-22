@@ -38,7 +38,7 @@ records the exact source identity and individual check results:
   formatting, lint, typed-core and security checks passed.
 
 The optional Serve tests were also exercised with their real import-time
-dependencies in one allocated Aurora node (PBS job `J095`):
+dependencies in one allocated Aurora node (PBS job `J097`):
 **152 focused unit tests passed**. The command was:
 
 ```bash

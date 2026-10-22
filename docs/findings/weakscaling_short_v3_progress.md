@@ -110,7 +110,7 @@ Plot: `findings/weakscaling_three_dispatch_v3.png`
 
 ## 512-Node Attempt — Ray GCS Failure
 
-**Attempted**: Direct-MPI 512n (job 8433728, prod queue, 4hr walltime, snapshot e5b1569b)
+**Attempted**: Direct-MPI 512n (job J003, prod queue, 4hr walltime, snapshot e5b1569b)
 
 **Result**: Stage 3 failed — `serve.run()` raised `RuntimeError: Deploying application default failed`.
 

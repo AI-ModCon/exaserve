@@ -12,7 +12,7 @@ not waive its safety, ownership, staging or evidence requirements.
 ## Why this work is needed
 
 Aurora's exact-size 32/64/128-node debug-scaling queue permits at most one hour.
-The final-runtime four-node 405B run, PBS `J081`, used 1:01:21; the previous
+The final-runtime four-node 405B run, PBS `J083`, used 1:01:21; the previous
 hardened four-node run used 1:08:50, and accepted n256 used 1:14:28. One-hour
 middle-scale submissions have insufficient demonstrated margin. Capacity is
 limited to 16 nodes; production begins at 256. No eligible held allocation
@@ -92,7 +92,7 @@ remains in the two original child bundle directories above.
 
 ### First request withdrawn before execution
 
-Campaign A was submitted as PBS `J088`, then verified still in Q and
+Campaign A was submitted as PBS `J090`, then verified still in Q and
 cancelled before allocation on 2026-09-09. No child started: both retain
 PLANNED revision 0. The campaign and its scheduler history are preserved;
 it is not qualification evidence and must not be resubmitted.
@@ -123,10 +123,10 @@ budgets and the two still-unexecuted frozen child bundles. Its controller is
 commit `6d0e1e536e8bf5995334b75014b548218e4cb84b`, source snapshot
 `20ddd971afc3887a4f03d8db031105cdfcd3f8558a03670294bc8c2bb17ec86c`,
 with scheduler identity `ac-aafcfe1b37d8`. A fresh one-node interactive
-regression session, PBS `J089`, has also been requested to test the complete
+regression session, PBS `J091`, has also been requested to test the complete
 corrected candidate; the same per-candidate regression budget above applies.
 
-Campaign B was submitted as PBS `J090`, then also withdrawn while still Q.
+Campaign B was submitted as PBS `J092`, then also withdrawn while still Q.
 A final cold-start review found that the parent asked the filesystem validator
 to inspect `/tmp/exaserve` before any child had created that directory. The
 parent now validates the existing declared `/tmp` mount and creates its own
@@ -138,7 +138,7 @@ or deleted, and neither A nor B is qualification evidence.
 
 ### Corrected-candidate regression and cold bootstrap
 
-On the validated one-node interactive session PBS `J089`, head
+On the validated one-node interactive session PBS `J091`, head
 `node-7-7-0`, `/tmp/exaserve` was actually absent. The corrected validator
 accepted the declared `/tmp` mount and created/removed a private temporary
 directory successfully, without requiring an existing ExaServe tree.
@@ -166,7 +166,7 @@ result and cold-bootstrap check above cover this controller's code.
 
 ### Proof C native execution
 
-PBS `J092` was submitted at 23:08 UTC on 2026-09-09 and entered R at
+PBS `J094` was submitted at 23:08 UTC on 2026-09-09 and entered R at
 23:21:33 UTC. The approved start waiter confirmed native head
 `node-25-1-0`; PBS reports exactly four physical capacity nodes:
 `node-25-1-0`, `node-25-1-1`, `node-25-1-2`, and
@@ -267,7 +267,7 @@ Each child keeps its original source, workload, deployment and exact logical
 node count; its standalone debug-scaling SchedulerPlan is not submitted.
 Physical allocation size and actual queue/walltime are captured separately.
 
-Canonical submission succeeded as PBS **`J094`** on 2026-09-09, using
+Canonical submission succeeded as PBS **`J096`** on 2026-09-09, using
 `python3 -m eval.cli allocation submit <campaign>/campaign.json`. A dedicated
 Aurora start monitor uses the seven-day production wait bound, followed by
 active parent/child-state and log monitoring. A queued parent is not an accepted
@@ -282,7 +282,7 @@ paper measurement. No child standalone PBS request is submitted alongside it.
   hermetic tests (0.75 seconds). Tests cover exact subsets, environment isolation,
   ambiguous/duplicate submissions, failure gating, cancellation/lease guards,
   strict native PBS completion, sentinel identity/freshness, and contract budgets.
-- Full regression passed on interactive PBS `J087`, exact node
+- Full regression passed on interactive PBS `J089`, exact node
   `node-14-4-3`, after the approved interactive-allocation fallback and a fresh
   site-environment setup: **1,768 passed, 27 warnings, 165.99 seconds**, exit 0. The session was
   validated against its actual PBS job/nodefile before execution and released

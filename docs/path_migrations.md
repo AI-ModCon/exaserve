@@ -46,7 +46,7 @@ Compute-node names appear as labels `node-<rack>-<chassis>-<slot>` with racks
 renumbered 1 to 25; one real rack maps to one label rack, so statements about
 shared racks and chassis still hold. Allocation-internal addresses appear as
 documentation addresses from `192.0.2.0/24`, and a reservation identifier as
-`<reservation>`. PBS job identifiers appear as labels `J001` to `J095`,
+`<reservation>`. PBS job identifiers appear as labels `J001` to `J097`,
 numbered in job order; a job keeps its label in every document. Maintainer
 helpers appear generically: the site environment script
 (`EXASERVE_ENV_SCRIPT_AURORA`), allocation leases (recorded in qualification

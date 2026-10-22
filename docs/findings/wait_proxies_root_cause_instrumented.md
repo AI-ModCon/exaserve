@@ -247,10 +247,10 @@ The 3-factor hypothesis was disproven:
 | Run | Nodes | Job ID | Queue | Run Dir |
 |-----|-------|--------|-------|---------|
 | 1n smoke | 1 | capacity J002 | capacity | 20260415T210345Z_inst_2node_manifest |
-| 32n inst | 32 | J003 | debug-scaling | weakscaling_nullcompute_proxy/run2/32-nodes |
-| 64n inst | 64 | J004 | debug-scaling | weakscaling_nullcompute_proxy/run2/64-nodes |
-| 128n inst | 128 | J005 | debug-scaling | weakscaling_nullcompute_proxy/run3/128-nodes |
-| 256n inst | 256 | J006 | small (prod) | weakscaling_nullcompute_proxy/run4/256-nodes |
+| 32n inst | 32 | J004 | debug-scaling | weakscaling_nullcompute_proxy/run2/32-nodes |
+| 64n inst | 64 | J005 | debug-scaling | weakscaling_nullcompute_proxy/run2/64-nodes |
+| 128n inst | 128 | J006 | debug-scaling | weakscaling_nullcompute_proxy/run3/128-nodes |
+| 256n inst | 256 | J007 | small (prod) | weakscaling_nullcompute_proxy/run4/256-nodes |
 
 All runs: `EXASERVE_NULL_COMPUTE=1`, PYTHONPATH overlay with instrumented proxy.py.
 All use commit `36c9066` (perf-inst branch) via snapshot.

@@ -2,7 +2,7 @@
 
 **Branch:** perf-inst-dev (commit 757809e + overlay 4dce240)
 **Date:** 2026-04-22
-**Jobs:** J007 (32n), J008 (64n), J009 (128n), J010 (256n)
+**Jobs:** J008 (32n), J009 (64n), J010 (128n), J011 (256n)
 
 ## Headline
 
