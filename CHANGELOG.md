@@ -71,8 +71,13 @@ passed hardware qualification. Exact artifacts and scope are recorded in
   and PBS output directory in a schema-2 campaign identity; eval run snapshots and
   benchmark results default to the configured data root; the LiteLLM interpreter
   and environment scripts have no default location.
-- List the branches retired before publication in the path migration guide,
-  and keep the issues that recurred on them in `docs/KNOWN_ISSUES.md`.
+- Publish `main` only (the path migration guide says so) and keep the issues
+  that recurred on the retired branches in `docs/KNOWN_ISSUES.md`.
+- Gather every plotting script in `eval/plot/` under a descriptive name (the
+  root `plot/` script, three from `eval/scripts/` and one from `benchmarks/`)
+  and rename the base matplotlib style; remove the empty `.codex` file, which
+  is now ignored; cite the paper on arXiv instead of naming a development
+  branch.
 - Remove run logs, audits, campaign records and research notes from the current
   tree and collect their lessons in `docs/operations_handbook.md`: deployment
   prerequisites, measured limits, failures seen and their fixes, settings that
@@ -127,8 +132,8 @@ passed hardware qualification. Exact artifacts and scope are recorded in
 
 ### Existing scaling and hardening baseline
 
-`main` incorporates the history through `044d3ef` from
-`paper/missing-scale-v0.4.0`: head-owned source/model distribution, typed MPI
+`main` incorporates the scaling and hardening history through `044d3ef`:
+head-owned source/model distribution, typed MPI
 replay aggregation, bounded lifecycle ownership, exact readiness evidence,
 node-local compatibility state, and qualified finite allocation-subset tooling.
 

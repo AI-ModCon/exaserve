@@ -8,8 +8,8 @@ The chart uses:
   - one line per backend count
 
 Usage:
-    python3 plot/proxy_scaling.py --input /path/to/proxy_sweep_ID.json
-    python3 plot/proxy_scaling.py --output plot/proxy_scaling.png
+    python3 eval/plot/litellm_proxy_sweep.py --input /path/to/proxy_sweep_ID.json
+    python3 eval/plot/litellm_proxy_sweep.py --output tmp/plots/litellm_proxy_sweep.png
 """
 
 import argparse
@@ -117,7 +117,7 @@ def plot_proxy_scaling(
         from matplotlib.ticker import FuncFormatter
     except ImportError as exc:
         raise SystemExit(
-            "matplotlib is required for plot/proxy_scaling.py. "
+            "matplotlib is required for eval/plot/litellm_proxy_sweep.py. "
             "Install it in the active environment or run the script from an environment "
             "that already has matplotlib available."
         ) from exc
@@ -231,7 +231,7 @@ def main() -> None:
     parser.add_argument(
         "--output",
         type=str,
-        default="plot/proxy_scaling.png",
+        default="tmp/plots/litellm_proxy_sweep.png",
         help="Where to save the figure.",
     )
     parser.add_argument(

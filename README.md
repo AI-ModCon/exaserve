@@ -7,11 +7,11 @@ trusted allocation-internal network. Slurm, CUDA/ROCm, SGLang, streaming, direct
 Serve exposure, and alternate gateways are rejected or validation-only unless a
 separately qualified `SiteProfile` says otherwise.
 
-The shared development baseline is `main`, which includes the scaling and
-hardening history previously developed on `paper/missing-scale-v0.4.0`.
+The design and its measurements on Aurora are described in
+[ExaServe: Large-Scale LLM Serving on Exascale HPC Systems](https://arxiv.org/abs/2609.10812).
 Historical package and hardware receipts qualify their exact artifacts, not
-every later commit. Paper measurements are not silently promoted into release
-evidence or cross-platform support claims.
+every later commit, and the paper's measurements are not release evidence or
+cross-platform support claims.
 
 Qualification is immutable-candidate and dimension specific. The proposed
 64-node target is not a support claim: it needs product-owner scope approval

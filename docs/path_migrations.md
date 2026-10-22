@@ -65,25 +65,12 @@ This redaction applies to the current tree; Git history is not rewritten
 
 ## Retired branches
 
-The repository is published with `main` only: the 15 branches below, audited on
-2026-10-21, and the tags `v0.1.0`, `v0.2.0` and `v0.4.0-rc2` are removed before
-the visibility change. Historical records may still name these branches.
-Concise summaries of recurring issues found during the branch audit are in
+The repository is published with `main` only. Every other development branch
+and the tags `v0.1.0`, `v0.2.0` and `v0.4.0-rc2` were audited and are removed
+before the visibility change: their code is part of `main`'s history, or they
+held an abandoned prototype or a cleanup that was not merged. Summaries of the
+recurring issues found during the audit are in
 [known issues](KNOWN_ISSUES.md#lessons-kept-from-retired-branches).
-
-| Branch | Final commit | Relation to `main` |
-| --- | --- | --- |
-| `develop`, `release-v0.4.0`, `feature/slurm-amd-support`, `refactor/exaserve-rename`, `refactor/pluggable-interfaces` | `1158f26` | In `main`'s history |
-| `paper/missing-scale-v0.4.0` | `044d3ef` | In `main`'s history |
-| `null-compute` | `ea10c5d` | In `main`'s history |
-| `perf-inst-stable` | `7ca4eee` | In `main`'s history |
-| `serve-single-application` | `afb0349` | In `main`'s history |
-| `feature/modcon-single-application-20261020` | `67253ad` | In `main`'s history |
-| `docs/consolidation-20261020` | `d41efd1` | Merged as pull request #1 |
-| `perf-inst` | `47865b4` | Every commit was reapplied to `main` in May 2026 |
-| `archive/pre-release-dirty-20260830` | `a12ccf5` | A preview worktree snapshot whose code reached `main`; its specs differed from `main`'s only by run count and a 300 s reconnect grace |
-| `release` | `c5a6b43` | A file-removal cleanup for a handoff; not merged |
-| `openai-compat` | `546e0de` | An early prototype on Ray Serve's `build_openai_app`; abandoned |
 
 ## Generated reference card
 

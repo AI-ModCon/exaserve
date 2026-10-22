@@ -142,8 +142,8 @@ to pass together.
 ## Regenerating the Word reference card
 
 `docs/ExaServe_Reference_Card.docx` is generated output. The repository does not
-redistribute the Academy template or the paper figures, so a clean clone needs
-these ignored inputs restored first:
+redistribute the Academy template or the two measurement figures, so a clean
+clone needs these ignored inputs restored first:
 
 ```text
 tmp/ref_card/Academy_Framework_Reference_Card.docx
@@ -151,7 +151,8 @@ docs/figures/fig1_proxy_scaling.png
 docs/figures/fig7_pp405b.png
 ```
 
-The two figures come from the paper-analysis output; the template must be
+The two figures are plots of the measurements in the
+[ExaServe paper](https://arxiv.org/abs/2609.10812); the template must be
 obtained from its licensed project source. From any working directory, run:
 
 ```bash

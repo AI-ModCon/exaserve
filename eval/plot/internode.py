@@ -9,7 +9,7 @@ Generates:
   Plot D — Errors & drops time-series per N (only if non-zero detected)
 
 Usage:
-    python3 plot_internode.py --input-dir /path/to/internode_YYYYMMDD_HHMMSS
+    python3 eval/plot/internode.py --input-dir /path/to/internode_YYYYMMDD_HHMMSS
 """
 
 import os

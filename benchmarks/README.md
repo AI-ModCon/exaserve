@@ -5,8 +5,10 @@ production release surface.
 
 - `netstats.py` samples `/proc/net/dev`; ClientLab's `netstats` collector runs
   it, and [stats.md](stats.md) explains its fields and how to read them.
-- `analyze.py`, `plot_internode.py` and `port_model.py` are legacy analysis
-  helpers for an older result format; nothing else in the repository uses them.
+- `analyze.py` and `port_model.py` are legacy analysis helpers for an older
+  result format; nothing else in the repository uses them. The matching plot
+  script is [`eval/plot/internode.py`](../eval/plot/internode.py), with the
+  other plotting scripts.
 
 The pre-hardening benchmark harness (client, proxy and stub launchers and shell
 orchestrators) was removed: it generated a retired manifest format and owned

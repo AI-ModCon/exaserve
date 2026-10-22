@@ -26,6 +26,8 @@ tmp/
 site_config_local.py
 eval/site_config_local.py
 codex_hooks/
+# local AI-assistant settings
+.codex
 # wheel/sdist build artifacts
 build/
 build.bak.*/

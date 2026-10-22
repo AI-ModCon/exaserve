@@ -3,17 +3,17 @@
 # regardless of CWD. Per-series colour/marker/linestyle choices live in
 # plotstyle.py; this file is global look-and-feel only.
 #
-# BASIS: this theme adopts the lab convention from eval/plot/yadusmatplotlibrc
+# BASIS: this theme adopts the base style in eval/plot/base_matplotlibrc
 # (small fonts, thin lines, dotted grid, tight PDF output) so figures are
 # authored at their FINAL physical size and rendered 1:1 in the paper (no
 # down-scaling). Figures are sized to the IEEE column (~3.4in) or text width
 # (~7in) in sc26_full_figures.py to match.
 #
-# PROJECT DEVIATIONS from yadusmatplotlibrc (adjust freely):
-#   * fonts: Yadu uses a uniform 6pt; titles/labels bumped to 7pt (ticks/legend
-#     stay 6pt) for print legibility on these dense multi-panel figures.
-#   * spines top/right off + light axes face: project polish; Yadu is silent
-#     (matplotlib default = all spines on, white face). Set back for strict Yadu.
+# PROJECT DEVIATIONS from base_matplotlibrc (adjust freely):
+#   * fonts: the base style uses a uniform 6pt; titles/labels bumped to 7pt
+#     (ticks/legend stay 6pt) for print legibility on dense multi-panel figures.
+#   * spines top/right off + light axes face: project polish; the base style is
+#     silent (matplotlib default = all spines on, white face). Set back to match it.
 #   * per-proxy colours come from plotstyle.PROXY_COLORS (Dark2), not the cycle
 #     below; the cycle is only the fallback for non-proxy plots.
 
@@ -52,13 +52,13 @@ axes.spines.top       : False
 axes.spines.right     : False
 axes.prop_cycle       : cycler('color', ['4D3886', '11A579', 'D64269', 'F2B701', '3969AC', 'E68310'])
 
-# ---- grid (Yadu: subtle dotted) ----
+# ---- grid (base style: subtle dotted) ----
 grid.color            : DFDFDF
 grid.linestyle        : :
 grid.linewidth        : 0.5
 grid.alpha            : 1.0
 
-# ---- ticks (Yadu sizes) ----
+# ---- ticks (base style sizes) ----
 xtick.major.width     : 0.5
 xtick.minor.width     : 0.5
 ytick.major.width     : 0.5
@@ -84,7 +84,7 @@ legend.borderpad      : 0.3
 legend.labelspacing   : 0.3
 legend.handlelength   : 1.6
 
-# ---- figure / save (Yadu: tight PDF, high dpi) ----
+# ---- figure / save (base style: tight PDF, high dpi) ----
 figure.facecolor      : white
 figure.dpi            : 200
 savefig.dpi           : 400
