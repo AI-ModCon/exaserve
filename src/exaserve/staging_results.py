@@ -83,7 +83,9 @@ def run_collective_operation(
     if not isinstance(expected_root_node, str) or not expected_root_node.strip():
         raise ValueError("expected_root_node must be non-empty")
     if mpi is None:
-        from mpi4py import MPI as mpi
+        from .mpi_loader import import_mpi
+
+        mpi = import_mpi()
 
     comm = mpi.COMM_WORLD
     rank = int(comm.Get_rank())

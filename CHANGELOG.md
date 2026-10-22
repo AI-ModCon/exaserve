@@ -25,6 +25,10 @@ passed hardware qualification. Exact artifacts and scope are recorded in
   debug-scaling limit before contacting the scheduler. The 405B
   characterization spec asks for two hours below 256 nodes, so its 17-255-node
   cells run only as allocation-campaign children.
+- Import MPI only through `exaserve.mpi_loader`, which loads the interpreter's
+  own libssl first: on Aurora's current image, source staging and the replay
+  engine failed to import mpi4py once `hashlib` had loaded the stack's
+  libcrypto.
 - Correct the documented descriptor limit: Aurora compute nodes allow
   1,048,575 open files (16,384 is the login-node limit). `maxconn: 8000` stays
   as a conservative default.

@@ -41,6 +41,16 @@ fails closed on a mismatch: a changed module is a new profile that needs new
 hardware evidence, never a bypass. Do not depend on host tools that the job
 environment does not declare.
 
+**Import MPI only through `exaserve.mpi_loader`.** On Aurora's current default
+image the OS libssl needs symbols (`OPENSSL_3.0.1`) that the frameworks stack's
+own libcrypto lacks. MPICH links libcurl and lists `/usr/lib64` in an RPATH
+that outranks `LD_LIBRARY_PATH`, so a process that has loaded `hashlib` and
+then imports mpi4py fails with "version `OPENSSL_3.0.1' not found"; source
+staging died this way before any rank started. `import_mpi()` imports `ssl`
+first, so the process keeps one OpenSSL, and a test rejects any other mpi4py
+import. Staging ranks run with an explicit environment, so a site-level
+preload cannot reach them.
+
 **Device selection on Aurora.** Device visibility comes from the plan through
 `ZE_AFFINITY_MASK`. Never introduce `ONEAPI_DEVICE_SELECTOR`: the site profile
 unsets it and sets `RAY_EXPERIMENTAL_NOSET_ONEAPI_DEVICE_SELECTOR=1`, because
