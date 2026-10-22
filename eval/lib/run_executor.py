@@ -31,6 +31,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Callable, Iterable
 
+from eval.site_config import site_config_environment_names
 from exaserve.exception_notes import add_exception_note
 from exaserve.schedulers import SubmissionRejected, get_scheduler, queue_walltime_violation
 
@@ -723,6 +724,15 @@ def _validated_replay_capsule_environment(
     return tuple(sorted(environment.items()))
 
 
+def _replay_base_environment(capsule_environment: dict[str, str]) -> dict[str, str]:
+    # Site configuration is head-side planning input. Its values name shared
+    # storage, which the closed replay environment refuses to carry.
+    site_configuration = site_config_environment_names()
+    base = {key: value for key, value in os.environ.items() if key not in site_configuration}
+    base.update(capsule_environment)
+    return base
+
+
 def _closed_replay_worker_environment(run_plan, capsule_environment: dict[str, str]) -> dict:
     from exaserve.plan.runtime_environment import (
         SHARED_ROOTS_ENV,
@@ -749,8 +759,7 @@ def _closed_replay_worker_environment(run_plan, capsule_environment: dict[str, s
     )
     paths.verify_capsule(policy=profile)
     paths.prepare_state(policy=profile)
-    base = os.environ.copy()
-    base.update(capsule_environment)
+    base = _replay_base_environment(capsule_environment)
     selected = closed_runtime_environment(plan, paths=paths, base_environment=base, policy=profile)
     selected["PYTHONSAFEPATH"] = "1"
     # Replay consumes only local paths. The general runtime guard's declaration

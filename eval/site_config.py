@@ -125,6 +125,14 @@ def _load_local_overrides() -> Dict[str, Any]:
     return overrides
 
 
+def site_config_environment_names() -> frozenset:
+    """The environment variables that configure this tooling on the head."""
+    return frozenset(
+        ["EXASERVE_SITE_CONFIG_LOCAL"]
+        + ["EXASERVE_{0}".format(field_name.upper()) for field_name in _FIELD_NAMES]
+    )
+
+
 def _load_env_overrides() -> Dict[str, Any]:
     overrides = {}
     for field_name in _FIELD_NAMES:

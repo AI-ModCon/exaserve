@@ -25,6 +25,15 @@ passed hardware qualification. Exact artifacts and scope are recorded in
   debug-scaling limit before contacting the scheduler. The 405B
   characterization spec asks for two hours below 256 nodes, so its 17-255-node
   cells run only as allocation-campaign children.
+- Batch jobs no longer fail on ExaServe's own configuration variables. Since
+  the built-in project root was removed, an eval job either failed at launch
+  without `EXASERVE_PROJECT_ROOT` or, with it, was refused because the value
+  names shared storage. The eval launcher now reads no site configuration and
+  passes none to the serving process or the replay client, and the serving
+  runtime drops
+  `EXASERVE_PROJECT_ROOT`, `EXASERVE_MODEL_STORAGE_PATH`,
+  `EXASERVE_LOCAL_STAGE_PATH` and `EXASERVE_ENV_SCRIPT_AURORA` from child
+  environments.
 - Import MPI only through `exaserve.mpi_loader`, which loads the interpreter's
   own libssl first: on Aurora's current image, source staging and the replay
   engine failed to import mpi4py once `hashlib` had loaded the stack's

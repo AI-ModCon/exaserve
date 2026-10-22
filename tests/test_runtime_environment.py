@@ -389,6 +389,36 @@ def test_closed_environment_discards_lmod_bookkeeping_before_shared_path_scan(tm
     assert not bookkeeping.keys() & env.keys()
 
 
+def test_closed_environment_drops_exaserve_head_configuration(tmp_path):
+    """Users export these to submit jobs, so batch jobs inherit them. They name
+    shared storage and no rank reads them, so they are dropped, not reported."""
+    plan = _plan()
+    paths = _paths(tmp_path)
+    python = tmp_path / "site-python"
+    python.write_bytes(b"python")
+    python.chmod(0o755)
+    head_configuration = {
+        "EXASERVE_PROJECT_ROOT": "/home/user/project",
+        "EXASERVE_MODEL_STORAGE_PATH": "/home/user/project/models",
+        "EXASERVE_LOCAL_STAGE_PATH": "/tmp/hf_home",
+        "EXASERVE_ENV_SCRIPT_AURORA": "/home/user/site/env.sh",
+    }
+    env = closed_runtime_environment(
+        plan,
+        paths=paths,
+        policy=plan,
+        base_environment={
+            QUALIFIED_PYTHON_ENV: str(python),
+            QUALIFIED_PYTHON_HASH_ENV: "d" * 64,
+            QUALIFIED_PYTHON_PROFILE_ENV: plan.site_profile_hash,
+            COMPAT_SOURCE_PROFILE_ENV: plan.compatibility_profile_hash,
+            COMPAT_SOURCE_MANIFEST_ENV: plan.manifest_hash,
+            **head_configuration,
+        },
+    )
+    assert not head_configuration.keys() & env.keys()
+
+
 def test_closed_environment_drops_unrecognized_ambient_behavior(tmp_path):
     plan = _plan()
     paths = _paths(tmp_path)

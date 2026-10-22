@@ -192,7 +192,10 @@ python3 -m eval.site_config get env_script_aurora
 Neither variable has a built-in default. Storage paths that are not set
 explicitly are derived from `EXASERVE_PROJECT_ROOT`, and PBS jobs are charged
 to `EXASERVE_PROJECT_ACCOUNT` unless a spec sets `scheduler.project`; commands
-that need either value fail with an error that names it.
+that need either value fail with an error that names it. These variables
+configure planning and submission on the head only: a batch job launches
+without them, and ExaServe drops them from every rank's environment, so
+exporting them in a shell profile is safe.
 
 Set model/data/output paths in your
 [local site configuration](../eval/site_config_local.example.py).

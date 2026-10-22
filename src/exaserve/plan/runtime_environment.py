@@ -175,7 +175,18 @@ _AMBIENT_DISCARD_PREFIXES = (
     # extension point. In particular, Lmod exports ``module``/``ml`` this way.
     "BASH_FUNC_",
 )
-_AMBIENT_DISCARD_KEYS = {"LOADEDMODULES", "_LMFILES_"}
+_AMBIENT_DISCARD_KEYS = {
+    "LOADEDMODULES",
+    "_LMFILES_",
+    # ExaServe's own head-side configuration: read when plans are compiled and
+    # jobs are submitted, never by ranks or engines. Users export it in their
+    # shell profile, so batch jobs inherit it, and its values name shared
+    # storage; drop it rather than report it as a leak.
+    "EXASERVE_PROJECT_ROOT",
+    "EXASERVE_MODEL_STORAGE_PATH",
+    "EXASERVE_LOCAL_STAGE_PATH",
+    "EXASERVE_ENV_SCRIPT_AURORA",
+}
 _OVERWRITTEN_PATH_KEYS = {
     "PWD",
     "OLDPWD",
