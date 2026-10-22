@@ -13,7 +13,8 @@ and hardware-qualified serving are separate support boundaries.
 - [FAQ](faq.md): environment, qualification, readiness, and contribution questions.
 - [AI-ModCon checklist](modcon_compliance.md): requirement mapping, validation
   limits, and GitHub administrator steps for `AI-ModCon/exaserve`.
-- [Research findings](findings/index.md): historical measurements and analysis.
+- [Operations handbook](operations_handbook.md): deployment heads-ups, measured
+  limits, failures seen and their fixes, and measurement practice.
 - [Documentation path migration](path_migrations.md): old-to-new path mapping
   and preservation of historical evidence identities.
 

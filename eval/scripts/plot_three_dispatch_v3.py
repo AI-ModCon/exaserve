@@ -478,8 +478,9 @@ def main() -> int:
     out = (
         sys.argv[1]
         if len(sys.argv) > 1
-        else str(REPO_ROOT / "docs/findings/weakscaling_three_dispatch_v3.png")
+        else str(REPO_ROOT / "tmp/plots/weakscaling_three_dispatch_v3.png")
     )
+    Path(out).parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out, dpi=200, bbox_inches="tight", facecolor="white", edgecolor="none")
     plt.close(fig)
     print(f"\nSaved: {out}")

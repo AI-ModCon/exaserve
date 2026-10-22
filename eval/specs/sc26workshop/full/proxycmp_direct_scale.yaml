@@ -39,7 +39,7 @@ deployment:
   replica_max_ongoing_requests: 256
   collect_stats: true
 client:
-  # Explicit for the record; local is also the default since 2026-07-25.
+  # Explicit for the record; local is also the default.
   direct_dispatch: local
   num_runs: 3
   dest: direct

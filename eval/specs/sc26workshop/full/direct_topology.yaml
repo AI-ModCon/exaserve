@@ -3,7 +3,7 @@ name: direct_topology
 # The paper reports direct-dispatch STREAMING per-node completions falling
 # 99 (n1) -> 71 (n256) QPS/node while non-streaming direct holds ~106 flat, and
 # attributes the gap, hedged, to Ray's control-plane footprint. Re-analysis of
-# the full-sweep shards (eval/plot + scratch analysis, 2026-07-25) says the
+# the full-sweep shards (eval/plot and a separate analysis) says the
 # attribution is untested and probably wrong on the mechanism:
 #   * the client dispatches perfectly (issue span 60.0s, lag p50 0.00s) at
 #     every N -- the offered rate really is 110 QPS/node everywhere;

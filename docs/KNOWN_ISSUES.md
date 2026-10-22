@@ -1,124 +1,160 @@
-# Known issues and empirical failure log
+# Known issues
 
-**Reconciled:** 2026-08-30 against the release-v0.4.0 source candidate.
+**Role:** issue register. `hardening/FINDINGS.yaml` is the authoritative
+disposition ledger; this file cannot close or waive a release gate. The measured
+behaviour behind these entries, and what to do about it, is in the
+[operations handbook](operations_handbook.md).
 
-**Role:** historical/empirical evidence. `hardening/FINDINGS.yaml` is the
-authoritative disposition ledger; this file cannot close or waive a release
-gate.
+No artifact of the current tree is production-qualified
+([hardening status](hardening/STATUS.md)). Large-scale observations below are
+diagnostic context; they do not qualify the current architecture or establish a
+support envelope.
 
-Final43 remains qualified at one and two Aurora nodes. The successor source
-candidate requires a new clean package and exact-candidate ladder. Historical
-128/256-node observations below remain useful diagnostic evidence, but they do
-not qualify the new architecture or establish a support envelope.
-
-## Current unresolved scale/scope observations
+## Current unresolved scale and scope observations
 
 ### A1. Envoy 256-node streaming deployment collapse — unqualified dimension
 
-Three historical Envoy streaming attempts reported zero request success after
-an EngineCore port collision, unhealthy replicas, a Serve controller failure,
-a false-ready marker, and later connection refusal. Envoy itself had initially
-been healthy. Final43 fixes port ownership, false readiness, process ownership,
-and failure evidence for the qualified HAProxy path, but Envoy/streaming/256
-nodes is not an approved release dimension and has not been reproduced with the
-new control plane. Ledger: `KI-A1`, `IN_PROGRESS`.
+Three earlier Envoy streaming attempts reported zero request success after an
+EngineCore port collision, unhealthy replicas, a Serve controller failure, a
+false-ready marker, and later connection refusal. Envoy itself had initially
+been healthy. Port ownership, false readiness, process ownership and failure
+evidence are fixed for the HAProxy path, but Envoy, streaming and 256 nodes are
+not an approved release dimension and have not been reproduced with the current
+control plane; with the current control plane Envoy streaming already shows
+connect-timeout errors at 64 nodes
+([handbook](operations_handbook.md#5-gateways-clients-and-serving-settings)).
+Ledger: `KI-A1`, `IN_PROGRESS`.
 
 ### A3. Ray GCS/controller pressure at large N — boundary evidence missing
 
-Historical 256-node runs showed roughly quadratic proxy/actor-handle work and a
-single-controller bottleneck. ExaServe's final readiness processing is indexed,
-bounded, and does not fleet-poll, but it cannot remove or claim to solve
-upstream Ray behavior. Early deployments of one Serve application with a
-replica on every GPU tile (February 2026) took about 100 s at 256 nodes, 199 s
-at 512 and 1,241 s at 1,024, about six times longer for the last doubling; at
-2,048 nodes (24,576 replicas) all three attempts reached the 1,200 s driver
-limit with about half of the replicas running. Measure the exact release-v0.4.0
-candidate at the approved boundary tier before setting a larger supported
-maximum. Refs:
-`docs/findings/gcs_contention_quantitative.md` and
-`docs/findings/proxyactor_death_cascade_256n.md`. Ledger: `KI-A3`, `IN_PROGRESS`.
+Earlier 256-node runs showed roughly quadratic proxy and actor-handle work and
+a single-controller bottleneck. ExaServe's readiness processing is indexed,
+bounded, and does not poll the fleet, but it cannot remove or claim to solve
+upstream Ray behaviour. Early deployments of one Serve application with a
+replica on every GPU tile took about 100 s at 256 nodes, 199 s at 512 and
+1,241 s at 1,024, about six times longer for the last doubling; at 2,048 nodes
+(24,576 replicas) all three attempts reached the 1,200 s driver limit with
+about half of the replicas running. Measure the current candidate at the
+approved boundary tier before setting a larger supported maximum. Mechanism and
+measurements: [handbook](operations_handbook.md#4-start-up-and-readiness).
+Ledger: `KI-A3`, `IN_PROGRESS`.
 
 ### A7 / D2. Residual source-import and MPI activation cost — scale proof missing
 
-The release architecture transactionally inventories and stages one source tree, generated
-overlay, and bootstrap, then requires a receipt from every planned rank. The
-two-node gates prove both ranks activated identical bytes. Residual imports
-from the shared environment and native broadcast behavior still need
-measurement at the approved scale boundary. Ledgers: `KI-A7`, `KI-D2`, and
-`TD-COPPER`, `IN_PROGRESS`.
+Only the allocation head reads shared storage: source, generated overlay and
+bootstrap are staged once into a node-local capsule, ranks import from it, and
+every planned rank returns a receipt. The two-node gates prove both ranks
+activated identical bytes. Only the native bootstrap has a syscall-level proof
+of the non-head rule (two nodes); a trace of a real staged-model Ray and vLLM
+run and per-rank shared-open counts at the approved scale are still required
+([handbook](operations_handbook.md#3-stage-code-and-models)). Ledgers:
+`KI-A7`, `KI-D2`, and `TD-COPPER`, `IN_PROGRESS`.
 
 ### B2. Centralized 256-node streaming congestion and rare HAProxy death
 
-Historical bounded-client streaming commonly completed requests but suffered a
-packet/retransmission storm (up to about 6.75 million retransmits and about
-195,000 established connections). A rarer run ended in total HAProxy death and
-connection refusal; its causal signal was not captured. Do not conflate the
-common degraded network regime with the rare process death. Streaming is not a
-release-v0.4.0 production claim. Refs:
-`eval/specs/sc26workshop/FINDINGS_haproxy_256n.md`. Ledger: `KI-B2`,
-`IN_PROGRESS`.
+Bounded-client streaming through one head-node HAProxy plateaus at about 4.7
+thousand requests/s from 128 nodes. At 256 nodes requests usually complete but
+with a TCP retransmission storm (up to about 7 million retransmissions and about
+200,000 established connections on the head node) and multi-second latency,
+while the model servers stay healthy. About one in twelve ramp-ups instead ended
+in total HAProxy death and connection refusal; its cause was not captured, and
+the supervisor now records the gateway's exit code and signal. Do not conflate
+the common degraded network regime with the rare process death
+([handbook](operations_handbook.md#5-gateways-clients-and-serving-settings)).
+Streaming is not a production claim. Ledger: `KI-B2`, `IN_PROGRESS`.
 
-## Resolved mechanisms in final43
+### B5. HAProxy thread count follows `gateway.worker_count` — configuration
+
+When `gateway.options.nbthread` is unset, the gateway's `worker_count` becomes
+HAProxy's thread count. The shipped examples and the characterization specs set
+`worker_count` (or `num_workers`) to 1, so HAProxy runs single-threaded, which
+cost 23% of streaming throughput at 64 nodes; earlier measurements used
+HAProxy's automatic thread count. Set `gateway.options.nbthread` explicitly
+(at least 4) for deployments beyond a few nodes. The renderer's docstring still
+says that an unset value means automatic detection.
+
+### C5. Client topology footgun — open for YAML and matrix specs
+
+The run plan represents deployment and client topology explicitly, and every
+dispatch arm validates before submission. The bounded default of four client
+nodes for proxy runs is not reached from YAML specs, though: the loader sets an
+omitted `client.num_nodes` to `deployment.num_nodes` before the bounded default
+applies, and matrix expansion overwrites even an explicit value unless the
+matrix targets or derives it. The regression tests build the plan objects
+directly and miss that path. Set `client.num_nodes` explicitly (in sweeps,
+derive it, for example `min(num_nodes, 4)`) and check the materialized
+`run.yaml`. The ledger closes `KI-C5` for the plan contract only.
+
+### D5. Pipeline-parallel patches fall back to a representative layer — open
+
+When no exact or canonical layer match exists, the pipeline-parallel
+compatibility patches return the first layer of the type for backend lookup and
+the first mapping entry for attention metadata, and KV-cache binding skips
+unmatched layers; these events are logged only with
+`EXASERVE_VLLM_PATCH_VERBOSE=1`. Receipts prove that the patches are active and
+the real PP=2 two-node canary passed, but a silent wrong-layer binding would not
+block READY. Before claiming new PP topologies or models, make unmatched-layer
+fallbacks fail closed or record them in the receipt, and use canaries that check
+output correctness.
+
+## Resolved mechanisms
 
 ### A2. Static port races — resolved
 
-Ports are generation-owned through descriptor/lease contracts. An address
-collision fails before the component counts toward readiness. The final43
-two-node null gate deliberately holds the HAProxy port and proves
-fail-before-launch behavior.
+Ports are generation-owned through descriptor and lease contracts. An address
+collision fails before the component counts toward readiness. A two-node null
+gate deliberately held the HAProxy port and proved fail-before-launch behaviour.
 
 ### A4 / D1. False or proxy-only readiness — resolved
 
 No log line, open socket, proxy health response, one canary, or prior-generation
 file can make a deployment READY. The canonical predicate requires exact
-sessions, resources, component/replica/engine receipts, owned gateway state,
-and a typed completion through the advertised endpoint; it is continuously
-re-evaluated. The two-node negative gate withholds a worker proxy and remains
-non-ready. Scale support is tracked separately by `PR-033` rather than by
-keeping the correctness defect open.
+sessions, resources, component, replica and engine receipts, owned gateway
+state, and a typed completion through the advertised endpoint; it is
+continuously re-evaluated. The two-node negative gate withholds a worker proxy
+and remains non-ready. Scale support is tracked separately by `PR-033` rather
+than by keeping the correctness defect open.
 
 ### A5. Tokenizer/Rayon oversubscription guard — resolved
 
-The bounded tokenizer environment is a typed SiteProfile/compatibility
-capability and is applied to the managed processes that need it. It is no longer
-an ambient shell workaround.
+The bounded tokenizer environment is a typed SiteProfile and compatibility
+capability and is applied to the managed processes that need it, Ray actors
+included. It is no longer an ambient shell workaround.
 
 ### A6. Scaling-trace ownership and load — resolved
 
-Telemetry is deployment/generation scoped, bounded, freshness checked, and
+Telemetry is deployment and generation scoped, bounded, freshness checked, and
 owned by the composition lifecycle. Cleanup runs through the same bounded
-shutdown path. Dead per-replica file-writing behavior is not reachable.
+shutdown path. Dead per-replica file-writing behaviour is not reachable.
 
 ### B1 / E1. Corrected non-streaming HAProxy result — preserved, not generalized
 
-The historical corrected result is about 27.1k requests/s at 256 nodes with
-about 0.04% errors and an explicitly bounded client topology. It replaced the
-confounded result in which one client per node hammered a single proxy. This is
-regression context, not final43 scale qualification and not evidence about
-streaming. Refs: `eval/specs/sc26workshop/FINDINGS_haproxy_256n.md` and
-`docs/findings/weakscaling_short_v3_progress.md`.
+The corrected result is about 27.1k requests/s at 256 nodes with about 0.04%
+errors and an explicitly bounded client topology. It replaced the confounded
+result in which one client per node hammered a single proxy. This is regression
+context, not scale qualification and not evidence about streaming
+([handbook](operations_handbook.md#5-gateways-clients-and-serving-settings)).
 
 ### B3. LiteLLM fake streaming — resolved by typed timing semantics
 
 LiteLLM's buffered end-burst cannot enter a real-streaming TBT comparison. The
-release-v0.4.0 result contract classifies it as `buffered_response`, retains
-throughput/error/E2E evidence, and withholds TTFT/TBT. Only
-`incremental_sse` may enter token-delivery SLO plots. Legacy results lacking the
-classification fail closed rather than being inferred from plausible-looking
-fields. Ledger: `KI-B3`, `FIXED`.
+result contract classifies it as `buffered_response`, retains throughput, error
+and end-to-end evidence, and withholds TTFT and TBT. Only `incremental_sse` may
+enter token-delivery SLO plots. Legacy results lacking the classification fail
+closed rather than being inferred from plausible-looking fields. Ledger:
+`KI-B3`, `FIXED`.
 
-### B4. Over-context API error semantics — resolved before v0.4.0 qualification
+### B4. Over-context API error semantics — resolved
 
-The paper preview found that oversized non-stream requests returned HTTP 500
+Earlier scale runs found that oversized non-stream requests returned HTTP 500
 and streaming requests committed HTTP 200 before terminating the SSE body. The
-release source candidate now counts the rendered prompt with the live backend
-tokenizer and rejects prompt plus requested completion beyond `max_model_len`
-as a correlated HTTP 400 before generation or headers. Ledger: `REL-API-01`,
-`FIXED`.
+server now counts the rendered prompt with the live backend tokenizer and
+rejects prompt plus requested completion beyond `max_model_len` as a correlated
+HTTP 400 before generation or headers. Ledger: `REL-API-01`, `FIXED`.
 
 ### C1. Server statistics silent/partial success — resolved
 
-The active producer/consumer uses one strict typed contract. Requested stats
+The active producer and consumer use one strict typed contract. Requested stats
 must cover the planned producers; missing, malformed, or partial required stats
 fail the run. The incompatible legacy pull API is not the production path.
 
@@ -137,34 +173,28 @@ garbage with `raw_decode`.
 ### C4. Distributed result partials — resolved
 
 Shard collection remains fault-isolating rather than reverting to the hanging
-root collective, but exact rank/result identities and terminal completeness are
-mandatory. A missing or duplicated shard cannot produce success.
-
-### C5. Client topology footgun — resolved
-
-The immutable run plan represents deployment and client topology explicitly.
-Every dispatch arm validates before submission; an omitted, targeted, or
-derived node-count mismatch follows the canonical plan rules rather than a
-hidden spec convention.
+root collective, but exact rank and result identities and terminal completeness
+are mandatory. A missing or duplicated shard cannot produce success.
 
 ### C6. TTFT/TBT interpretation — resolved
 
 Analysis and figures report TTFT and TBT only for `incremental_sse` timing.
-Non-streaming and buffered runs retain E2E latency but cannot populate or enter
-token-delivery fields and SLO panels.
+Non-streaming and buffered runs retain end-to-end latency but cannot populate or
+enter token-delivery fields and SLO panels.
 
 ### D3. Competing proxy instrumentation owner — resolved
 
 The retired profiling hook and full-file overlay path are absent from the
 reachable production code. Instrumentation has one documented owner and atomic
-activation/receipt semantics.
+activation and receipt semantics.
 
 ### D4. Pipeline-parallel topology/private API — resolved for selected profile
 
-PP topology is a plan capability with explicit node-pinned stage ownership.
-Final43 proves one real PP=2 replica across two physical hosts and exact
-EngineCore/worker receipts. Unsupported multi-replica/non-shard combinations
-fail plan capability checks rather than proceeding with ambiguous placement.
+PP topology is a plan capability with explicit node-pinned stage ownership. One
+real PP=2 replica across two physical hosts was proven with exact EngineCore and
+worker receipts. Unsupported multi-replica and non-shard combinations fail plan
+capability checks rather than proceeding with ambiguous placement; see D5 for
+the layer-matching fallback that remains.
 
 ## Lessons kept from retired branches
 
@@ -180,21 +210,21 @@ replicas, every queue-length probe from Ray Serve's request router missed the
 default 0.1 s deadline at once, and the router then failed in a loop with
 `AttributeError: 'NoneType' object has no attribute 'routing_context'`: Ray's
 backoff path reaches that check with no pending request when routing tasks
-outnumber queued requests (February 2026). Raising the deadline removed the
-crash. The Aurora site profile sets `RAY_SERVE_QUEUE_LENGTH_RESPONSE_DEADLINE_S=300.0`
-before any Ray process starts ([site.py](../src/exaserve/site.py)); keep it, and
-repeat a saturated 64-node run before lowering or removing it.
+outnumber queued requests. Raising the deadline removed the crash. The Aurora
+site profile sets `RAY_SERVE_QUEUE_LENGTH_RESPONSE_DEADLINE_S=300.0` before any
+Ray process starts ([site.py](../src/exaserve/site.py)); keep it, and repeat a
+saturated 64-node run before lowering or removing it.
 
 ### L2. Control reconnect grace shorter than the start-up burst — configuration
 
-Twice in August 2026, at 16 and at 64 nodes, the synchronized engine start-up
-burst outlasted the default 60 s control reconnect grace: rank control sessions
-that dropped during the burst could not reconnect in time, and the deployment
-failed closed before READY. Set `deployment.control.reconnect_grace_s`
-explicitly for large start-ups. The paper preview used 300 s, which recovered
-every rank at 16 nodes; the 64-node attempts also needed the transport and
-event-store fixes in [paper preview](PAPER_EXPERIMENT_PREVIEW_20260811.md)
-items 27 to 29.
+At 16 and at 64 nodes the synchronized engine start-up burst outlasted the
+default 60 s control reconnect grace: rank control sessions that dropped during
+the burst could not reconnect in time, and the deployment failed closed before
+READY. Set `deployment.control.reconnect_grace_s` explicitly for large
+start-ups; 300 s recovered every rank at 16 nodes. The 64-node attempts also
+needed transport and event-store fixes that are now in the code (a socket reset
+while writing a heartbeat response is treated as a recoverable rank loss, and
+receipt batches survive reconnects).
 
 ### L3. Lmod is not `nounset`-clean — resolved
 
@@ -216,18 +246,18 @@ do the same.
 
 ### L5. Worker-node logs lost when collected at job teardown — resolved
 
-In April 2026, copying Ray session logs and node-local instrumentation from
-worker nodes after the launcher exited repeatedly returned empty or partial
-results at 32 to 64 nodes. Nodes stopped answering while the scheduler tore the
-job down and cleaned node-local scratch, Ray session directories could
-disappear once shutdown began, remote-glob copies returned nothing without an
-error, archiving live Ray log directories hung on sockets and files still being
-written, and a timeout wrapper killed copy jobs it did not own. Each rank now
-archives its own node-local diagnostics after its Ray child has stopped, in a
-bounded, killable subprocess that skips links and non-regular files and records
-how many it skipped ([state/diagnostics.py](../src/exaserve/state/diagnostics.py),
-called from [rank_main.py](../src/exaserve/rank_main.py)). A diagnostics failure
-is reported but never changes the run outcome; new collectors should gather in
+Copying Ray session logs and node-local instrumentation from worker nodes after
+the launcher exited repeatedly returned empty or partial results at 32 to 64
+nodes. Nodes stopped answering while the scheduler tore the job down and
+cleaned node-local scratch, Ray session directories could disappear once
+shutdown began, remote-glob copies returned nothing without an error, archiving
+live Ray log directories hung on sockets and files still being written, and a
+timeout wrapper killed copy jobs it did not own. Each rank now archives its own
+node-local diagnostics after its Ray child has stopped, in a bounded, killable
+subprocess that skips links and non-regular files and records how many it
+skipped ([state/diagnostics.py](../src/exaserve/state/diagnostics.py), called
+from [rank_main.py](../src/exaserve/rank_main.py)). A diagnostics failure is
+reported but never changes the run outcome; new collectors should gather in
 band before the job step ends.
 
 ## Current release blockers
@@ -235,5 +265,6 @@ band before the job step ends.
 - ADR-000's proposed 64-node ceiling needs a product-owner decision; and
 - if 64 is selected, exact-candidate 4/16/64 qualification remains required.
 
-See `hardening/STATUS.md`, `hardening/FINAL_AUDIT.md`, and
-`hardening/COMPATIBILITY_MATRIX.md` for the current release verdict.
+See the [hardening status](hardening/STATUS.md) and the
+[compatibility matrix](hardening/COMPATIBILITY_MATRIX.md) for the current
+release verdict.

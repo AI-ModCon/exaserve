@@ -676,7 +676,7 @@ blocks.append(
             ],
             [
                 "Scaling analyses",
-                "docs/findings/ and docs/KNOWN_ISSUES.md — root-cause write-ups, scale cliffs and fixes",
+                "docs/operations_handbook.md and docs/KNOWN_ISSUES.md — limits, root causes, fixes",
             ],
         ],
         [2800, 7424],

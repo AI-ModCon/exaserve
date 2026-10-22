@@ -16,16 +16,17 @@ evidence or cross-platform support claims.
 Qualification is immutable-candidate and dimension specific. The proposed
 64-node target is not a support claim: it needs product-owner scope approval
 and the predeclared exact-candidate ladder. See
-[`docs/hardening/STATUS.md`](docs/hardening/STATUS.md) for the current artifact,
-evidence-backed maximum, and unresolved gates.
+[`docs/hardening/STATUS.md`](docs/hardening/STATUS.md) for the current
+qualification state, evidence-backed maximum, and unresolved gates.
 
 ## Documentation and AI-ModCon preparation
 
 Start with the [documentation index](docs/index.md),
 [getting-started guide](docs/getting_started.md), [usage examples](docs/usage.md),
 and [API reference](docs/api.md). The unified `docs/` tree also contains the
-authoritative architecture plan, design notes, hardening records, and
-[research findings](docs/findings/index.md). The
+authoritative architecture plan, design notes, the hardening status and the
+[operations handbook](docs/operations_handbook.md), which collects measured
+behaviour, limits, failures seen and their fixes. The
 [path migration guide](docs/path_migrations.md) explains relocated historical
 references.
 

@@ -130,10 +130,11 @@ readiness protocol.
 
 ## Historical measurements
 
-The SC26 research campaign includes measurements through 256 Aurora nodes,
-including HAProxy/non-streaming and pipeline-parallel workloads. Those artifacts
-were produced before the final hardened control plane and remain in `docs/findings/`
-for scientific context. They may be used as regression baselines, not as current
+Earlier research campaigns measured up to 256 Aurora nodes, including
+HAProxy/non-streaming and pipeline-parallel workloads, before the final hardened
+control plane. Their results and lessons are summarized in the
+[operations handbook](operations_handbook.md); the original records remain in
+the repository history. They may be used as regression baselines, not as current
 release evidence. A support statement requires the final code, exact packaged
 artifact, approved envelope, canonical status/receipt chain, and required tier
 to pass together.

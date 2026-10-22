@@ -4,7 +4,7 @@ queueing + execution times.
 
 Each block in gcs_server.out looks like:
 
-    [2026-04-21 23:14:42,471 I 128845 128845] (gcs_server) gcs_server.cc:957: Main service Event stats:
+    [<date> <time>,<ms> I <pid> <tid>] (gcs_server) gcs_server.cc:957: Main service Event stats:
 
 
     Global stats: 32 total (13 active)

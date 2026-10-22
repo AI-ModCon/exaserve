@@ -1,90 +1,107 @@
-# ExaServe backlog and research TODOs
+# ExaServe open work
 
-**Reconciled:** 2026-08-30 against the `release-v0.4.0` source candidate.
-Final43 remains the last packaged one/two-node hardware-qualified artifact;
-the successor must not inherit those receipts by name.
-
-**Role:** non-normative backlog. The execution plan defines architecture and
-`hardening/FINDINGS.yaml` defines disposition; this file cannot waive a gate.
+**Role:** non-normative backlog. The
+[execution plan](PRODUCTION_HARDENING_EXECUTION_PLAN.md) defines architecture
+and the [findings ledger](hardening/FINDINGS.yaml) defines disposition; this
+file cannot waive a gate. The current qualification state is in the
+[hardening status](hardening/STATUS.md); behaviour seen in measurements and the
+questions it left open are in the
+[operations handbook](operations_handbook.md#10-open-problems).
 
 ## Release-gating actions
 
 1. Product owner: approve the proposed 64-node first-release ceiling or select
    a lower ceiling.
-2. After that decision, predeclare and run only the matching immutable
-   `release-v0.4.0` ladder.
-   A 64-node choice requires 4, 16, and 64 nodes with the same immutable wheel.
-3. Update ADR-000, the compatibility matrix, ledger, and release verdict from
-   those exact receipts. Do not substitute legacy or earlier-candidate runs.
+2. After that decision, predeclare and run only the matching ladder from one
+   immutable candidate. A 64-node choice requires 4, 16 and 64 nodes with the
+   same wheel.
+3. Update ADR-000, the compatibility matrix, the ledger and the release verdict
+   from those exact receipts. Do not substitute runs from other code or earlier
+   candidates.
 
-## Canonical work still open
+## Open ledger records
 
-These are the eight `IN_PROGRESS` ledger records; all depend on scale/scope
+These are the eight `IN_PROGRESS` ledger records; all depend on scale or scope
 evidence rather than an unresolved two-node code defect:
 
 | ID | Required next proof |
 |---|---|
 | `PR-033` | Owner-approved envelope and exact-candidate qualification at its boundary. |
-| `KI-A1` | Only if Envoy/streaming/256 nodes enters scope: reproduce with owned failure evidence. |
-| `KI-A3` | Measure release-v0.4.0 Ray/GCS/controller behavior at the approved boundary. |
+| `KI-A1` | Only if Envoy, streaming or 256 nodes enters scope: reproduce with owned failure evidence. |
+| `KI-A3` | Measure Ray GCS and controller behaviour of the current candidate at the approved boundary. |
 | `KI-A7` | Measure residual shared-environment imports at the approved scale. |
 | `KI-B2` | Only if streaming enters scope: capture the rare HAProxy death's real cause. |
 | `KI-D2` | Prove native distribution and every activation receipt at the approved boundary. |
 | `TD-COPPER` | Quantify residual shared-filesystem import traffic at that boundary. |
-| `IMP-B16` | Freeze the already-implemented plan family against the approved/measured envelope. |
+| `IMP-B16` | Freeze the already-implemented plan family against the approved and measured envelope. |
+
+## Known defects to fix
+
+- The bounded default of four client nodes for eval proxy runs is not reached
+  from YAML specs or matrix expansion
+  ([C5](KNOWN_ISSUES.md#c5-client-topology-footgun--open-for-yaml-and-matrix-specs)).
+- HAProxy runs single-threaded when `gateway.worker_count` is 1, which the
+  shipped examples set
+  ([B5](KNOWN_ISSUES.md#b5-haproxy-thread-count-follows-gatewayworker_count--configuration)).
+- Pipeline-parallel compatibility patches fall back to a representative layer
+  instead of failing closed
+  ([D5](KNOWN_ISSUES.md#d5-pipeline-parallel-patches-fall-back-to-a-representative-layer--open)).
 
 ## External platform qualification
 
-`TD-SLURM-AMD` is `EXTERNAL_BLOCKER`. The scheduler/vendor abstractions and
+`TD-SLURM-AMD` is `EXTERNAL_BLOCKER`. The scheduler and vendor abstractions and
 failure contracts are unit-tested, but production support requires a native
 Slurm allocation with a pinned CUDA or ROCm stack. When such a system is
 available, qualify device isolation, dependency profile, HAProxy availability,
-multi-node launch, PP placement, process failure, readiness, and cleanup. Until
+multi-node launch, PP placement, process failure, readiness and cleanup. Until
 then the selected SiteProfile rejects the combination.
 
-SGLang is explicitly gated out of the selected Aurora profile. Adding it is a
-new compatibility/site profile with its own clean package, real-engine,
-failure, and scale evidence; the existence of `SGLangEngine` is not a support
-claim.
+SGLang is explicitly gated out of the selected Aurora profile (`TD-SGLANG`).
+Adding it is a new compatibility and site profile with its own clean package,
+real-engine, failure and scale evidence; the existence of `SGLangEngine` is not
+a support claim.
 
 ## Optional work outside the current production release
 
-- `TD-CACHE`: proxy-layer request caching/deduplication.
+- `TD-CACHE`: proxy-layer request caching and deduplication.
 - `TD-STAGE-PAR`: concurrent multi-model download. Transactional serial staging
-  remains correct; revisit only if startup SLO data makes parallelism necessary.
-- `TD-CPP-CLIENT`: paper-only C++ client experiment. The Go replay contract is
-  the production benchmark/client path.
+  remains correct; revisit only if start-up targets make parallelism necessary.
+- `TD-CPP-CLIENT`: a C++ client experiment for research only. The Go replay
+  client is the benchmark client.
 
 ## Research and measurement ideas
 
-- Measure raw latency including a LiteLLM hop, clearly labeled as
-  validation-only and not real streaming.
-- Isolate proxy overhead with matched request/client topology.
-- Compare error rate before and after explicit retry policies.
-- Explore distributed/sharded ingress if an approved envelope exceeds the
+- Strong scaling (fixed workload, more nodes) and tail latency (p99 and p999
+  from the Go client histograms).
+- Measure latency through a LiteLLM hop, clearly labelled as validation-only
+  and not real streaming.
+- Isolate proxy overhead with matched request and client topology.
+- Compare error rates with and without explicit retry policies.
+- Explore distributed or sharded ingress if an approved envelope exceeds the
   measured single-head HAProxy boundary.
-- Evaluate a sharded control-plane alternative only if the approved scale and
-  final43 measurements show Ray's upstream controller is the limiting factor.
-- Update SC26 paper framing and figures separately from the release claims.
+- Evaluate a sharded control plane only if measurements at the approved scale
+  show that Ray's controller is the limiting factor.
 
-## Completed hardening items retained for context
+## Closed backlog items
 
-The following former TODOs are closed in final43 and should not be reopened by
-stale prose:
+These former backlog items are closed in the ledger, which records their
+evidence:
 
-- hermetic/package CI, typing, linting, security, and failure-path tests;
-- strict immutable plans shared by serving, eval, ClientLab, and schedulers;
-- OS-owned/leased ports and deliberate collision failure;
-- exact null-compute/tokenizer identity and capability labeling;
-- loud, narrow chat-template fallback behavior;
-- transport/completion request-ID correlation and bounded `/metrics`;
-- centralized SiteProfile constants;
-- exact-hash generated compatibility delivery with no installed-file edits;
-- explicit PP topology/capability gating and a real two-host PP=2 proof;
-- one scheduler abstraction and declared PSI/J dependency-when-selected;
-- removal of the legacy Bash lifecycle/readiness path; and
-- documented, path-independent, atomic reference-card regeneration. The
-  ignored template and two figure prerequisites are listed in `docs/exaserve.md`.
-
-For current release state, see `hardening/STATUS.md` and
-`hardening/FINAL_AUDIT.md`.
+- `TD-TESTS`: hermetic and packaged CI, typing, linting, security and
+  failure-path tests;
+- `TD-NULLTOK`: exact null-compute and tokenizer identity, and capability
+  labelling;
+- `TD-PORTS`: OS-owned, leased ports and deliberate collision failure;
+- `TD-CHATTPL`: loud, capability-gated chat-template fallback;
+- `TD-REQID` and `TD-METRICS`: request-ID correlation and a bounded `/metrics`;
+- `TD-CONSTS`: site constants centralized in the SiteProfile;
+- `TD-SITECUST`: exact-hash generated compatibility delivery with no edits to
+  installed files;
+- `TD-PP-MULTI`: explicit PP topology and capability gating, and a real
+  two-host PP=2 proof;
+- `TD-PROXYPROF`: the legacy proxy-profiling owner retired;
+- `TD-PSIJ`: one scheduler abstraction, with PSI/J a dependency only when
+  selected;
+- `TD-DOCS-REGEN`: documented, path-independent, atomic reference-card
+  regeneration (the ignored template and two figure prerequisites are listed in
+  [docs/exaserve.md](exaserve.md)).

@@ -121,8 +121,8 @@ and one trailing newline. Their resulting committed SHA-256 identities are
 source and all six vLLM sources that implement or interpret this private cache
 and RPC-path format.
 
-The cold-cache failure is sealed by 8B diagnostic `run3/n2`, PBS `J073`:
-vLLM's registry subprocess exited `-11`/`SIGSEGV` while inspecting
+The cold-cache failure was reproduced with an 8B diagnostic run: vLLM's
+registry subprocess exited `-11`/`SIGSEGV` while inspecting
 `LlamaForCausalLM`. A VC-01 candidate is not qualified merely by these static
 checks; Aurora evidence must also show that a fresh generation-local cache
 consumes the seeded entry without launching that subprocess, followed by a

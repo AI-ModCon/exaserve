@@ -38,7 +38,7 @@ records the exact source identity and individual check results:
   formatting, lint, typed-core and security checks passed.
 
 The optional Serve tests were also exercised with their real import-time
-dependencies in one allocated Aurora node (PBS job `J097`):
+dependencies in one allocated Aurora node:
 **152 focused unit tests passed**. The command was:
 
 ```bash
@@ -50,13 +50,8 @@ PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
 ```
 
 This used the current site framework (Python 3.12.12, Ray 2.56.1,
-pytest 9.0.3), with no live model, GPU, MPI or serving-cluster launch.
-The older 2025.3.1 framework could not load because its module dependencies no
-longer resolved in the current site hierarchy. These are unit-test results,
-not qualification of either serving stack. The focused log and the logs of
-the two failed module-setup attempts are kept in the maintainer's run area,
-outside the repository. The temporary lease and test allocation were released
-after testing.
+pytest 9.0.3), with no live model, GPU, MPI or serving-cluster launch. These
+are unit-test results, not qualification of either serving stack.
 
 At the owner's request, current CI targets Python 3.12, matching Aurora's
 current Python 3.12.12. The earlier Python 3.10 job is superseded and is not a
@@ -103,8 +98,9 @@ CI policy, plus outdated repository links and disabled security features.
 ### Operational details kept for the disclosure decision
 
 On 2026-10-22 the project decided that Git history is not rewritten, that
-the current tree must carry none of the identifiers listed under
-[publication redaction](path_migrations.md#publication-redaction), and that the
+the current tree must carry neither the identifiers listed under
+[publication redaction](path_migrations.md#publication-redaction) nor run
+history, and that the
 tags `v0.1.0`, `v0.2.0` and `v0.4.0-rc2` and the 15 non-main branches are
 removed before the visibility change. The current tree retains:
 
@@ -120,10 +116,10 @@ removed before the visibility change. The current tree retains:
   [ALCF's public running-jobs guide](https://docs.alcf.anl.gov/aurora/running-jobs-aurora/).
 - The maintainer contact `wenyiw@uchicago.edu` in package metadata,
   SECURITY.md and the Code of Conduct.
-- Research records retain performance measurements, dated run narratives,
-  queue-wait observations, and failure analyses. Anonymized node labels preserve
-  rack/chassis relationships, as described in
-  [publication redaction](path_migrations.md#publication-redaction).
+- Run logs, audits, campaign records and research notes were removed from the
+  current tree. Their lessons are in the
+  [operations handbook](operations_handbook.md), which keeps measurements and
+  failure analyses without identifiers or dates.
 
 Earlier commits keep their original content; removing the branches and tags does
 not change what `main`'s history holds.
@@ -274,37 +270,3 @@ so the payload still has to be applied there.
    [audited branches](path_migrations.md#retired-branches) and their recurring
    lessons ([known issues](KNOWN_ISSUES.md#lessons-kept-from-retired-branches))
    are recorded.
-
-## Historical validation boundary (2026-09-23)
-
-Initial preparation inspected metadata, resolved/checked the dependency lock,
-parsed configuration, checked documentation links, and performed small static
-checks. It did not launch experiments, compute allocations, full test suites,
-or package builds. The subsequently approved push to `main` can trigger the
-configured GitHub-hosted CI; this does not authorize resuming HPC experiments
-or adding a Frontier profile. The updated CI and package gates must run before this candidate is
-declared verified. Prior 1,773-test results belong to the earlier scaling
-candidate, not these repository/packaging changes.
-
-The known sequential 405B model-staging storage failure, missing 64-/128-node
-paper points, and stale paper selectors are not repaired by this preparation.
-They remain separate work; a repository transfer is not evidence of closure.
-
-### Static checks performed in the initial pass
-
-- Generated the lock with uv 0.10.1 using metadata-only resolution, disabled
-  third-party builds and Python downloads; 241 packages are resolved across
-  optional and default dependency branches. No environment sync or GPU
-  installation was performed.
-- Offline locked export matches all 33 portable CI pins for the 3.10 and 3.12
-  CI interpreter environments, with no Ray, vLLM or PyTorch in the default set.
-- Verified that the published Python requirement, existing optional/runtime
-  dependencies, and build-system pins are unchanged.
-- Parsed Python, TOML and workflow YAML; checked shell/Makefile command syntax,
-  retained CI jobs, local Markdown links, Ruff correctness/style, and whitespace.
-- Added regression cases for missing/modified license artifacts and wrong SPDX
-  wheel metadata, but did not run tests or builds in this preparation pass.
-
-At the end of the initial pass, CI execution, a fresh package gate, GitHub
-protection settings and transfer remained pending. None of those initial static
-checks is reported as a hardware experiment or a passing release qualification.

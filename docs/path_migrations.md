@@ -6,23 +6,23 @@ Documentation is consolidated under `docs/`. Existing filenames and the
 | Previous repository path | Current repository path |
 | --- | --- |
 | `doc/<path>` | `docs/<path>` |
-| `findings/<report>.md` | `docs/findings/<report>.md` |
+| `findings/<report>.md`, later `docs/findings/<report>.md` | Removed from the current tree; summarized in the [operations handbook](operations_handbook.md) |
 | `findings/direct_stream_window_analysis.py` | `eval/scripts/direct_stream_window_analysis.py` |
+| Run logs, audits and campaign records under `docs/`, `docs/hardening/` and `eval/specs/sc26workshop/` | Removed from the current tree; summarized in the [operations handbook](operations_handbook.md) |
 | `note.txt` | Removed from the published tree (personal development scratchpad) |
 
-The [findings index](findings/index.md) distinguishes research reports from
-current qualification evidence. Runtime behavior, legacy tools,
-dependency locks, generated reference-card bytes and personal agent state are
-outside this documentation cleanup.
+Runtime behavior, legacy tools, dependency locks, generated reference-card bytes
+and personal agent state are outside this documentation cleanup.
 
 ## Historical evidence
 
 The [findings ledger](hardening/FINDINGS.yaml) is moved without modifying its
 bytes. Existing artifact manifests, receipts, source commits, hashes, recorded
-commands and qualification metadata retain their original identities. Literal
-paths inside historical reports may therefore still use `doc/` or `findings/`.
-Consult those files at their recorded source commit to interpret original line
-numbers and exact bytes; the table above locates their current descendants.
+commands and qualification metadata retain their original identities, so paths
+they cite may still use `doc/` or `findings/`. Consult cited files at their
+recorded source commit to interpret original line numbers and exact bytes; the
+table above locates their current descendants, and removed records remain in the
+repository history.
 
 The ledger validator recognizes both current documentation paths and these
 relocated historical references. A reference still requires an existing target;
@@ -38,17 +38,15 @@ historical hardware results to the current code.
 
 ### Publication redaction
 
-The current tree redacts operational details from
-documentation, example and hardening configurations, frozen evaluation specs
-and test fixtures. A maintainer's home or project directory appears as
-`/home/YOUR_USER/...` or `/lus/flare/projects/YOUR_PROJECT/YOUR_USER/...`.
-Compute-node names appear as labels `node-<rack>-<chassis>-<slot>` with racks
-renumbered 1 to 25; one real rack maps to one label rack, so statements about
-shared racks and chassis still hold. Allocation-internal addresses appear as
-documentation addresses from `192.0.2.0/24`, and a reservation identifier as
-`<reservation>`. PBS job identifiers appear as labels `J001` to `J097`,
-numbered in job order; a job keeps its label in every document. Maintainer
-helpers appear generically: the site environment script
+The current tree carries no maintainer account paths, compute-node names,
+allocation-internal addresses, reservation or job identifiers, or run
+narratives. A maintainer's home or project directory appears as
+`/home/YOUR_USER/...` or `/lus/flare/projects/YOUR_PROJECT/YOUR_USER/...`; test
+fixtures use synthetic node labels such as `node-10-4-1` and documentation
+addresses from `192.0.2.0/24`. Run logs, audits and campaign records that
+carried such details were removed (see the table above); their lessons are in
+the [operations handbook](operations_handbook.md). Maintainer helpers appear
+generically: the site environment script
 (`EXASERVE_ENV_SCRIPT_AURORA`), allocation leases (recorded in qualification
 evidence as `acquisition_source: subjob`, with the `AURORA_SUBJOB` session
 marker) and the interactive-allocation fallback. The allocation

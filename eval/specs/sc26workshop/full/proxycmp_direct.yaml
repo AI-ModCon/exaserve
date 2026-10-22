@@ -6,10 +6,10 @@ name: proxycmp_direct
 # NOTE: validate the 1-node streaming cell first — a prior 1n direct+stream run
 # timed out on the per-node HSN health check; confirm before submit-all.
 #
-# run0 (2026-06) DID NOT actually dispatch node-locally despite the description
-# above: the Go client hash-routed every request across all N node URLs, so it
-# was an N x N mesh. Fixed 2026-07-25 (client.direct_dispatch, default local);
-# run1 onward is genuinely node-local. Measured at n128, mesh vs local makes
+# The first run of this spec did NOT actually dispatch node-locally despite the
+# description above: the Go client hash-routed every request across all N node
+# URLs, so it was an N x N mesh. client.direct_dispatch (default local) fixed
+# this; later runs are genuinely node-local. Measured at n128, mesh vs local makes
 # almost no difference (82.6 vs 81.0 QPS/node), so the per-node streaming
 # decline with N is NOT cross-node token delivery — see direct_topology.yaml.
 matrix:
@@ -46,7 +46,7 @@ deployment:
   replica_max_ongoing_requests: 256
   collect_stats: true
 client:
-  # Explicit for the record; local is also the default since 2026-07-25.
+  # Explicit for the record; local is also the default.
   direct_dispatch: local
   num_runs: 6
   dest: direct

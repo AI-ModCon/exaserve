@@ -1191,7 +1191,7 @@ def _patch_ray_serve_proxy_future_timeout(module=None) -> None:
     _patch_log("Applied Ray Serve proxy timeout future patch")
 
 
-# WP3 delete-first (ADR-003 decision 1, 2026-08-05): stale Serve constants
+# WP3 delete-first (ADR-003 decision 1): stale Serve constants
 # (values disagreed with the live RS-01 profile) and ProxyActor profiling were
 # retired. RS-03 restores the formerly dead timeout repair only after a fresh
 # 64-node qualification reproduced the pinned Ray 2.53 asyncio race.

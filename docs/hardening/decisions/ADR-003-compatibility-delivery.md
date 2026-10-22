@@ -90,8 +90,8 @@ the old setup-overlay shell path remain deleted.
 ## Materialization and activation contract
 
 1. Source staging copies a clean ExaServe package and materializes the overlay
-   at
-   `/tmp/exaserve_src/exaserve/_compat_runtime/<compatibility_profile_hash>`.
+   at `python/exaserve/_compat_runtime/<compatibility_profile_hash>` inside the
+   generation's node-local runtime capsule (`EXASERVE_LOCAL_RUNTIME_ROOT`).
    The complete staged tree, including overlay modules, manifest, and bootstrap,
    is content-inventoried and broadcast transactionally.
 2. The plan-derived environment prepends that compatibility root and the

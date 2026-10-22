@@ -132,8 +132,9 @@ def main() -> int:
     out = (
         sys.argv[1]
         if len(sys.argv) > 1
-        else str(REPO_ROOT / "docs/findings/weakscaling_haproxy_vs_direct_v3.png")
+        else str(REPO_ROOT / "tmp/plots/weakscaling_haproxy_vs_direct_v3.png")
     )
+    Path(out).parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out, dpi=120, bbox_inches="tight")
     print(f"\nSaved: {out}")
     return 0

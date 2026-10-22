@@ -35,9 +35,15 @@ passed hardware qualification. Exact artifacts and scope are recorded in
   and PBS output directory in a schema-2 campaign identity; eval run snapshots and
   benchmark results default to the configured data root; the LiteLLM interpreter
   and environment scripts have no default location.
-- Label compute nodes in published records as `node-<rack>-<chassis>-<slot>`,
-  list the branches retired before publication in the path migration guide, and
-  keep the issues that recurred on them in `docs/KNOWN_ISSUES.md`.
+- List the branches retired before publication in the path migration guide,
+  and keep the issues that recurred on them in `docs/KNOWN_ISSUES.md`.
+- Remove run logs, audits, campaign records and research notes from the current
+  tree and collect their lessons in `docs/operations_handbook.md`: deployment
+  prerequisites, measured limits, failures seen and their fixes, settings that
+  worked, and measurement and qualification practice. The hardening status and
+  open-work pages now describe the current state only; the removed records
+  remain in the repository history. Remove an unused copy of an old broadcast
+  helper from `tools/`.
 - Reject request-supplied chat templates and reserved `chat_template_kwargs`
   keys with HTTP 400, require a model configuration's `model_type` to match its
   reviewed architecture before broadcast, and load evaluation tokenizers
@@ -97,6 +103,6 @@ gates do not establish a complete production release or Frontier support.
 ## Historical 0.4.0 candidate
 
 The package version remains `0.4.0`; this entry does not create a release or tag.
-The `release-v0.4.0` baseline and `v0.4.0-rc2` evidence are preserved in
-[`doc/hardening/STATUS.md`](docs/hardening/STATUS.md). Its supersession notice
-explains why earlier artifacts do not automatically qualify the current tree.
+The `release-v0.4.0-rc2` package and earlier evidence are summarized in
+[`docs/hardening/STATUS.md`](docs/hardening/STATUS.md), which explains why
+they do not qualify the current tree.

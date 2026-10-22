@@ -11,7 +11,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 RUNS_ROOT = get_runs_root()
 RUN_GROUP = "run3"
 RATE_PER_NODE = 17.5
-OUTPUT_PATH = REPO_ROOT / "docs/findings/weakscaling_haproxy_vs_direct.png"
+OUTPUT_PATH = REPO_ROOT / "tmp/plots/weakscaling_haproxy_vs_direct.png"
 
 
 def load_results(spec_name):

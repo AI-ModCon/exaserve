@@ -40,9 +40,9 @@ The plots include horizontal dashed lines at the per-NIC hardware limits. Use th
 
 ### Key signals to look for
 
-1. **Client TX vs Stub RX symmetry** — Total client TX should approximately equal total stub RX. Large discrepancies indicate packet loss or retransmission.
+1. **Client TX vs target RX symmetry** — Total client TX should approximately equal total target RX. Large discrepancies indicate packet loss or retransmission.
 
-2. **Per-node balance** — If one stub node shows much higher RX than others, the Go client's round-robin may not be balanced, or network paths have different latencies.
+2. **Per-node balance** — If one target node shows much higher RX than others, the Go client's round-robin may not be balanced, or network paths have different latencies.
 
 3. **Drops > 0** — Any non-zero drop count means the kernel is dropping packets. This is a hard signal that the interface is overwhelmed.
 
@@ -62,11 +62,3 @@ The metrics collected are equivalent to `sar -n DEV 1` output:
 | `txpck/s` | `pps_tx` |
 
 We use `/proc/net/dev` directly because it does not require the `sysstat` package and provides finer control over which interfaces and polling intervals to use.
-
-## Benchmark Results Reference (Aurora)
-
-| Proxy                              | max RPS | note                          |
-|------------------------------------|---------|-------------------------------|
-| No proxy (replay_client, loopback) | 600K    | per node, can scale           |
-| No proxy (replay_client, remote)   | 300K    | per node, can scale           |
-| LiteLLM                            | 250     | per LiteLLM worker, can scale |

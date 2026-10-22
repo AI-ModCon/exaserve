@@ -1901,7 +1901,7 @@ def _normalize(record: dict[str, Any]) -> dict[str, Any]:
         regions = (
             [str(regions).strip()]
             if str(regions or "").strip()
-            else ["docs/PRODUCTION_READINESS_AUDIT.md"]
+            else ["docs/hardening/FINDINGS.yaml"]
         )
     acceptance = record.get("acceptance_tests")
     if not isinstance(acceptance, list):
