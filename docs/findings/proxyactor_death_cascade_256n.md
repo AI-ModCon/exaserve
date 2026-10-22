@@ -19,7 +19,7 @@ succeeded at 1787s on retry."
 
 ## Kill Mechanism — Definitive Evidence
 
-From controller_10619.log:9603-9605 (externally retained capture: `../../agpt/data/experiments/runs/weakscaling_haproxy_short_v3/run1/256-nodes/logs/backend/20260410T093039Z_ray_runtime/ray_logs/node-11-0-1/serve/controller_10619.log#L9603-L9605`):
+From controller_10619.log:9603-9605 (externally retained capture: `<experiments_root>/runs/weakscaling_haproxy_short_v3/run1/256-nodes/logs/backend/20260410T093039Z_ray_runtime/ray_logs/node-11-0-1/serve/controller_10619.log#L9603-L9605`):
 
 ```
 WARNING 2026-04-10 09:44:23,222 controller 10619 --
@@ -40,7 +40,7 @@ universal 256n phenomenon.
 
 ## Per-Failure Mechanism — 300s Timeout Per Check
 
-From controller_10619.log:9240-9303 (externally retained capture: `../../agpt/data/experiments/runs/weakscaling_haproxy_short_v3/run1/256-nodes/logs/backend/20260410T093039Z_ray_runtime/ray_logs/node-11-0-1/serve/controller_10619.log#L9240`):
+From controller_10619.log:9240-9303 (externally retained capture: `<experiments_root>/runs/weakscaling_haproxy_short_v3/run1/256-nodes/logs/backend/20260410T093039Z_ray_runtime/ray_logs/node-11-0-1/serve/controller_10619.log#L9240`):
 
 ```
 09:40:02 -- Didn't receive health check response for proxy on <node> after 300.0s.
@@ -132,8 +132,8 @@ each other.
 
 ## Cross-Reference
 
-- HAProxy 256n driver log: 20260410T093039Z_ray_runtime/launch.log (externally retained capture: `../../agpt/data/experiments/runs/weakscaling_haproxy_short_v3/run1/256-nodes/logs/backend/20260410T093039Z_ray_runtime/launch.log`)
-- HAProxy 256n controller log: ray_logs/node-11-0-1/serve/controller_10619.log (externally retained capture: `../../agpt/data/experiments/runs/weakscaling_haproxy_short_v3/run1/256-nodes/logs/backend/20260410T093039Z_ray_runtime/ray_logs/node-11-0-1/serve/controller_10619.log`)
-- Direct 256n driver log: 20260411T160850Z_ray_runtime/launch.log (externally retained capture: `../../agpt/data/experiments/runs/weakscaling_direct_short_v3/run1/256-nodes/logs/backend/20260411T160850Z_ray_runtime/launch.log`)
+- HAProxy 256n driver log: 20260410T093039Z_ray_runtime/launch.log (externally retained capture: `<experiments_root>/runs/weakscaling_haproxy_short_v3/run1/256-nodes/logs/backend/20260410T093039Z_ray_runtime/launch.log`)
+- HAProxy 256n controller log: ray_logs/node-11-0-1/serve/controller_10619.log (externally retained capture: `<experiments_root>/runs/weakscaling_haproxy_short_v3/run1/256-nodes/logs/backend/20260410T093039Z_ray_runtime/ray_logs/node-11-0-1/serve/controller_10619.log`)
+- Direct 256n driver log: 20260411T160850Z_ray_runtime/launch.log (externally retained capture: `<experiments_root>/runs/weakscaling_direct_short_v3/run1/256-nodes/logs/backend/20260411T160850Z_ray_runtime/launch.log`)
 - Prior wait_proxies investigation (null-compute): [wait_proxies_root_cause_instrumented.md](wait_proxies_root_cause_instrumented.md)
 - Stage walkthrough: [ray_launch_stages.md](ray_launch_stages.md)

@@ -132,9 +132,6 @@ def _model_search_roots(storage_path: str) -> list[Path]:
     roots: list[Path] = []
     if storage_path:
         roots.append(Path(storage_path))
-    home_models = Path.home() / "agpt" / "models"
-    if home_models.is_dir():
-        roots.append(home_models)
     hf_home = os.environ.get("HF_HOME")
     if hf_home:
         roots.append(Path(hf_home))

@@ -64,9 +64,15 @@ class SiteConfigTests(unittest.TestCase):
         self.assertEqual(
             cfg.experiments_root, "/lus/flare/projects/example-project/alice/data/experiments"
         )
-        self.assertEqual(cfg.litellm_python_path, f"{temp_home}/agpt/venv/litellm/bin/python3")
-        self.assertEqual(cfg.snapshot_dir, f"{temp_home}/agpt/data/snapshots")
-        self.assertEqual(cfg.bench_results_dir, f"{temp_home}/agpt/data/bench_results")
+        self.assertEqual(cfg.litellm_python_path, "")
+        self.assertEqual(cfg.env_script_aurora, "")
+        self.assertEqual(cfg.env_script_litellm, "")
+        self.assertEqual(
+            cfg.snapshot_dir, "/lus/flare/projects/example-project/alice/data/snapshots"
+        )
+        self.assertEqual(
+            cfg.bench_results_dir, "/lus/flare/projects/example-project/alice/data/bench_results"
+        )
         self.assertEqual(cfg.sglang_python_path, "")
         self.assertEqual(
             site_config.get_runs_root(),

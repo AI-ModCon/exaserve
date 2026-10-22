@@ -16,15 +16,14 @@ BurstGPT is handled separately: the raw release CSV is downloaded to
 the trace generator, not here).
 
 This is NODE-ONLY work: it reads the 670 MB ShareGPT bank into memory and runs
-the HF tokenizer, which would get a login node killed. Run it inside a subjob:
+the HF tokenizer, which would get a login node killed. Run it on a compute node
+of an interactive allocation:
 
-    subjob 1
-    # on the node:
-    source ~/script/env_aurora
+    source "$EXASERVE_ENV_SCRIPT_AURORA"    # the site environment script
     python -m eval.tools.fetch_paper_datasets --sample 200 --datasets humaneval burstgpt
     #   ^ validate small first, then drop --sample / widen --datasets
 
-Network egress uses the proxy that env_aurora exports (HTTPS_PROXY).
+Network egress uses the proxy that the site environment exports (HTTPS_PROXY).
 """
 
 from __future__ import annotations
@@ -119,7 +118,8 @@ def fetch_cnn_dailymail(out_dir: Path, sample: int | None) -> None:
     except ImportError:
         _log(
             "cnn_dailymail: ERROR — `datasets` not importable. "
-            "Run under `module load frameworks` / env_aurora, or `pip install datasets`."
+            "Run under `module load frameworks` / the site environment script, "
+            "or `pip install datasets`."
         )
         raise
     n = sample or 5000

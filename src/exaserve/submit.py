@@ -15,6 +15,7 @@ import json
 import os
 import re
 import secrets
+import shlex
 import sys
 import time
 from datetime import datetime, timezone
@@ -48,12 +49,21 @@ _ACTIVE_OR_UNCERTAIN = {
     SchedulerState.UNKNOWN,
 }
 
-# ``bootstrap_script`` is JobSpec's sole deliberate site-admin shell seam.
-_DEFAULT_ENV_SETUP = """if [ -f "$HOME/script/env_aurora" ]; then
-    source "$HOME/script/env_aurora"
-else
-    module load frameworks
-fi"""
+
+def _default_env_setup() -> str:
+    """Return the job's site preparation, JobSpec's sole raw shell seam.
+
+    ``EXASERVE_ENV_SCRIPT_AURORA`` names the site environment script, as for
+    evaluation runs. It is resolved at submission, so the job does not depend on
+    the submitter's shell; without it the job loads the frameworks module.
+    """
+    configured = os.environ.get("EXASERVE_ENV_SCRIPT_AURORA", "").strip()
+    if not configured:
+        return "module load frameworks"
+    script = Path(configured).expanduser()
+    if not script.is_absolute():
+        raise ValueError(f"EXASERVE_ENV_SCRIPT_AURORA must be an absolute path, got {configured!r}")
+    return f"source {shlex.quote(str(script))}"
 
 
 def _private_directory(path: Path) -> Path:
@@ -262,7 +272,7 @@ def _new_prepared_submission(
         cwd=cfg_path.parent,
         environment=environment,
         environment_unset=tuple(site_profile.environment_unset),
-        bootstrap_script=_DEFAULT_ENV_SETUP,
+        bootstrap_script=_default_env_setup(),
         num_nodes=plan.num_nodes,
         walltime=walltime,
         account=project_account,

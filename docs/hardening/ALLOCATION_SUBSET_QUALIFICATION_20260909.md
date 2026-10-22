@@ -15,14 +15,14 @@ Aurora's exact-size 32/64/128-node debug-scaling queue permits at most one hour.
 The final-runtime four-node 405B run, PBS `J081`, used 1:01:21; the previous
 hardened four-node run used 1:08:50, and accepted n256 used 1:14:28. One-hour
 middle-scale submissions have insufficient demonstrated margin. Capacity is
-limited to 16 nodes; production begins at 256. No eligible keepalive allocation
+limited to 16 nodes; production begins at 256. No eligible held allocation
 was available when this continuation resumed.
 
 The proposed adapter acquires one finite physical PBS allocation and executes
 exact logical subsets sequentially on its original head. It does not edit the
 existing PP `run11` children, weaken exact membership or hash checks, shorten
 their workload, or replace their canonical lifecycle. A native parent job is
-not a keepalive and is not advertised as a subjob lease.
+not a held allocation and is not advertised as a lease source.
 
 Parent controller source identity is separate from child runtime identity.
 The target child source remains commit `0a835470421bfabba744688061ad6ef70ed6752c`,
@@ -35,7 +35,7 @@ Accepted PP `run11/n256` remains unchanged.
 
 | Gate | Lane | Logical / physical nodes | Acquisition | Walltime | Expected runtime | Requested node-hours | Attempt limit |
 |---|---|---|---|---|---|---:|---:|
-| Controller regression suite | WP0_EARLY | 1 / 1 | Approved `srundbg` interactive fallback | 1h | About 3–5m | 1 | 1 per reviewed candidate |
+| Controller regression suite | WP0_EARLY | 1 / 1 | Approved interactive-allocation fallback | 1h | About 3–5m | 1 | 1 per reviewed candidate |
 | Subset isolation proof | WP0_EARLY | 2 / 4, two independent null lifecycles | Native finite parent; capacity | 1h | 10–15m | 4 | 1 per immutable campaign |
 | Middle PP curve | FINAL | 32, then 64, then 128 / 256 | Native finite parent; prod | 6h | About 3–4h total | 1,536 | 1 per immutable campaign |
 
@@ -86,7 +86,7 @@ Controller commit `8c59f5130e642cfc3d23619e8933b548e6aa2bae`, controller source
 hash `18603db557a3b663282a1c696603566f11857097f0a17f6c8f0e4a591da8f9a5`.
 Only the unrelated design drafts were explicitly excluded from its committed
 snapshot. Scheduler identity is `ac-67dfb2946f44`; native stdout/stderr are
-directed to `/home/YOUR_USER/aurora_rayserver/tmp/`. Per-child executor logs and
+directed to the PBS spool directory. Per-child executor logs and
 parent proof sidecars live in the campaign directory; canonical child evidence
 remains in the two original child bundle directories above.
 
@@ -173,9 +173,9 @@ PBS `J092` was submitted at 23:08 UTC on 2026-09-09 and entered R at
 `node-25-1-4`, with the project allocation and one-hour walltime. The two children
 remain logical two-node runs, not exact-size physical two-node jobs.
 
-The batch body sources `~/script/env_aurora` and invokes the sealed controller:
+The batch body sources the site environment script and invokes the sealed controller:
 `python3 -m eval.cli allocation execute /lus/flare/projects/YOUR_PROJECT/YOUR_USER/data/experiments/allocation_campaigns/subset-proof-20260909-c/campaign.json`.
-Native output is directed to `/home/YOUR_USER/aurora_rayserver/tmp/`; campaign
+Native output is directed to the PBS spool directory; campaign
 state, `child-0/executor.log`, and `child-1/executor.log` were actively monitored
 under the campaign directory through the terminal result.
 
@@ -283,8 +283,8 @@ paper measurement. No child standalone PBS request is submitted alongside it.
   ambiguous/duplicate submissions, failure gating, cancellation/lease guards,
   strict native PBS completion, sentinel identity/freshness, and contract budgets.
 - Full regression passed on interactive PBS `J087`, exact node
-  `node-14-4-3`, after the approved `srundbg` fallback and fresh `env_aurora`
-  setup: **1,768 passed, 27 warnings, 165.99 seconds**, exit 0. The session was
+  `node-14-4-3`, after the approved interactive-allocation fallback and a fresh
+  site-environment setup: **1,768 passed, 27 warnings, 165.99 seconds**, exit 0. The session was
   validated against its actual PBS job/nodefile before execution and released
   after the test. Pytest used a fresh short `/tmp/xs-regression.*` base directory.
   Log: `artifacts/diagnostics/allocation_subset_20260909/pbsJ087/pytest.log`;

@@ -29,6 +29,12 @@ passed hardware qualification. Exact artifacts and scope are recorded in
 - Replace PBS job identifiers in published records with labels. The legacy
   paper-evidence ledger moves to schema 3 without job identifiers; its loader
   reads them from the pinned PBS stdout file name.
+- Remove maintainer home-directory defaults. The serving launcher sources the
+  script that `EXASERVE_ENV_SCRIPT_AURORA` names (otherwise it loads the
+  frameworks module); allocation campaigns record the site environment script
+  and PBS output directory in a schema-2 campaign identity; eval run snapshots and
+  benchmark results default to the configured data root; the LiteLLM interpreter
+  and environment scripts have no default location.
 - Label compute nodes in published records as `node-<rack>-<chassis>-<slot>`,
   list the branches retired before publication in the path migration guide, and
   keep the issues that recurred on them in `docs/KNOWN_ISSUES.md`.

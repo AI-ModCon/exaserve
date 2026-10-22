@@ -118,7 +118,7 @@ read-only `/opt/aurora` squashfs, PALS executable transfer, `envnone` isolation,
 local `/tmp` cwd, absence of `PBS_NODEFILE` in the application, native streaming,
 and exact candidate cleanup. The initial shell attempt correctly failed before
 tests because Lmod is not `nounset`-clean; the retry followed the scheduler
-renderer contract by enabling `set -u` only after `env_aurora` was sourced.
+renderer contract by enabling `set -u` only after the site environment script was sourced.
 
 The final integrated tree passed **1,563 tests** (27 dependency warnings) on
 the two-node Aurora interactive PBS allocation `J057`. That allocation also

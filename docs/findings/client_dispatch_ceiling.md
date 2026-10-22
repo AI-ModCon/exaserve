@@ -524,7 +524,7 @@ error class `"port_exhaustion"` in per-request results.
 
 ## Raw Data
 
-- Single-proc sweep: `/home/YOUR_USER/agpt/data/bench_results/clientlab/client-dispatch-ceiling_20260401T235004Z/`
-- Multi-proc sweep: `/home/YOUR_USER/agpt/data/bench_results/clientlab/client-dispatch-scaling_20260402T013700Z/`
-- Profiling experiment: `/home/YOUR_USER/agpt/data/bench_results/clientlab/dispatch_profiling_20260402T024400Z/`
-- Safe zone re-run: `/home/YOUR_USER/agpt/data/bench_results/clientlab/client-safe-zone_20260405T000211Z/`
+- Single-proc sweep: `<bench_results_dir>/clientlab/client-dispatch-ceiling_20260401T235004Z/`
+- Multi-proc sweep: `<bench_results_dir>/clientlab/client-dispatch-scaling_20260402T013700Z/`
+- Profiling experiment: `<bench_results_dir>/clientlab/dispatch_profiling_20260402T024400Z/`
+- Safe zone re-run: `<bench_results_dir>/clientlab/client-safe-zone_20260405T000211Z/`

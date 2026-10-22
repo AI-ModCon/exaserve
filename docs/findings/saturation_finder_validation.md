@@ -146,6 +146,6 @@ ceiling. The single-proc gap is tracked in `clientlab/TODO` for future profiling
 
 ## Raw Data
 
-- Run 1 (before fix): `/home/YOUR_USER/agpt/data/bench_results/clientlab/sat_vs_ceiling_20260402T184951Z/`
-- Run 2 (after fix): `/home/YOUR_USER/agpt/data/bench_results/clientlab/sat_vs_ceiling_20260402T191439Z/`
-- Run 3 (16-proc): `/home/YOUR_USER/agpt/data/bench_results/clientlab/sat_16proc_20260402T202501Z/`
+- Run 1 (before fix): `<bench_results_dir>/clientlab/sat_vs_ceiling_20260402T184951Z/`
+- Run 2 (after fix): `<bench_results_dir>/clientlab/sat_vs_ceiling_20260402T191439Z/`
+- Run 3 (16-proc): `<bench_results_dir>/clientlab/sat_16proc_20260402T202501Z/`

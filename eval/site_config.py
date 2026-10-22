@@ -149,7 +149,6 @@ def _normalize_config(config: SiteConfig) -> SiteConfig:
     current_user = (
         local_account_name() if not config.user_data_root or not config.model_storage_path else ""
     )
-    home_dir = str(Path.home())
 
     project_root = _coerce_field_value("project_root", config.project_root)
     if project_root and not os.path.isabs(project_root):
@@ -175,25 +174,13 @@ def _normalize_config(config: SiteConfig) -> SiteConfig:
     )
     output_trace_dir = config.output_trace_dir or os.path.join(user_data_root, "output_traces")
     experiments_root = config.experiments_root or os.path.join(user_data_root, "experiments")
-    litellm_python_path = config.litellm_python_path or os.path.join(
-        home_dir,
-        "agpt",
-        "venv",
-        "litellm",
-        "bin",
-        "python3",
-    )
-    snapshot_dir = config.snapshot_dir or os.path.join(home_dir, "agpt", "data", "snapshots")
-    bench_results_dir = config.bench_results_dir or os.path.join(
-        home_dir,
-        "agpt",
-        "data",
-        "bench_results",
-    )
-    env_script_aurora = config.env_script_aurora or os.path.join(home_dir, "script", "env_aurora")
-    env_script_litellm = config.env_script_litellm or os.path.join(
-        home_dir, "script", "env_litellm"
-    )
+    # Environment scripts and the LiteLLM interpreter have no default location;
+    # run snapshots and benchmark results default to the configured data root.
+    litellm_python_path = config.litellm_python_path
+    snapshot_dir = config.snapshot_dir or os.path.join(user_data_root, "snapshots")
+    bench_results_dir = config.bench_results_dir or os.path.join(user_data_root, "bench_results")
+    env_script_aurora = config.env_script_aurora
+    env_script_litellm = config.env_script_litellm
 
     normalized = config.with_updates(
         project_root=project_root,

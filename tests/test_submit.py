@@ -33,6 +33,18 @@ gateway:
     )
 
 
+def test_job_site_setup_comes_from_the_configured_script(monkeypatch):
+    from exaserve.submit import _default_env_setup
+
+    monkeypatch.setenv("EXASERVE_ENV_SCRIPT_AURORA", "/site dir/env.sh")
+    assert _default_env_setup() == "source '/site dir/env.sh'"
+    monkeypatch.delenv("EXASERVE_ENV_SCRIPT_AURORA")
+    assert _default_env_setup() == "module load frameworks"
+    monkeypatch.setenv("EXASERVE_ENV_SCRIPT_AURORA", "relative/env.sh")
+    with pytest.raises(ValueError, match="absolute path"):
+        _default_env_setup()
+
+
 def test_submit_rejects_duplicate_yaml_before_compilation(tmp_path):
     config_path = tmp_path / "duplicate.yaml"
     config_path.write_text("num_nodes: 1\nnum_nodes: 2\n", encoding="utf-8")
@@ -51,7 +63,7 @@ def test_submit_serve_dry_run_persists_plan_and_renders_direct_python(tmp_path, 
     job_paths = list(log_dir.glob("submissions/*/job.pbs"))
     assert len(job_paths) == 1
     pbs_text = job_paths[0].read_text(encoding="utf-8")
-    assert 'source "$HOME/script/env_aurora"' in pbs_text
+    assert "source /lus/flare/projects/example-project/site-environment.sh" in pbs_text
     assert "EXASERVE_RUN_LOG_DIR=" in pbs_text
     assert "EXASERVE_SITE_PROFILE_PATH=" in pbs_text
     assert "-m exaserve.launcher" in pbs_text

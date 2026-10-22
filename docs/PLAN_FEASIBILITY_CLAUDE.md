@@ -28,7 +28,7 @@ WP0; audit line numbers and historical environment versions are not timeless.
 | ClientLab Python | 2,627 lines across all Python files |
 | Tests | 10 `test_*.py` files and 36 collected tests in the adjudicated baseline; 24–25 passed depending on an undeclared host `rg`, with other recorded failures |
 | CI | No `.github` workflow files in the checked tree. A GitHub remote exists, but that does not prove GitHub Actions is enabled, authorized, or the selected CI provider |
-| Aurora acquisition | Reuse a valid compute session, then prefer `subjob` only when an eligible source allocation already contains enough free nodes; otherwise use the approved interactive fallback |
+| Aurora acquisition | Reuse a valid compute session, then prefer an allocation lease only when an eligible source allocation already contains enough free nodes; otherwise use the approved interactive fallback |
 | Aurora queues | `capacity`: 1–16 nodes; `debug-scaling`: 2–256 nodes and at most one hour; `prod`: 256+ nodes with longer runs. Historical queue delay/job-count observations are not policy |
 
 The source counts are only rough sizing inputs. They do not justify estimating
@@ -146,7 +146,7 @@ replace the single-control-plane topology before a high-scale claim is made.
 Scenario sharing may reduce allocation overhead, but 16/64/128/256 remain
 independent logical gates with fresh generations, reset boundaries, artifacts,
 and verdicts. A larger physical allocation may host a smaller logical gate only
-after subset isolation is proven and both sizes are recorded. `subjob` cannot
+after subset isolation is proven and both sizes are recorded. A lease cannot
 create nodes outside its source allocation. Queue, walltime/lease TTL,
 node-hours, expected duration, retry policy, and output path must be budgeted per
 gate before a final campaign; calendar cost remains TBD until then.

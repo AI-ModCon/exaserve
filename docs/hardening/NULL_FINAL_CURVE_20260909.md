@@ -15,7 +15,7 @@ Run-store parent:
 
 ## WP12 execution budgets
 
-No eligible user-managed keepalive allocation is available. Acquisition is
+No eligible user-managed held allocation is available. Acquisition is
 the approved canonical PBS batch fallback, with exact logical and physical
 node counts. FINAL denotes campaign gate recordkeeping, not a complete
 production release claim. Budgets below are recorded before the monitor's
@@ -54,7 +54,7 @@ python3 -m eval.cli run submit <run-store-parent>/<group>/n<nodes>/run.yaml
 ```
 
 The sealed job body selects its immutable source snapshot, sources
-`/home/YOUR_USER/script/env_aurora`, and executes the exact materialized run in
+the site environment script, and executes the exact materialized run in
 its PBS compute allocation. The login node is used only for submission,
 monitoring and small evidence reads. Logs are at `<cell>/logs/pbs/{stdout,stderr}`
 and backend logs at `<cell>/logs/backend`; accepted output is under
@@ -153,9 +153,9 @@ Both 32-node trials retain the exact final source and have distinct generations
 and provenance hashes. Metrics-exporter warnings again did not prevent the
 hash-bound acceptance or clean shutdown.
 
-Before the next submission, `subjob status` reports no active leases,
-`qstat -u "$USER"` reports no jobs, and the user-managed keepalive record remains
-stopped with no source allocation. Canonical batch fallback therefore remains
+Before the next submission, the lease helper reports no active leases,
+`qstat -u "$USER"` reports no jobs, and the user-managed held-allocation record
+remains stopped with no source allocation. Canonical batch fallback therefore remains
 the acquisition path. The clean frozen checkout remains at `0a83547`.
 
 Canonical `python3 -m eval.cli run submit .../run12/n64/run.yaml` succeeded

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Final packaged-artifact lifecycle qualification on Aurora.
 
-The site shell is only responsible for sourcing ``env_aurora`` and invoking
+The site shell is only responsible for sourcing the site environment script and invoking
 this program.  This harness then starts the installed ExaServe composition
 root directly, observes only the canonical status/receipt artifacts, and
 records a self-contained evidence bundle for fresh generations.  The default

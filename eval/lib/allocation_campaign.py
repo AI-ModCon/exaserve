@@ -38,6 +38,8 @@ from exaserve.state.atomic import (
     strict_json_loads,
 )
 
+from eval.site_config import get_site_config
+
 from .run_planner import (
     _detect_repo_state,
     _ensure_repo_snapshot,
@@ -47,7 +49,7 @@ from .run_planner import (
 from .utils import dataclass_to_dict
 
 
-_SCHEMA = 1
+_SCHEMA = 2
 _CLEANUP_S = 900
 _FORCE_S = 30
 _FIELDS = {
@@ -60,6 +62,7 @@ _FIELDS = {
     "cleanup_reserve_s",
     "qualification_mode",
     "qualification",
+    "bootstrap",
     "created_at",
     "campaign_hash",
 }
@@ -135,6 +138,13 @@ def _validate_contract(campaign: dict) -> None:
     request = SchedulerPlan(**request_raw)
     if not isinstance(request.account, str) or not request.account:
         raise ValueError("campaign scheduler account must be a non-empty string")
+    bootstrap = campaign["bootstrap"]
+    if (
+        not isinstance(bootstrap, dict)
+        or set(bootstrap) != {"env_script", "pbs_spool"}
+        or not all(isinstance(value, str) and os.path.isabs(value) for value in bootstrap.values())
+    ):
+        raise ValueError("campaign bootstrap must name absolute env_script and pbs_spool paths")
     expected = SchedulerPlan(
         type="pbs",
         nodes=request.nodes,
@@ -430,6 +440,8 @@ def materialize_campaign(
     repo_root: str | None = None,
     allow_dirty: bool = False,
     account: str | None = None,
+    env_script: str | None = None,
+    pbs_spool: str | None = None,
 ) -> str:
     """Create immutable acquisition intent. No child is submitted or modified."""
     account = account or get_site_defaults().project_account
@@ -438,6 +450,15 @@ def materialize_campaign(
             "allocation campaigns need a PBS account: pass --account or set "
             "EXASERVE_PROJECT_ACCOUNT"
         )
+    env_script = env_script or get_site_config().env_script_aurora
+    if not env_script or not os.path.isabs(os.path.expanduser(env_script)):
+        raise ValueError(
+            "allocation campaigns need an absolute site environment script: pass "
+            "--env-script or set EXASERVE_ENV_SCRIPT_AURORA"
+        )
+    spool = Path(pbs_spool).expanduser() if pbs_spool else Path.home() / ".cache/exaserve/pbs"
+    if not spool.is_absolute():
+        raise ValueError("--pbs-spool must be an absolute path")
     if type(qualification_mode) is not bool or type(allow_dirty) is not bool:
         raise ValueError("mode flags must be boolean")
     if not isinstance(children, list) or not children or len(children) != len(set(children)):
@@ -495,6 +516,12 @@ def materialize_campaign(
         "cleanup_reserve_s": _CLEANUP_S,
         "qualification_mode": qualification_mode,
         "qualification": qualification,
+        # The job's site setup and PBS output location are part of the
+        # immutable campaign identity.
+        "bootstrap": {
+            "env_script": os.path.expanduser(env_script),
+            "pbs_spool": ensure_owned_directory(spool),
+        },
         "created_at": _now(),
     }
     _validate_contract(payload)
@@ -519,8 +546,8 @@ def _job_spec(campaign: dict) -> JobSpec:
     root = Path(campaign["root"])
     controller = Path(campaign["controller"]["snapshot_root"])
     identity = "ac-" + campaign["campaign_hash"][:12]
-    # Site-required PBS spool locations; child evidence stays in its bundle.
-    spool = Path.home() / "aurora_rayserver/tmp"
+    # PBS spool from the campaign identity; child evidence stays in its bundle.
+    spool = Path(campaign["bootstrap"]["pbs_spool"])
     return JobSpec(
         job_name=identity,
         num_nodes=request.nodes,
@@ -531,7 +558,7 @@ def _job_spec(campaign: dict) -> JobSpec:
         stdout_dir=spool,
         stderr_dir=spool,
         cwd=controller,
-        source_env_script=Path.home() / "script/env_aurora",
+        source_env_script=Path(campaign["bootstrap"]["env_script"]),
         pythonpath=(controller, controller / "src"),
         run_identity=identity,
         environment_unset=("ONEAPI_DEVICE_SELECTOR",),
@@ -549,7 +576,7 @@ def _job_spec(campaign: dict) -> JobSpec:
 def _load_campaign(path: str) -> dict:
     value = strict_json_load_path(path)
     if not isinstance(value, dict) or set(value) != _FIELDS or value["schema_version"] != _SCHEMA:
-        raise ValueError("campaign artifact shape/version mismatch")
+        raise ValueError("campaign artifact shape or schema version mismatch")
     _validate_contract(value)
     payload = {key: item for key, item in value.items() if key != "campaign_hash"}
     if canonical_hash(payload) != value["campaign_hash"]:

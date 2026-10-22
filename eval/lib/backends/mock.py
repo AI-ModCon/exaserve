@@ -36,7 +36,7 @@ class MockBackendAdapter(BackendAdapter):
         return run_plan.runtime_manifest_path
 
     def runtime_env(self, run_plan) -> RuntimeEnvSpec:
-        return RuntimeEnvSpec(env_script="~/script/env_aurora")
+        return RuntimeEnvSpec(env_script="/path/to/site-environment.sh")
 
     def launch(self, run_ctx: BackendRunContext) -> LaunchedBackend:
         monitor = BackendProcessHandle(

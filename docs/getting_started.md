@@ -208,26 +208,22 @@ not required filenames. If using the validation-only LiteLLM gateway, configure
 Environment preparation is not yet uniform across all entry points:
 
 - **Serving CLI:** captures the submitting interpreter's `sys.executable`.
-  Its job bootstrap still checks `$HOME/script/env_aurora` and otherwise loads
-  `frameworks`; no custom setup-file CLI option exists. That private file is
-  optional, but if present it is executed. The eval environment override above
-  does not affect this entry point. Ensure the recorded interpreter, required
-  libraries and gateway are available after that bootstrap; inspect the rendered
-  job with `--dry-run` before submission. Loading a different module in the job
-  does not change the recorded interpreter.
-- **Allocation campaigns:** currently hard-code a private environment-script
-  path, spool location and account assumptions in
-  [the controller](../eval/lib/allocation_campaign.py). They do not honor the
-  ordinary eval override. Treat that path as operator-specific, not a portable
-  deployment recipe. Making it configurable must bind the setup to the immutable
-  campaign identity and re-run the WP12 proof; do not edit a generated campaign
-  or fabricate private helper files to make it pass.
-- **Historical hardening helpers and the mock eval backend:** some retain
-  maintainer-local paths. They are not the general installation interface.
+  Its job bootstrap sources the script that `EXASERVE_ENV_SCRIPT_AURORA` names
+  at submission (an absolute path) and otherwise loads `frameworks`. Ensure the
+  recorded interpreter, required libraries and gateway are available after that
+  bootstrap; inspect the rendered job with `--dry-run` before submission.
+  Loading a different module in the job does not change the recorded
+  interpreter.
+- **Allocation campaigns:** take the PBS account, the site environment script
+  and the PBS output directory from `--account`, `--env-script` and
+  `--pbs-spool` (or `EXASERVE_PROJECT_ACCOUNT` and `EXASERVE_ENV_SCRIPT_AURORA`)
+  and record them in the immutable campaign identity (schema 2). The WP12 proof
+  has not been re-run for this bootstrap; do not edit a generated campaign.
+- **Historical hardening helpers:** some still assume the maintainer's
+  allocation-lease helper. They are not the general installation interface.
 
-These limitations are recorded, not fixed by changing documentation. Use the
-ordinary explicit-config Ray evaluation path where applicable; do not advertise
-the allocation controller as portable until its bootstrap is corrected and
+Use the ordinary explicit-config Ray evaluation path where applicable; do not
+advertise the allocation controller as portable until its new bootstrap is
 qualified.
 
 ### Before the first run

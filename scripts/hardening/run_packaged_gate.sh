@@ -26,7 +26,7 @@ if [ ! -r "${PBS_NODEFILE:-}" ] || ! awk -v host="$current_host" '
   exit 2
 fi
 
-source "$HOME/script/env_aurora"
+source "${EXASERVE_ENV_SCRIPT_AURORA:?set EXASERVE_ENV_SCRIPT_AURORA to the site environment script}"
 unset ONEAPI_DEVICE_SELECTOR
 set -u
 

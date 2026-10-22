@@ -24,7 +24,7 @@ Run-group root:
 
 ## WP12 execution budgets
 
-No eligible keepalive allocation is available for these exact-size jobs;
+No eligible held allocation is available for these exact-size jobs;
 acquisition is the canonical PBS batch fallback. Each gate uses FINAL-lane
 recordkeeping for this paper campaign, not a complete production release claim.
 
@@ -44,7 +44,7 @@ The n4 job was submitted once at `2026-09-09 20:02:22 UTC`, scheduler identity
 `es-43d2461f6ba1`; its durable state is now `SUCCEEDED`, phase `succeeded`, and
 `submit_attempt=1`. No duplicate submission was made by this monitor.
 
-The exact immutable job body sources `/home/YOUR_USER/script/env_aurora`, selects
+The exact immutable job body sources the site environment script, selects
 the sealed snapshot, and invokes `python3 -m eval.cli run execute <cell>/run.yaml`
 inside its exact-size PBS compute allocation. Monitoring and small evidence
 reads occur on the login node; model, Ray, MPI and replay execution do not.
@@ -125,10 +125,10 @@ without a scheduler job ID or prior submit attempt. Its semantic hash is
 `1de8115a2b3b7b47c0efa4fbd1b5292cc6019c61bcbe06aa3328fa2ab9718341`;
 its source snapshot matches accepted n4. Exact deployment/scheduler size is
 8 nodes; the sealed job requests capacity and `02:00:00`, sources
-`env_aurora`, then unsets `ONEAPI_DEVICE_SELECTOR` before compute execution.
+the site environment script, then unsets `ONEAPI_DEVICE_SELECTOR` before compute execution.
 Required bundle, trace, runtime, plan, profile and output-directory checks
-passed. `qstat -u "$USER"` showed no active user jobs; `subjob status` showed no
-active leases and keepalive metadata reported no usable source.
+passed. `qstat -u "$USER"` showed no active user jobs; the lease helper showed no
+active leases and reported no usable source allocation.
 
 Submission command, from the clean frozen worktree after loading `frameworks`
 and `go` and unsetting `ONEAPI_DEVICE_SELECTOR`:

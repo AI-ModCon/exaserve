@@ -382,10 +382,14 @@ def qualification_contract(tmp_path):
             }
         )
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "root": str(tmp_path),
         "qualification_mode": True,
         "qualification": None,
+        "bootstrap": {
+            "env_script": "/site/environment.sh",
+            "pbs_spool": str(tmp_path / "spool"),
+        },
         "cleanup_reserve_s": 900,
         "child_timeout_s": 480,
         "scheduler": dataclass_to_dict(

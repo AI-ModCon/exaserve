@@ -148,7 +148,7 @@ def _gateway_from_backend(backend_args: dict) -> tuple[Optional[dict], bool, Opt
         from eval.site_config import get_site_config
 
         # LiteLLM intentionally lives in a separate virtual environment from
-        # Ray/vLLM.  The parent job must retain env_aurora, so an omitted
+        # Ray/vLLM.  The parent job must retain the site environment, so an omitted
         # override resolves through the site-configured LiteLLM interpreter
         # instead of an unavailable ambient PATH entry.
         python_path = proxy.get("python_path") or get_site_config().litellm_python_path

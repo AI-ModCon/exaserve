@@ -2059,21 +2059,22 @@ and `go` as needed.
 Compute-session acquisition and validation:
 
 1. Reuse a valid existing compute session when available.
-2. Otherwise prefer `subjob` to lease the required nodes from the user's
-   keepalive allocation. The agent does not start or manage keepalive.
-   `subjob` can lease only nodes already present and free in an eligible source;
-   never assume that `subjob 64`, `subjob 128`, or `subjob 256` is available.
-3. If no lease source exists, use the repository-approved `srundbg` or
-   `srundsc N` interactive fallback; do not improvise scheduler commands.
+2. Otherwise prefer leasing the required nodes from an allocation the user
+   already holds; the agent does not start or manage that allocation. A lease
+   can use only nodes already present and free in an eligible source; never
+   assume that a 64-, 128- or 256-node lease is available.
+3. If no lease source exists, use the site's approved interactive allocation;
+   do not improvise scheduler commands.
 4. A session is valid only when `PBS_JOBID` is set, `PBS_NODEFILE` exists and is
    readable, the current hostname is in that file, and the shell is either marked
    `AURORA_SUBJOB=1` or verified as the interactive PBS compute shell.
-5. In every fresh compute session, source `~/script/env_aurora` for an ExaServe
+5. In every fresh compute session, source the site environment script
+   (`EXASERVE_ENV_SCRIPT_AURORA`) for an ExaServe
    Ray/vLLM run, including one whose canonical plan selects LiteLLM. The parent
    must retain the framework environment while the plan launches LiteLLM from
    its separate, hash-bound executable; activating the LiteLLM virtualenv in
    the parent can make its NumPy version incompatible with vLLM/Numba. Source
-   `~/script/env_litellm` only for a standalone LiteLLM diagnostic that does not
+   a separate LiteLLM environment script only for a standalone LiteLLM diagnostic that does not
    import or run Ray/vLLM in the parent. Verify node count, working directory,
    Python/environment, executables, input models/data, unique output directory,
    remaining walltime, and XPU visibility before launch. Use
@@ -2127,7 +2128,7 @@ small isolation proof below passes.
   Preserve the original PBS job/PALS environment and physical node inventory;
   select an explicit exact subset containing that same head, and supply its
   node-local nodefile to both PBS/MPI and ExaServe. Never change PBS_JOBID, fake
-  a subjob lease, or silently truncate a nodefile inside a DeploymentPlan binder.
+  an allocation lease, or silently truncate a nodefile inside a DeploymentPlan binder.
 - A child's original SchedulerPlan is not submitted in this attach/reuse mode.
   Its deployment, logical scheduler count, source snapshot, and immutable inputs
   remain unchanged. Execute the canonical child CLI from its sealed source,

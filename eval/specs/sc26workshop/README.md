@@ -149,7 +149,7 @@ node-failure-prone (~1h × 256 nodes) — re-run; the failures are diagnosable
 ## How to run
 
 ```bash
-# one cell interactively:            subjob --nodes N -- bash tmp/run_smoke.sh <spec>
+# one cell interactively:            bash tmp/run_smoke.sh <spec>   (inside an N-node allocation)
 # whole spec via PBS:                python -m eval.cli run materialize <spec> && \
 #                                    python -m eval.cli run submit-all <spec>
 # score:                             python -m eval.plot.goodput -e <spec> --preset paper

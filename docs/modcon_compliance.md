@@ -112,9 +112,6 @@ are the published contact:
   `aurora-pbs-0001.hostmgmt.cm.aurora.alcf.anl.gov` PBS server name, the
   `aurora-uan-*` login-node pattern and the shared model-weights path
   `/lus/flare/projects/datasets/model-weights`.
-- Default home-directory layouts without an account name: `~/agpt/...` and
-  `~/script/env_aurora` in `eval/site_config.py`, and `~/aurora_rayserver/tmp`
-  in `eval/lib/allocation_campaign.py`.
 - The maintainer contact `wenyiw@uchicago.edu` in package metadata,
   SECURITY.md and the Code of Conduct.
 

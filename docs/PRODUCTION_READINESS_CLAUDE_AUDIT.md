@@ -454,7 +454,7 @@ identity also stores prompt/trace **paths**, not content hashes, as claimed.
   KNOWN_ISSUES.md; the closure map in plan §7 covers **all** of PR-001..035
   with no orphans (several intentionally appear in two WPs).
 - Plan §2 "retains all 35 findings" ✓ — the audit numbers PR-001..PR-035.
-- Plan WP12's Aurora workflow reference `~/script/env_aurora` exists.
+- Plan WP12's Aurora workflow reference to the site environment script exists.
 - Plan §2 "Aurora is the only credible current platform" is consistent with
   TODO.md's own status notes (Slurm e2e unproven offsite, AMD bring-up
   unverified, SGLang not smoke-validated).

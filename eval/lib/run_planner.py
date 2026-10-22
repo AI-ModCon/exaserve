@@ -1446,6 +1446,11 @@ def _materialize_variant(
         raise ValueError(
             "scheduler.project is empty: set it in the spec or export EXASERVE_PROJECT_ACCOUNT"
         )
+    if not runtime_env.env_script:
+        raise ValueError(
+            "no site environment script: set EXASERVE_ENV_SCRIPT_AURORA (or env_script_aurora "
+            "in site_config_local.py) or backend.args.ray.launch.env_script in the spec"
+        )
     job_text = get_scheduler(getattr(scheduler, "type", "pbs")).render_job(
         JobSpec(
             job_name=scheduler_identity,

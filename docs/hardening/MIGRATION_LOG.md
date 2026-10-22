@@ -86,7 +86,7 @@ AC-CTL-01); ledger covers all findings.
 (F-08..F-11, owners WP7/WP8/WP9) in 8.7s.
 **Next unblocked slice:** S03 inventory (agent running) → S03 activator
 harness; then S01/S02 one-/two-node early-compute proofs (WP12 early lane,
-subjob lease).
+allocation lease).
 
 ---
 
@@ -132,7 +132,7 @@ first cause (`CHILD_EXIT`) arrives over the channel while mpiexec reports
 only a cause-free 143 job abort — confirming the channel/launcher role
 split; node watchdog kills local children and exits nonzero on control-lease
 loss; zero process residue after every scenario. First attempt failed on a
-subjob/SSH quoting hazard (multi-line -c command mangled) → batteries now
+lease-shell/SSH quoting hazard (multi-line -c command mangled) → batteries now
 live in script files (`run_s01_battery.sh`).
 
 **Gate S02-2N COMPLETE after 4 runs — ADR-002 decided** (see
@@ -291,7 +291,7 @@ cause fixed (8 environment repairs in P00.1, 4 contract fixes here).
 
 ## 2026-08-05 — Slice P02.3: Blocker/High burn-down (driver, eval, scheduler, proxy)
 
-Keepalive re-armed by user; long compute now via subjob leases.
+Held allocation re-armed by the user; long compute now via allocation leases.
 
 **Fixed (code + tests, suite 67/67 green):**
 - **PR-001 + PR-028 (driver):** `driver.py` now tracks `exit_code`, raises
@@ -1917,7 +1917,7 @@ manifest SHA-256  0bc6f132a167bd5e0e8df2d6651b68217cee0d27a6359358bb5bec09a1d987
 ```
 
 The first package-gate invocation failed before evidence because the outer
-`subjob` shell did not preserve the expected cwd. The next (`a1`) run exposed a
+lease shell did not preserve the expected cwd. The next (`a1`) run exposed a
 real harness defect: supervisor derived paths used `Path.cwd()`, so one test
 failed while 1203 passed and 9 skipped. Its partial evidence is retained and is
 not an accepted receipt. The harness now anchors derived paths to the repository
@@ -1948,7 +1948,7 @@ preserved the no-retroactive-evidence rule.
 | HAProxy no-delay pair | `b4b02ad33d00e8e3d46a2d79868ca7a701abd02c69e6f2b983d06d89fc1e16b4` | no-delay on and off — both PASS |
 | supervisor/watchdog q2 | `782216c25a63bc94f3e6b7a83673bc912b269cb3a78fbd07ffa5aea198518309` | head Ray child death and worker supervisor death — PASS |
 
-Every run used a validated `subjob` lease, sourced `env_aurora`, removed
+Every run used a validated allocation lease, sourced the site environment script, removed
 `ONEAPI_DEVICE_SELECTOR`, and used the installed final42 bootstrap plus the
 repository harness. No run above two nodes was requested or consumed.
 

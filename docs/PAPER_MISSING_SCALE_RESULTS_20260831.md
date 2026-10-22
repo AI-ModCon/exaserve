@@ -76,9 +76,9 @@ No eligible user-managed long-lived allocation was available at submission.
 
 A 256-node production parent is not a supported drop-in workaround today:
 
-- `subjob` discovers user-managed allocation slots or qualifying `debug-*`
-  allocations, not an arbitrary production job. Do not alter keepalive state
-  or disguise a data job as an interactive debug allocation.
+- The allocation-lease helper discovers user-managed held allocations or
+  qualifying debug allocations, not an arbitrary production job. Do not alter a
+  held allocation or disguise a data job as an interactive debug allocation.
 - Eval requires scheduler/deployment node-count agreement; the allocation
   binder rejects an oversized nodefile rather than silently truncating it.
 - The authoritative plan permits a larger physical allocation only after

@@ -1013,7 +1013,7 @@ def test_dirty_repo_warning_and_snapshot_excludes_uncommitted_content(
 
 
 def test_ray_adapter_always_uses_exaserve_env(temp_spec, tmp_path, monkeypatch):
-    """Backend always uses env_aurora; litellm runs as a separate subprocess."""
+    """Backend always uses the site environment; litellm runs as a separate subprocess."""
     prompt_path = tmp_path / "prompts.json"
     spec_path = tmp_path / "ray_spec.yaml"
     repo_root = _init_git_repo(tmp_path / "repo")
@@ -1030,7 +1030,9 @@ def test_ray_adapter_always_uses_exaserve_env(temp_spec, tmp_path, monkeypatch):
     )
     adapter = get_backend_adapter("ray")
     runtime_env = adapter.runtime_env(plans[0])
-    assert runtime_env.env_script.endswith("env_aurora")
+    # Materialization runs in worker processes, so this uses the session's
+    # site settings from conftest.py rather than a per-test override.
+    assert runtime_env.env_script == os.environ["EXASERVE_ENV_SCRIPT_AURORA"]
     gateway = plans[0].semantic_plan.deployment.gateway
     assert gateway is not None
     assert gateway.executable_ref == str(

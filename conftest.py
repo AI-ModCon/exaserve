@@ -33,6 +33,12 @@ os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 # that derive storage paths or render jobs use this neutral placeholder project.
 os.environ.setdefault("EXASERVE_PROJECT_ROOT", "/lus/flare/projects/example-project")
 os.environ.setdefault("EXASERVE_PROJECT_ACCOUNT", "example-project")
+os.environ.setdefault(
+    "EXASERVE_ENV_SCRIPT_AURORA", "/lus/flare/projects/example-project/site-environment.sh"
+)
+os.environ.setdefault(
+    "EXASERVE_LITELLM_PYTHON_PATH", "/lus/flare/projects/example-project/litellm/bin/python3"
+)
 
 
 @pytest.fixture

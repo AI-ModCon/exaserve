@@ -91,7 +91,7 @@ hash-verified, role-filtered generated overlay described in ADR-003.
 | Supervisor/watchdog faults | PASS — exact head Ray child and worker supervisor deaths, one first cause, zero survivors | `artifacts/hardening/final43-supervisor-watchdog-v3q2-2n-20260809-a1/qualification/result.json` |
 
 The package gate ran from a clean installed wheel inside a one-node lease. All
-hardware runs used `subjob`, the pinned Aurora environment, immutable
+hardware runs used allocation leases, the pinned Aurora environment, immutable
 predeclared campaign rows, and the same wheel/site/compatibility identities.
 
 ## Architecture exercised by the candidate

@@ -47,7 +47,11 @@ renumbered 1 to 25; one real rack maps to one label rack, so statements about
 shared racks and chassis still hold. Allocation-internal addresses appear as
 documentation addresses from `192.0.2.0/24`, and a reservation identifier as
 `<reservation>`. PBS job identifiers appear as labels `J001` to `J095`,
-numbered in job order; a job keeps its label in every document. The allocation
+numbered in job order; a job keeps its label in every document. Maintainer
+helpers appear generically: the site environment script
+(`EXASERVE_ENV_SCRIPT_AURORA`), allocation leases (recorded in qualification
+evidence as `acquisition_source: subjob`, with the `AURORA_SUBJOB` session
+marker) and the interactive-allocation fallback. The allocation
 name is not published, and the code has no default PBS account or project root
 ([getting started](getting_started.md#configure-evaluation-environment-preparation)).
 

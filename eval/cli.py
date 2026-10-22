@@ -126,6 +126,14 @@ def build_parser() -> argparse.ArgumentParser:
     allocation_materialize.add_argument(
         "--account", default=None, help="PBS account (default: EXASERVE_PROJECT_ACCOUNT)"
     )
+    allocation_materialize.add_argument(
+        "--env-script",
+        default=None,
+        help="site environment script (default: EXASERVE_ENV_SCRIPT_AURORA)",
+    )
+    allocation_materialize.add_argument(
+        "--pbs-spool", default=None, help="PBS output directory (default: ~/.cache/exaserve/pbs)"
+    )
     for name in ("submit", "execute"):
         allocation_commands.add_parser(name).add_argument("campaign")
 
@@ -172,6 +180,8 @@ def main(argv: list[str] | None = None) -> int:
                     repo_root=args.repo_root,
                     allow_dirty=args.allow_dirty,
                     account=args.account,
+                    env_script=args.env_script,
+                    pbs_spool=args.pbs_spool,
                 )
             )
             return 0

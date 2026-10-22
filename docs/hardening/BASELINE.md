@@ -70,7 +70,7 @@ fails collection. Owner WP0 (AC-TST-01 collection clause).
 Aurora, PBS; package scheduler default = PSI/J (`get_scheduler()`), eval
 scheduler = PBS/Slurm EvalScheduler stack; site queues: capacity 1–16 nodes,
 debug-scaling 2–256 @ ≤1 h, prod ≥256. Compute sessions per `AGENTS.md`
-(subjob lease preferred; `srundbg`/`srundsc N` fallback).
+(allocation lease preferred; interactive-allocation fallback).
 
 ## Codex takeover checkpoint (2026-08-07)
 

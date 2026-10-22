@@ -126,7 +126,7 @@ backend:
     ray:
       launch:
         # Override the env script used inside the PBS job if needed.
-        # env_script: /home/<user>/script/env_aurora
+        # env_script: /absolute/path/to/site-environment.sh
         # Compiles null_compute into the hash-bearing DeploymentPlan runtime policy.
         null_compute: false
         # Ray head port written into the runtime manifest.
@@ -141,7 +141,7 @@ backend:
         # Backend Ray Serve HTTP port on each node.
         backend_port: 8000
         # Optional. If omitted, site_config.litellm_python_path is used.
-        # python_path: /home/<user>/agpt/venv/litellm/bin/python3
+        # python_path: /absolute/path/to/litellm-runtime/bin/python3
         # Worker count for the proxy implementation.
         num_workers: 2
         # Passed verbatim to the proxy backend.

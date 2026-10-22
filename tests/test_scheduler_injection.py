@@ -54,11 +54,11 @@ def test_scheduler_unsets_site_environment_after_bootstrap():
 
     script = PBSScheduler().render_job(
         _spec(
-            source_env_script=Path("/tmp/env_aurora"),
+            source_env_script=Path("/tmp/site-environment.sh"),
             environment_unset=("ONEAPI_DEVICE_SELECTOR",),
         )
     )
-    source_at = script.index("source /tmp/env_aurora")
+    source_at = script.index("source /tmp/site-environment.sh")
     no_user_site_at = script.index("export PYTHONNOUSERSITE=1", source_at)
     safe_path_at = script.index("export PYTHONSAFEPATH=1", source_at)
     unset_at = script.index("unset ONEAPI_DEVICE_SELECTOR")

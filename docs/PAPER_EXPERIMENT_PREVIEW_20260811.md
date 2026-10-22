@@ -338,7 +338,7 @@ Rejected attempts remain on disk and are not counted above.
     CPU cores each, which is beyond the login-node preparation allowance. The
     retained partial root contains only run-group metadata, not an executable
     run. High-tier trace and bundle materialization was therefore moved into a
-    validated one-node `subjob`; this is an execution-placement correction, not
+    validated one-node allocation lease; this is an execution-placement correction, not
     accepted experiment evidence.
 23. That compute-side retry encountered the two leases left by the killed
     login-node trace workers. The lease itself behaved correctly, but
@@ -512,8 +512,8 @@ Rejected attempts remain on disk and are not counted above.
     vLLM/Numba runtime, which requires NumPy 2.2 or older, so model actors
     failed before READY. The attempt was stopped immediately and completed
     bounded 2/2 teardown with no residuals. The feasible isolation is to keep
-    the Ray parent and model actors in `env_aurora` and launch only the gateway
-    from the plan-bound `/home/YOUR_USER/venv/litellm/bin/litellm` executable.
+    the Ray parent and model actors in the site environment and launch only the gateway
+    from the plan-bound LiteLLM executable.
     This retains one authoritative Python control plane and prevents gateway
     packages from contaminating the model runtime.
 41. The isolated LiteLLM retry on `793a780` used an explicit 180-second gateway
@@ -540,7 +540,7 @@ Rejected attempts remain on disk and are not counted above.
 43. The qualification also exposed documentation drift: `AGENTS.md` and the
     execution plan said to activate the LiteLLM virtualenv for a mixed
     Ray/vLLM plus LiteLLM run, while the compiler, generated PBS job, and
-    `plan_adapter` correctly require an `env_aurora` parent and a separately
+    `plan_adapter` correctly require a site-environment parent and a separately
     bound LiteLLM executable. Candidate `e6b5ba8` makes that isolation rule
     authoritative in both documents. No serving code changed. All six 64-node
     variants were resealed from this final candidate with source snapshot hash
@@ -628,7 +628,7 @@ Rejected attempts remain on disk and are not counted above.
     former 55/64 cleanup truncation under the 300-second outer watchdog.
 50. The replacement `3ba15df` LiteLLM non-streaming cell proves that the
     isolated gateway is runnable at 64 nodes when its deadlines reflect the
-    actual dependency behavior. The mixed parent remained in `env_aurora`; the
+    actual dependency behavior. The mixed parent remained in the site environment; the
     plan launched the hash-bound
     `/home/YOUR_USER/venv/litellm/bin/litellm` executable with a 180-second bind
     deadline, 300-second gateway request timeout, 420-second recovery deadline,
