@@ -159,9 +159,11 @@ defaults:
 | Llama-3-8B, TP=8 x PP=2 on two nodes | READY about 430 s, most of it engine creation |
 | Null compute (no model), HAProxy, 12 replicas per node | READY 29-30 s at 32 nodes, about 40 s at 64 nodes and 549-555 s at 256 nodes |
 
-Request at least about 90 minutes for any cold 405B run, even at four nodes;
-the checked-in 405B spec still asks for one hour on debug-scaling for 17-255
-nodes, so run those scales through an allocation campaign or a longer queue.
+Request at least about 90 minutes for any cold 405B run, even at four nodes.
+The checked-in 405B spec asks for two hours below 256 nodes and four from 256.
+At 17-255 nodes that exceeds the one-hour debug-scaling limit, so `submit` and
+`submit-all` refuse those cells before contacting the scheduler and leave them
+PLANNED; run them as allocation-campaign children (below).
 Node-local tmpfs is wiped at job end, so every allocation pays the staging cost
 again. Record per-stage transfer times in every large-model run; in one 8-node
 405B run stage 0 moved data about three times slower than stage 1, and the
@@ -357,15 +359,16 @@ filesystem I/O; test heartbeat latency under a deliberately slow store before
 trusting a new persistence path at scale.
 
 **Control-channel deadlines are unmeasured candidates.** Defaults:
-registration 300 s, reconnect grace 60 s, heartbeat 5 s, lease timeout 30 s
-(at least three heartbeats is enforced), watchdog cleanup 300 s, frames at most
-1 MiB. Environment variables cannot override compiled values. A large
-synchronized start-up can outlast the 60 s reconnect grace
-([L2](KNOWN_ISSUES.md#l2-control-reconnect-grace-shorter-than-the-start-up-burst--configuration)),
-so set `deployment.control` values explicitly for large start-ups and record
-the measured values per tier: at 16 nodes eight rank sessions dropped during
-the synchronized engine start-up and could not reconnect within 60 s, and
-`reconnect_grace_s: 300` recovered all of them. No checked-in spec sets it.
+registration 300 s, reconnect grace 60 s (300 s from 16 nodes), heartbeat 5 s,
+lease timeout 30 s (at least three heartbeats is enforced), watchdog cleanup
+300 s, frames at most 1 MiB. Environment variables cannot override compiled
+values. At 16 nodes eight rank sessions dropped during the synchronized engine
+start-up and could not reconnect within 60 s, and `reconnect_grace_s: 300`
+recovered all of them; the compiler therefore raises the default from 16 nodes
+([L2](KNOWN_ISSUES.md#l2-control-reconnect-grace-shorter-than-the-start-up-burst--default-raised)),
+and an explicit `deployment.control` value still wins. A rank that never
+returns is then declared lost after 300 s rather than 60 s. Record the measured
+values per tier.
 
 **Ports.** Twelve replicas starting at once on a node used to pick the same
 free port (EADDRINUSE). Engine ports now come from node-local exclusive leases
@@ -426,22 +429,23 @@ tokens per SSE event and proxy-node network tuning. When client-side streaming
 numbers collapse at scale, check server-side TTFT and TBT before blaming the
 model servers.
 
-**HAProxy thread count follows `gateway.worker_count`.** When
-`gateway.options.nbthread` is unset, the gateway's `worker_count` becomes the
-HAProxy thread count, and the shipped examples and characterization specs set
-it to 1. A single thread pegs one core and cost 23% of streaming throughput at
-64 nodes; below about four threads HAProxy is CPU-bound, above that it is
-network-bound (forcing 32 threads at 256 nodes changed nothing). Set
-`gateway.options.nbthread` explicitly for any deployment beyond a few nodes
-([B5](KNOWN_ISSUES.md#b5-haproxy-thread-count-follows-gatewayworker_count--configuration)).
+**HAProxy threads.** A single HAProxy thread pegs one core and cost 23% of
+streaming throughput at 64 nodes; below about four threads HAProxy is
+CPU-bound, above that it is network-bound (forcing 32 threads at 256 nodes
+changed nothing). ExaServe leaves the thread count to HAProxy unless
+`gateway.worker_count` is above 1 or `gateway.options.nbthread` is set
+([B5](KNOWN_ISSUES.md#b5-haproxy-thread-count-follows-gatewayworker_count--resolved)).
 
 **Size `maxconn` for the expected concurrency.** ExaServe requires
 2 x `maxconn` + backend count + 256 descriptors under the hard `RLIMIT_NOFILE`
-and refuses to launch otherwise; the default `maxconn` of 8,000 is sized for a
-16,384 descriptor limit and the 64-node tier. Historical 256-node streaming
-runs held up to about 162 thousand HAProxy descriptors under an observed limit
-of 1,048,575. Check the hard limit the job actually sees and size `maxconn` to
-offered rate times end-to-end latency plus headroom.
+and refuses to launch otherwise. Compute nodes allowed 1,048,575 descriptors,
+soft and hard, both in the batch job and under `mpiexec` (measured in October
+2026); the 16,384 limit of login nodes does not apply to the gateway.
+Historical 256-node streaming runs held up to about 162 thousand HAProxy
+descriptors. The default `maxconn` of 8,000 is conservative (it fits a 16,384
+limit with 64 backends); size `maxconn` to offered rate times end-to-end
+latency plus headroom, and check the hard limit the job actually sees on a new
+system.
 
 **Rare HAProxy death.** About one in twelve 256-node streaming ramp-ups lost
 the HAProxy process after a healthy warm-up (threads dropped to zero, no OOM or
@@ -535,13 +539,13 @@ failed with `pthread_create failed`. State `direct_dispatch` (local, mesh or
 paired) whenever per-node client results are compared; early "direct" runs hit
 the local node while later ones spread over all backends.
 
-**Known gap in eval proxy runs.** The bounded default of four client nodes for
-proxy runs is not reached from YAML: an omitted `client.num_nodes` loads as the
-deployment node count, and matrix expansion overwrites even an explicit value
-unless the matrix targets or derives it. Set it explicitly (in sweeps, derive
-it, for example `min(num_nodes, 4)`) and check the client node count in the
-materialized `run.yaml` before submitting
-([C5](KNOWN_ISSUES.md#c5-client-topology-footgun--open-for-yaml-and-matrix-specs)).
+**Client node count in eval runs.** An omitted `client.num_nodes` is derived
+for every matrix variant: at most four client nodes for proxy runs, one per
+deployment node for direct runs. An explicit or matrix-derived value is kept as
+written. Proxy results from specs older than this rule used one client rank
+per deployment node unless the matrix targeted or derived the count; check the
+client node count in the materialized `run.yaml` before comparing with them
+([C5](KNOWN_ISSUES.md#c5-client-topology-footgun--resolved)).
 
 **LiteLLM.** An apparent LiteLLM scaling loss at 16 and 32 nodes was client
 starvation; the gateway's own overhead at adequate concurrency has not been
@@ -810,9 +814,9 @@ parent-process monkeypatching, and never call an undeclared host executable.
 - Configuration is strict: unknown and duplicate keys, quoted booleans,
   non-finite numbers and model-identifier collisions are rejected. Fix the
   configuration, not the validator.
-- Write authoritative state with the `state.atomic` helpers, pass
-  `expected_revision` to every status transition, and wrap anything that can
-  outlive a lease in a lease heartbeat. On a new shared filesystem, re-verify
+- Write authoritative state with the `state.atomic` helpers, pass the
+  `expected_revision` you read to every status write (the store refuses a write
+  without it), and wrap anything that can outlive a lease in a lease heartbeat. On a new shared filesystem, re-verify
   `O_EXCL` and rename atomicity first.
 - Use argument vectors, not shell strings. In generated scripts, never place
   `shlex.quote` output inside double quotes (a `$(...)` value once executed
@@ -852,9 +856,9 @@ parent-process monkeypatching, and never call an undeclared host executable.
   Only the native bootstrap has a syscall-level proof (two nodes).
 - Measured site control and readiness limits, and a recorded decision on the
   release ceiling.
-- Pipeline-parallel compatibility patches still fall back to a representative
-  layer or mapping entry when no exact match exists
-  ([D5](KNOWN_ISSUES.md#d5-pipeline-parallel-patches-fall-back-to-a-representative-layer--open));
+- Whether the real PP=2 canary relies on a pipeline-parallel layer fallback,
+  which production plans now refuse
+  ([D5](KNOWN_ISSUES.md#d5-pipeline-parallel-patches-fall-back-to-a-representative-layer--fails-closed-in-production));
   use PP canaries that check output correctness.
 - The slower data rate of pipeline stage 0 in 405B staging.
 - Streaming through one head-node HAProxy beyond 64 nodes (see section 5);

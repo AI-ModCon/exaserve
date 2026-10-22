@@ -123,6 +123,7 @@ _AMBIENT_ALLOWED_KEYS = {
     "EXASERVE_RUNTIME_OWNERSHIP_ROOT",
     "EXASERVE_MULTIPROC_SPAWN_LOCK",
     "EXASERVE_VLLM_PATCH_VERBOSE",
+    "EXASERVE_VLLM_PP_LAYER_FALLBACK",
     "EXASERVE_QUALIFIED_PYTHON",
     "EXASERVE_QUALIFIED_PYTHON_SHA256",
     "EXASERVE_QUALIFIED_PYTHON_SITE_PROFILE_HASH",
@@ -1186,6 +1187,7 @@ def runtime_environment(plan) -> dict[str, str]:
     from ..compat.generated_overlay import ROOT_ENV, overlay_root_for
     from ..compat.profile import (
         MULTIPROC_WORKER_PATCH_GATE,
+        PP_LAYER_FALLBACK_POLICY,
         PP_PATCH_GATE,
         RAY_WORKER_PATCH_GATE,
     )
@@ -1213,6 +1215,7 @@ def runtime_environment(plan) -> dict[str, str]:
         "EXASERVE_COMPAT_MANIFEST_HASH": plan.manifest_hash,
         "EXASERVE_COMPAT_DELIVERY": "generated-overlay",
         PP_PATCH_GATE: "1" if pp_enabled else "0",
+        PP_LAYER_FALLBACK_POLICY: "record" if plan.validation_mode else "fail",
         RAY_WORKER_PATCH_GATE: "1" if pp_enabled else "0",
         MULTIPROC_WORKER_PATCH_GATE: "1" if multiproc_enabled else "0",
         "EXASERVE_XPU_VLLM_DISABLE_RAY_COMPILED_DAG": (

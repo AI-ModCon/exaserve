@@ -206,11 +206,12 @@ gateway:
     maxconn: 8000
 ```
 
-`maxconn: 8000` is intentional. ExaServe computes HAProxy's descriptor demand
-as `2 * maxconn + backend_count + 256`, verifies the hard `RLIMIT_NOFILE`, and
-raises the soft limit when allowed. Larger copied values such as 50,000 or
-100,000 cannot run under Aurora's observed 16,384 hard limit and fail before
-launch.
+`maxconn: 8000` is a conservative default, not a site ceiling. ExaServe
+computes HAProxy's descriptor demand as `2 * maxconn + backend_count + 256`,
+checks it against the hard `RLIMIT_NOFILE` before launch, and raises the soft
+limit when allowed. Aurora compute nodes allowed 1,048,575 descriptors when
+measured in October 2026 (login nodes allow 16,384). Size `maxconn` to the
+offered rate times end-to-end latency, plus headroom.
 
 See [`examples/config.reference.yaml`](examples/config.reference.yaml) for the
 complete schema. [`examples/config.direct.yaml`](examples/config.direct.yaml)

@@ -456,6 +456,25 @@ def test_envoy_upstream_idle_timeout_is_hash_bound():
     assert overridden.deployment_plan_hash != plan.deployment_plan_hash
 
 
+@pytest.mark.parametrize(
+    ("nodes", "control", "grace_s"),
+    [
+        (8, None, 60.0),
+        (16, None, 300.0),
+        (64, None, 300.0),
+        (64, {"reconnect_grace_s": 90.0}, 90.0),
+    ],
+)
+def test_large_start_ups_get_a_reconnect_grace_that_outlasts_the_burst(nodes, control, grace_s):
+    """At 16 and 64 nodes ranks dropped during the engine start-up burst and
+    could not reconnect within 60 s; 300 s recovered them. An explicit value wins."""
+    raw = _raw(num_nodes=nodes, validation_mode=True)
+    if control is not None:
+        raw["control"] = control
+    plan = compile_deployment_plan(raw, site=_site(), deployment_id=f"grace-{nodes}")
+    assert plan.control.reconnect_grace_s == grace_s
+
+
 def test_validation_execution_still_requires_the_exact_site_profile_identity():
     candidate = default_site_profile()
     validation_plan = compile_deployment_plan(

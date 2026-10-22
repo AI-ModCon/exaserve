@@ -32,7 +32,7 @@ from pathlib import Path
 from typing import Callable, Iterable
 
 from exaserve.exception_notes import add_exception_note
-from exaserve.schedulers import SubmissionRejected, get_scheduler
+from exaserve.schedulers import SubmissionRejected, get_scheduler, queue_walltime_violation
 
 from .backends import get_backend_adapter
 from .backends.base import (
@@ -582,6 +582,16 @@ def _submit_run_once(run_plan, scheduler, *, submit_attempt: int) -> tuple[str, 
                 return "reconciled", _reconcile_one_submission(run_plan, scheduler, identity)
             except Exception as exc:
                 return "ambiguous", str(exc)
+        # A walltime the queue cannot hold is refused here, once, before any
+        # intent is written: the run stays PLANNED, so it can still run as an
+        # allocation-campaign child.
+        violation = queue_walltime_violation(
+            getattr(run_plan.scheduler, "type", "pbs"),
+            run_plan.scheduler.queue,
+            run_plan.scheduler.walltime,
+        )
+        if violation is not None:
+            return "invalid", violation
 
         try:
             write_run_state(run_plan, "submitting", submit_attempt=submit_attempt)
@@ -2056,6 +2066,14 @@ def _submit_all_locked(
                         f"(definite rejection, attempt {attempt}): {msg}",
                         flush=True,
                     )
+            elif kind == "invalid":
+                # Retrying cannot change this answer; the run stays PLANNED.
+                failed[run_plan.run_id] = msg
+                print(
+                    f"  [{len(submitted)}/{total}] FAILED    "
+                    f"{run_plan.run_group_id}/{run_plan.run_id}: {msg}",
+                    flush=True,
+                )
             else:
                 failed[run_plan.run_id] = msg
                 print(f"  AMBIGUOUS  {run_plan.run_id}: {msg}", flush=True)

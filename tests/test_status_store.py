@@ -18,7 +18,7 @@ from exaserve.state.status import (
 
 
 def _walk_to_ready(store: StatusStore) -> None:
-    store.initialize("dep-1", DeploymentState.PLANNED)
+    record = store.initialize("dep-1", DeploymentState.PLANNED)
     chain = [
         DeploymentState.PLANNED,
         DeploymentState.STAGING,
@@ -28,7 +28,9 @@ def _walk_to_ready(store: StatusStore) -> None:
         DeploymentState.READY,
     ]
     for current, nxt in zip(chain, chain[1:]):
-        store.transition(current, nxt, reason_code="STEP")
+        record = store.transition(
+            current, nxt, reason_code="STEP", expected_revision=record.revision
+        )
 
 
 def test_deployment_lifecycle_and_history(tmp_path):
@@ -39,21 +41,45 @@ def test_deployment_lifecycle_and_history(tmp_path):
     assert [h["state"] for h in record.history][0] == "PLANNED"
 
     # Post-READY loss revalidates; READY is not a latch (plan WP5.1/ADR-002).
-    store.transition(DeploymentState.READY, DeploymentState.VALIDATING, reason_code="REPLICA_LOST")
+    record = store.transition(
+        DeploymentState.READY,
+        DeploymentState.VALIDATING,
+        reason_code="REPLICA_LOST",
+        expected_revision=record.revision,
+    )
     # Terminal FAILED reachable from active state.
-    store.transition(DeploymentState.VALIDATING, DeploymentState.FAILED, reason_code="DEADLINE")
+    record = store.transition(
+        DeploymentState.VALIDATING,
+        DeploymentState.FAILED,
+        reason_code="DEADLINE",
+        expected_revision=record.revision,
+    )
     with pytest.raises(IllegalTransition):
-        store.transition(DeploymentState.FAILED, DeploymentState.READY, reason_code="NOPE")
+        store.transition(
+            DeploymentState.FAILED,
+            DeploymentState.READY,
+            reason_code="NOPE",
+            expected_revision=record.revision,
+        )
 
 
 def test_illegal_skip_and_stale_expectation(tmp_path):
     store = StatusStore.deployment(tmp_path / "s.json")
     store.initialize("dep-2", DeploymentState.PLANNED)
     with pytest.raises(IllegalTransition):
-        store.transition(DeploymentState.PLANNED, DeploymentState.READY, reason_code="SKIP")
-    store.transition(DeploymentState.PLANNED, DeploymentState.STAGING, reason_code="STEP")
+        store.transition(
+            DeploymentState.PLANNED, DeploymentState.READY, reason_code="SKIP", expected_revision=0
+        )
+    store.transition(
+        DeploymentState.PLANNED, DeploymentState.STAGING, reason_code="STEP", expected_revision=0
+    )
     with pytest.raises(StatusConflict):  # caller's view is stale
-        store.transition(DeploymentState.PLANNED, DeploymentState.STAGING, reason_code="STALE")
+        store.transition(
+            DeploymentState.PLANNED,
+            DeploymentState.STAGING,
+            reason_code="STALE",
+            expected_revision=0,
+        )
 
 
 def test_run_lifecycle_distinguishes_partial_and_invalid(tmp_path):
@@ -64,29 +90,35 @@ def test_run_lifecycle_distinguishes_partial_and_invalid(tmp_path):
         RunState.SUBMITTED,
         reason_code="QSUB",
         data_update={"scheduler_job_id": "123.aurora"},
+        expected_revision=0,
     )
-    store.transition(RunState.SUBMITTED, RunState.RUNNING, reason_code="R")
+    store.transition(RunState.SUBMITTED, RunState.RUNNING, reason_code="R", expected_revision=1)
     store.transition(
         RunState.RUNNING,
         RunState.PARTIAL,
         reason_code="MISSING_SHARDS",
         data_update={"collected_ranks": 3, "expected_ranks": 4},
+        expected_revision=2,
     )
     record = store.load()
     assert record.state == "PARTIAL"
     assert record.data["scheduler_job_id"] == "123.aurora"  # durable job identity
     with pytest.raises(IllegalTransition):  # PARTIAL is terminal
-        store.transition(RunState.PARTIAL, RunState.SUCCEEDED, reason_code="NO")
+        store.transition(
+            RunState.PARTIAL, RunState.SUCCEEDED, reason_code="NO", expected_revision=3
+        )
 
 
 def test_failed_run_is_terminal_and_retry_requires_a_new_materialization(tmp_path):
     store = StatusStore.run(tmp_path / "run_status.json")
     store.initialize("run-failed", RunState.PLANNED)
-    store.transition(RunState.PLANNED, RunState.SUBMITTED, reason_code="QSUB")
-    store.transition(RunState.SUBMITTED, RunState.FAILED, reason_code="FAILED")
+    store.transition(RunState.PLANNED, RunState.SUBMITTED, reason_code="QSUB", expected_revision=0)
+    store.transition(RunState.SUBMITTED, RunState.FAILED, reason_code="FAILED", expected_revision=1)
 
     with pytest.raises(IllegalTransition):
-        store.transition(RunState.FAILED, RunState.SUBMITTED, reason_code="RETRY")
+        store.transition(
+            RunState.FAILED, RunState.SUBMITTED, reason_code="RETRY", expected_revision=2
+        )
 
 
 def test_concurrent_cas_exactly_one_winner(tmp_path):
@@ -99,7 +131,7 @@ def test_concurrent_cas_exactly_one_winner(tmp_path):
         barrier.wait()
         try:
             StatusStore.run(tmp_path / "run_status.json").transition(
-                RunState.PLANNED, RunState.SUBMITTED, reason_code=tag
+                RunState.PLANNED, RunState.SUBMITTED, reason_code=tag, expected_revision=0
             )
             outcomes.append(f"win:{tag}")
         except StatusConflict:
@@ -119,11 +151,14 @@ def test_status_history_is_bounded_without_losing_creation_or_current_state(tmp_
     _walk_to_ready(store)
     transitions = 600
     state = DeploymentState.READY
+    revision = store.load().revision
     for _ in range(transitions):
         new = (
             DeploymentState.VALIDATING if state == DeploymentState.READY else DeploymentState.READY
         )
-        store.transition(state, new, reason_code="FLAP")
+        revision = store.transition(
+            state, new, reason_code="FLAP", expected_revision=revision
+        ).revision
         state = new
     record = store.load()
     assert len(record.history) == MAX_STATUS_HISTORY_EVENTS
@@ -159,21 +194,39 @@ def test_status_store_rejects_inputs_that_would_poison_the_next_load(tmp_path):
     store = StatusStore.deployment(tmp_path / "strict.json")
     store.initialize("d", DeploymentState.PLANNED)
     with pytest.raises(ValueError, match="reason_code"):
-        store.transition(DeploymentState.PLANNED, DeploymentState.STAGING, reason_code="")
+        store.transition(
+            DeploymentState.PLANNED, DeploymentState.STAGING, reason_code="", expected_revision=0
+        )
     with pytest.raises(ValueError, match="detail"):
         store.transition(
             DeploymentState.PLANNED,
             DeploymentState.STAGING,
             reason_code="STEP",
             detail=7,
+            expected_revision=0,
         )
+    for revision in (True, None, -1):
+        with pytest.raises(ValueError, match="expected_revision"):
+            store.transition(
+                DeploymentState.PLANNED,
+                DeploymentState.STAGING,
+                reason_code="STEP",
+                expected_revision=revision,
+            )
+
+
+def test_status_writes_require_the_revision_the_caller_read(tmp_path):
+    """IMP-B07: an optional revision let a writer skip the ABA check by leaving
+    it out. Both write paths now refuse that."""
+    store = StatusStore.deployment(tmp_path / "required.json")
+    store.initialize("d", DeploymentState.PLANNED)
+    with pytest.raises(TypeError, match="expected_revision"):
+        store.transition(DeploymentState.PLANNED, DeploymentState.STAGING, reason_code="STEP")
+    with pytest.raises(TypeError, match="expected_revision"):
+        store.update(DeploymentState.PLANNED, reason_code="HEARTBEAT")
     with pytest.raises(ValueError, match="expected_revision"):
-        store.transition(
-            DeploymentState.PLANNED,
-            DeploymentState.STAGING,
-            reason_code="STEP",
-            expected_revision=True,
-        )
+        store.update(DeploymentState.PLANNED, reason_code="HEARTBEAT", expected_revision=None)
+    assert store.load().revision == 0
 
 
 def test_nonhistorical_updates_are_bounded_and_revision_accounted(tmp_path):
@@ -184,6 +237,7 @@ def test_nonhistorical_updates_are_bounded_and_revision_accounted(tmp_path):
             DeploymentState.PLANNED,
             reason_code="HEARTBEAT",
             data_update={"beat": index},
+            expected_revision=index,
             record_history=False,
         )
     record = store.load()
@@ -199,8 +253,15 @@ def test_backward_wall_clock_does_not_corrupt_revision_order(tmp_path, monkeypat
     store.initialize("d", DeploymentState.PLANNED)
     initial = store.load().updated_at
     monkeypatch.setattr(status_module.time, "time", lambda: initial - 100.0)
-    store.transition(DeploymentState.PLANNED, DeploymentState.STAGING, reason_code="STEP")
-    store.update(DeploymentState.STAGING, reason_code="HEARTBEAT", record_history=False)
+    store.transition(
+        DeploymentState.PLANNED, DeploymentState.STAGING, reason_code="STEP", expected_revision=0
+    )
+    store.update(
+        DeploymentState.STAGING,
+        reason_code="HEARTBEAT",
+        expected_revision=1,
+        record_history=False,
+    )
 
     record = store.load()
     assert record.updated_at == initial

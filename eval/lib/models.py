@@ -173,6 +173,9 @@ class ClientSpec:
     # results landing in results/<arm>/. Overrides direct_dispatch per arm.
     dispatch_topologies: list[str] = field(default_factory=list)
     saturation: SaturationSpec = field(default_factory=SaturationSpec)
+    # True when the spec omitted client.num_nodes: the count then follows
+    # default_client_nodes() for every matrix variant instead of a fixed value.
+    num_nodes_auto: bool = False
 
 
 @dataclass

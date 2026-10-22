@@ -27,6 +27,7 @@ from eval.lib.spec_io import (
 )
 from eval.lib.plan_adapter import compile_shared_run_plan
 from eval.lib.utils import load_yaml_file
+from exaserve.schedulers import queue_walltime_violation
 
 
 def test_eval_yaml_loader_rejects_duplicate_keys(tmp_path):
@@ -152,15 +153,21 @@ def test_missing_paper_scale_specs_preserve_the_declared_current_infra_matrix() 
         assert variant.spec.client.num_runs == 2
         assert variant.spec.client.stream is False
         assert variant.spec.backend.args["ray"]["proxy"]["type"] == "haproxy"
+        refused = queue_walltime_violation(
+            "pbs", variant.spec.scheduler.queue, variant.spec.scheduler.walltime
+        )
+        assert (refused is not None) == (16 < nodes < 256)
         if nodes <= 16:
             assert (variant.spec.scheduler.queue, variant.spec.scheduler.walltime) == (
                 "capacity",
                 "02:00:00",
             )
         elif nodes < 256:
+            # A cold run outlasts debug-scaling's one-hour limit; these cells run
+            # inside an allocation campaign, and a direct submission is refused.
             assert (variant.spec.scheduler.queue, variant.spec.scheduler.walltime) == (
                 "debug-scaling",
-                "01:00:00",
+                "02:00:00",
             )
         else:
             assert (variant.spec.scheduler.queue, variant.spec.scheduler.walltime) == (
@@ -525,6 +532,64 @@ def test_an_explicit_client_topology_is_respected():
         _spec(dest="proxy", deployment_nodes=256, client_nodes=32)
     )
     assert normalized.client.num_nodes == 32
+
+
+def _client_count_spec(tmp_path, *, dest, client_nodes=None, nodes=(1, 16, 256), derived=None):
+    lines = [
+        "name: client-count",
+        "matrix:",
+        "  axes:",
+        "  - name: num_nodes",
+        f"    values: {list(nodes)!r}",
+        "    targets: [deployment.num_nodes, scheduler.nodes]",
+    ]
+    if derived is not None:
+        lines += ["  derived:", "  - path: client.num_nodes", f"    expr: '{derived}'"]
+    lines += [
+        "trace:",
+        "  kind: weak_scaling",
+        "workload:",
+        "  duration: 1",
+        "deployment:",
+        "  num_nodes: 1",
+        "  models:",
+        "    - model_id: m",
+        "client:",
+        f"  dest: {dest}",
+    ]
+    if client_nodes is not None:
+        lines.append(f"  num_nodes: {client_nodes}")
+    path = tmp_path / "client-count.yaml"
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return [variant.spec.client.num_nodes for variant in expand_matrix(load_experiment_spec(path))]
+
+
+def test_a_yaml_proxy_sweep_bounds_an_omitted_client_count(tmp_path):
+    """KI-C5 through the real entry point: the loader and matrix expansion used
+    to replace an omitted count with one rank per node before the bound applied."""
+    assert _client_count_spec(tmp_path, dest="proxy") == [1, 4, 4]
+
+
+def test_a_yaml_direct_sweep_keeps_one_client_rank_per_node(tmp_path):
+    assert _client_count_spec(tmp_path, dest="direct") == [1, 16, 256]
+
+
+def test_a_yaml_sweep_keeps_an_explicit_client_count(tmp_path):
+    assert _client_count_spec(tmp_path, dest="proxy", client_nodes=2) == [2, 2, 2]
+
+
+def test_a_yaml_sweep_derived_client_count_wins(tmp_path):
+    assert _client_count_spec(tmp_path, dest="proxy", derived="min(num_nodes, 8)") == [1, 8, 8]
+
+
+def test_a_yaml_direct_sweep_rejects_an_explicit_count_that_leaves_nodes_idle(tmp_path):
+    with pytest.raises(ValueError, match="one client rank per node"):
+        _client_count_spec(tmp_path, dest="direct", client_nodes=1)
+
+
+def test_a_yaml_negative_client_count_is_rejected(tmp_path):
+    with pytest.raises(ValueError, match="client.num_nodes must be >= 1"):
+        _client_count_spec(tmp_path, dest="proxy", client_nodes=-1)
 
 
 def test_eval_rejects_multi_process_saturation_before_launch():

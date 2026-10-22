@@ -288,6 +288,34 @@ def default_queue_and_walltime(num_nodes: int) -> tuple[str, str]:
     return "prod", "02:00:00"
 
 
+# The site's debug and debug-scaling queues stop a job after one hour, and qsub
+# refuses a longer request outright; resubmitting cannot change that answer.
+PBS_QUEUE_MAX_WALLTIME_S: Mapping[str, int] = MappingProxyType(
+    {"debug": 3600, "debug-scaling": 3600}
+)
+
+
+def queue_walltime_violation(scheduler_type: str, queue: str, walltime: str) -> Optional[str]:
+    """Return why ``walltime`` cannot run in ``queue``, or None when it can.
+
+    Only published limits are checked; an unknown queue is left to the
+    scheduler. Callers refuse the submission before contacting the scheduler.
+    """
+    limit = PBS_QUEUE_MAX_WALLTIME_S.get(queue) if scheduler_type == "pbs" else None
+    if limit is None:
+        return None
+    if not re.fullmatch(r"\d+:[0-5]\d:[0-5]\d", walltime):
+        raise ValueError("scheduler walltime must use HH:MM:SS")
+    hours, minutes, seconds = (int(part) for part in walltime.split(":"))
+    if hours * 3600 + minutes * 60 + seconds <= limit:
+        return None
+    return (
+        f"walltime {walltime} exceeds the {queue} queue's maximum of "
+        f"{limit // 3600:02d}:{limit % 3600 // 60:02d}:00, so the scheduler would refuse "
+        "it; run this cell as an allocation-campaign child or choose a longer queue"
+    )
+
+
 class SchedulerBackend(ABC):
     name = "base"
     submit_timeout_s = 600

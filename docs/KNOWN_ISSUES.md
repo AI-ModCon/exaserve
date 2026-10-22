@@ -63,39 +63,23 @@ the common degraded network regime with the rare process death
 ([handbook](operations_handbook.md#5-gateways-clients-and-serving-settings)).
 Streaming is not a production claim. Ledger: `KI-B2`, `IN_PROGRESS`.
 
-### B5. HAProxy thread count follows `gateway.worker_count` — configuration
-
-When `gateway.options.nbthread` is unset, the gateway's `worker_count` becomes
-HAProxy's thread count. The shipped examples and the characterization specs set
-`worker_count` (or `num_workers`) to 1, so HAProxy runs single-threaded, which
-cost 23% of streaming throughput at 64 nodes; earlier measurements used
-HAProxy's automatic thread count. Set `gateway.options.nbthread` explicitly
-(at least 4) for deployments beyond a few nodes. The renderer's docstring still
-says that an unset value means automatic detection.
-
-### C5. Client topology footgun — open for YAML and matrix specs
-
-The run plan represents deployment and client topology explicitly, and every
-dispatch arm validates before submission. The bounded default of four client
-nodes for proxy runs is not reached from YAML specs, though: the loader sets an
-omitted `client.num_nodes` to `deployment.num_nodes` before the bounded default
-applies, and matrix expansion overwrites even an explicit value unless the
-matrix targets or derives it. The regression tests build the plan objects
-directly and miss that path. Set `client.num_nodes` explicitly (in sweeps,
-derive it, for example `min(num_nodes, 4)`) and check the materialized
-`run.yaml`. The ledger closes `KI-C5` for the plan contract only.
-
-### D5. Pipeline-parallel patches fall back to a representative layer — open
+### D5. Pipeline-parallel patches fall back to a representative layer — fails closed in production
 
 When no exact or canonical layer match exists, the pipeline-parallel
-compatibility patches return the first layer of the type for backend lookup and
-the first mapping entry for attention metadata, and KV-cache binding skips
-unmatched layers; these events are logged only with
-`EXASERVE_VLLM_PATCH_VERBOSE=1`. Receipts prove that the patches are active and
-the real PP=2 two-node canary passed, but a silent wrong-layer binding would not
-block READY. Before claiming new PP topologies or models, make unmatched-layer
-fallbacks fail closed or record them in the receipt, and use canaries that check
-output correctness.
+compatibility patches substitute the first layer of the type (backend and
+model-layer lookup) or the first mapping entry (attention metadata), or skip a
+KV-cache binding. These events used to appear only with
+`EXASERVE_VLLM_PATCH_VERBOSE=1`, so a wrong-layer binding would not block READY.
+The compiled plan now sets `EXASERVE_VLLM_PP_LAYER_FALLBACK`: production plans
+(`fail`, also the behaviour when it is unset) stop the engine at the first
+fallback and name the layer; validation plans (`record`) keep the substitution
+and print one warning per layer to the engine's stderr
+([_sitecustomize.py](../src/exaserve/_sitecustomize.py)). The warnings are not
+yet part of the engine receipt, and the real PP=2 two-node canary has not been
+rerun under the new policy, so it is not known whether that canary relies on a
+fallback; if it does, production PP plans now fail at engine start. Rerun the
+canary and read its stderr before claiming PP topologies or models, and use
+canaries that check output correctness.
 
 ## Resolved mechanisms
 
@@ -152,6 +136,16 @@ server now counts the rendered prompt with the live backend tokenizer and
 rejects prompt plus requested completion beyond `max_model_len` as a correlated
 HTTP 400 before generation or headers. Ledger: `REL-API-01`, `FIXED`.
 
+### B5. HAProxy thread count follows `gateway.worker_count` — resolved
+
+The composition root used to pass `gateway.worker_count` to HAProxy as its
+thread count. The shipped examples and the characterization specs set it to 1,
+so HAProxy ran on one core, which cost 23% of streaming throughput at 64 nodes;
+earlier measurements had used HAProxy's automatic thread count. A
+`worker_count` above 1 still sets the thread count, but a value of 1 now leaves
+it to HAProxy, and `gateway.options.nbthread` overrides both
+([composition.py](../src/exaserve/composition.py)).
+
 ### C1. Server statistics silent/partial success — resolved
 
 The active producer and consumer use one strict typed contract. Requested stats
@@ -176,6 +170,23 @@ Shard collection remains fault-isolating rather than reverting to the hanging
 root collective, but exact rank and result identities and terminal completeness
 are mandatory. A missing or duplicated shard cannot produce success.
 
+### C5. Client topology footgun — resolved
+
+For `dest=proxy`, one client rank per deployment node aims the whole fleet at
+one front proxy; at 256 nodes that was misread as a proxy throughput regression
+(see B1). The bounded default of four client nodes did not reach YAML specs:
+the loader filled an omitted `client.num_nodes` with the deployment node count,
+and matrix expansion overwrote even an explicit value unless the matrix
+targeted or derived it. An omitted count is now kept as "derived" and
+recomputed for every matrix variant (at most four nodes for proxy runs, one per
+node for direct runs, one for saturation searches); an explicit or derived
+value is kept as written, and a negative one is rejected. The tests go through
+the YAML loader and matrix expansion
+([test_spec_footguns.py](../eval/tests/test_spec_footguns.py)). Proxy results
+from earlier specs that did not target or derive the count used one client
+rank per deployment node, whatever the spec said. Ledger: `KI-C5` (plan
+contract).
+
 ### C6. TTFT/TBT interpretation — resolved
 
 Analysis and figures report TTFT and TBT only for `incremental_sse` timing.
@@ -194,7 +205,7 @@ PP topology is a plan capability with explicit node-pinned stage ownership. One
 real PP=2 replica across two physical hosts was proven with exact EngineCore and
 worker receipts. Unsupported multi-replica and non-shard combinations fail plan
 capability checks rather than proceeding with ambiguous placement; see D5 for
-the layer-matching fallback that remains.
+layer-name fallbacks.
 
 ## Lessons kept from retired branches
 
@@ -215,16 +226,20 @@ site profile sets `RAY_SERVE_QUEUE_LENGTH_RESPONSE_DEADLINE_S=300.0` before any
 Ray process starts ([site.py](../src/exaserve/site.py)); keep it, and repeat a
 saturated 64-node run before lowering or removing it.
 
-### L2. Control reconnect grace shorter than the start-up burst — configuration
+### L2. Control reconnect grace shorter than the start-up burst — default raised
 
 At 16 and at 64 nodes the synchronized engine start-up burst outlasted the
 default 60 s control reconnect grace: rank control sessions that dropped during
 the burst could not reconnect in time, and the deployment failed closed before
-READY. Set `deployment.control.reconnect_grace_s` explicitly for large
-start-ups; 300 s recovered every rank at 16 nodes. The 64-node attempts also
-needed transport and event-store fixes that are now in the code (a socket reset
-while writing a heartbeat response is treated as a recoverable rank loss, and
-receipt batches survive reconnects).
+READY; 300 s recovered every rank at 16 nodes. The plan compiler now uses 300 s
+for deployments of 16 nodes or more
+([compiler.py](../src/exaserve/plan/compiler.py)); an explicit
+`deployment.control.reconnect_grace_s` still wins. The cost is slower failure
+detection: a rank that does not come back is declared lost 300 s after its
+session drops, not 60 s. The raised default has not been run at scale yet. The 64-node attempts also needed transport and
+event-store fixes that are now in the code (a socket reset while writing a
+heartbeat response is treated as a recoverable rank loss, and receipt batches
+survive reconnects).
 
 ### L3. Lmod is not `nounset`-clean — resolved
 

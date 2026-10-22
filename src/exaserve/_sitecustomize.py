@@ -31,6 +31,34 @@ def _patch_log(message: str) -> None:
         print(f"[AuroraPatch pid={os.getpid()}] {message}", flush=True)
 
 
+# A PP layer lookup with no exact or canonical match used to fall back to a
+# representative layer or mapping entry, or skip a KV-cache binding, and say so
+# only in verbose logs. That can bind the wrong layer silently, so the plan
+# decides: production plans fail on the first fallback, and validation plans
+# record each one and warn once. Same name as compat.profile.PP_LAYER_FALLBACK_POLICY.
+PP_LAYER_FALLBACK_POLICY = "EXASERVE_VLLM_PP_LAYER_FALLBACK"
+PP_LAYER_FALLBACKS: dict[tuple[str, str], str] = {}
+_MAX_RECORDED_PP_LAYER_FALLBACKS = 256
+
+
+def _pp_layer_fallback(site: str, layer_name: str, substitute: object) -> None:
+    if os.getenv(PP_LAYER_FALLBACK_POLICY) != "record":
+        raise RuntimeError(
+            f"pipeline-parallel {site}: no layer matches {layer_name!r} (fallback would "
+            f"use {substitute!r}); this plan does not allow layer fallbacks"
+        )
+    key = (site, layer_name)
+    if key in PP_LAYER_FALLBACKS or len(PP_LAYER_FALLBACKS) >= _MAX_RECORDED_PP_LAYER_FALLBACKS:
+        return
+    PP_LAYER_FALLBACKS[key] = repr(substitute)
+    print(
+        f"[AuroraPatch pid={os.getpid()}] WARNING: pipeline-parallel {site} fell back "
+        f"for layer {layer_name!r} to {substitute!r}",
+        file=sys.stderr,
+        flush=True,
+    )
+
+
 def _local_accelerator_id_list(accelerator_manager) -> list[str]:
     num_devices = accelerator_manager.get_current_node_num_accelerators()
     if num_devices <= 0:
@@ -183,7 +211,11 @@ def _find_backend_fallback_layer(mapping: dict, layer_name: str):
     for existing_key, layer in mapping.items():
         if _canonicalize_layer_name(existing_key) == canonical_name:
             return layer
-    return next(iter(mapping.values()), None)
+    representative = next(iter(mapping.items()), None)
+    if representative is None:
+        return None
+    _pp_layer_fallback("backend lookup", layer_name, representative[0])
+    return representative[1]
 
 
 def _find_model_fallback_layer(model_runner, layer_type, layer_name: str):
@@ -211,6 +243,8 @@ def _find_model_fallback_layer(model_runner, layer_type, layer_name: str):
     if compatible_match is not None:
         return compatible_match
     if exact_match is not None:
+        # The first layer of the type, not a name match.
+        _pp_layer_fallback("model layer lookup", layer_name, exact_match[0])
         return exact_match
 
     model = getattr(model_runner, "model", None)
@@ -231,7 +265,10 @@ def _find_model_fallback_layer(model_runner, layer_type, layer_name: str):
 
     if compatible_match is not None:
         return compatible_match
-    return exact_match or (None, None)
+    if exact_match is not None:
+        _pp_layer_fallback("model layer lookup", layer_name, exact_match[0])
+        return exact_match
+    return None, None
 
 
 def _resolve_mapping_value(mapping: dict, layer_name: str, resolved_key: str | None):
@@ -254,6 +291,7 @@ def _resolve_mapping_value(mapping: dict, layer_name: str, resolved_key: str | N
     if fallback_key is None:
         return None, None
 
+    _pp_layer_fallback("attention metadata", layer_name, fallback_key)
     _patch_log(f"Falling back to representative mapping entry: {layer_name} <- {fallback_key}")
     return fallback_key, mapping[fallback_key]
 
@@ -350,6 +388,7 @@ def _patch_vllm_bind_kv_cache() -> None:
                         f"Using direct KV cache binding fallback: {layer_name} -> {fallback_key}"
                     )
             if not matches:
+                _pp_layer_fallback("KV-cache binding", layer_name, None)
                 _patch_log(f"Skipped KV cache binding for unmatched layer {layer_name}")
                 continue
 

@@ -303,6 +303,57 @@ def test_gateway_manifest_records_execution_qualification_truthfully(
             root._gateway_listener = None
 
 
+@pytest.mark.parametrize(
+    ("gateway", "expected_threads"),
+    [
+        ({}, []),
+        ({"worker_count": 8}, ["8"]),
+        ({"worker_count": 8, "options": {"nbthread": 4}}, ["4"]),
+    ],
+)
+def test_haproxy_thread_count_is_automatic_unless_chosen(
+    tmp_path, monkeypatch, gateway, expected_threads
+):
+    import re
+    import shutil
+    from pathlib import Path
+
+    import exaserve.control.finite_process as finite_process
+    import exaserve.state.ports as ports
+
+    real_bind_listener = ports.bind_listener
+    monkeypatch.setattr(shutil, "which", lambda _name: "/bin/true")
+    monkeypatch.setattr(
+        finite_process,
+        "run_finite",
+        lambda *_args, **_kwargs: SimpleNamespace(returncode=0, stdout="", stderr=""),
+    )
+    monkeypatch.setattr(
+        ports,
+        "bind_listener",
+        lambda _port, *, host: real_bind_listener(0, host=host),
+    )
+    raw = {
+        "num_nodes": 2,
+        "models": [
+            {"model_id": "a/b", "tensor_parallel_size": 1, "max_model_len": 4096, "size": 8}
+        ],
+        "gateway": {"kind": "haproxy", "port": 4001, **gateway},
+    }
+    plan = compile_deployment_plan(raw, site=_site(), deployment_id="d")
+    root = CompositionRoot(plan=plan, generation=7, run_dir=str(tmp_path), log=lambda *_: None)
+    root.bind_allocation(["n0", "n1"], "j")
+    try:
+        argv = root.gateway_argv(str(tmp_path))
+        config = Path(argv[argv.index("-f") + 1]).read_text()
+        # The default worker_count of 1 must not pin HAProxy to one thread.
+        assert re.findall(r"^\s*nbthread (\d+)\s*$", config, re.MULTILINE) == expected_threads
+    finally:
+        if root._gateway_listener is not None:
+            root._gateway_listener.close()
+            root._gateway_listener = None
+
+
 def test_the_advertised_endpoint_is_the_gateway_port(tmp_path):
     root = _root(tmp_path)
     assert root.advertised_endpoint("10.0.0.1") == "http://10.0.0.1:4001"

@@ -6,6 +6,29 @@ passed hardware qualification. Exact artifacts and scope are recorded in
 
 ## Unreleased
 
+### Defect fixes
+
+- HAProxy no longer runs on one thread when `gateway.worker_count` is 1 (the
+  value in the examples); a count above 1 or `gateway.options.nbthread` still
+  sets the thread count.
+- Eval specs: an omitted `client.num_nodes` stays derived through YAML loading
+  and matrix expansion (at most four client nodes for proxy runs, one per node
+  for direct runs), and an explicit value is no longer overwritten by matrix
+  expansion. Four start-up-only specs now get the one client node they set.
+- Pipeline-parallel layer-name fallbacks stop the engine in production plans
+  and print a warning in validation plans (`EXASERVE_VLLM_PP_LAYER_FALLBACK`).
+- Plans of 16 or more nodes default to a 300 s control reconnect grace, which
+  changes their deployment plan hash.
+- Status writes (`StatusStore.transition` and `update`) require the
+  `expected_revision` the writer read.
+- `submit` and `submit-all` refuse a walltime above the one-hour debug and
+  debug-scaling limit before contacting the scheduler. The 405B
+  characterization spec asks for two hours below 256 nodes, so its 17-255-node
+  cells run only as allocation-campaign children.
+- Correct the documented descriptor limit: Aurora compute nodes allow
+  1,048,575 open files (16,384 is the login-node limit). `maxconn: 8000` stays
+  as a conservative default.
+
 ### Publication readiness
 
 - Name `AI-ModCon/exaserve` in package metadata, documentation and contribution

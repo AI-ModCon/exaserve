@@ -1124,6 +1124,30 @@ def test_submit_all_rejects_mixed_scheduler_group_before_scheduler_contact(
     assert "No scheduler was contacted" in output
 
 
+def test_a_walltime_the_queue_cannot_hold_is_refused_before_scheduler_contact(tmp_path):
+    from types import SimpleNamespace
+
+    from exaserve.state.status import RunState, StatusStore
+
+    state_path = tmp_path / "run_status.json"
+    StatusStore.run(state_path).initialize("g/r", RunState.PLANNED)
+    run_plan = SimpleNamespace(
+        bundle=SimpleNamespace(state_path=str(state_path)),
+        scheduler=SimpleNamespace(type="pbs", queue="debug-scaling", walltime="02:00:00"),
+        run_semantic_hash="a" * 64,
+        spec_name="s",
+        run_group_id="g",
+        run_id="r",
+    )
+    scheduler = SimpleNamespace(submit=lambda _path: pytest.fail("the scheduler was contacted"))
+
+    kind, detail = run_executor._submit_run_once(run_plan, scheduler, submit_attempt=1)
+    assert kind == "invalid"
+    assert "debug-scaling queue's maximum of 01:00:00" in detail
+    record = StatusStore.run(state_path).load()
+    assert (record.state, record.revision) == ("PLANNED", 0)  # no intent was written
+
+
 def test_plot_scripts_resolve_an_exact_run_group_and_result(tmp_path, monkeypatch):
     experiments_root = tmp_path / "experiments"
     result_path = (

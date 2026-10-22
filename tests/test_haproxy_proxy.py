@@ -249,7 +249,7 @@ def test_haproxy_backend_names_do_not_alias_distinct_model_ids():
     assert len(_safe_backend_name("x" * 5000)) <= 64
 
 
-def test_haproxy_default_descriptor_budget_fits_aurora_limit(tmp_path):
+def test_haproxy_default_descriptor_budget_fits_a_16k_limit(tmp_path):
     cfg = _read_config(
         HAProxyProxy().generate_config(
             [BackendEndpoint("node-a", 8000, "org/model")],

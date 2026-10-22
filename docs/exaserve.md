@@ -88,9 +88,9 @@ gateway:
 ```
 
 There is no nested `model_deployment_config`, `proxy_config`, or mutable Ray
-runtime schema. `maxconn: 8000` fits Aurora's observed descriptor ceiling;
-ExaServe calculates and checks the exact required `RLIMIT_NOFILE` before
-HAProxy launch.
+runtime schema. `maxconn: 8000` is a conservative default; ExaServe
+calculates and checks the exact required `RLIMIT_NOFILE` before HAProxy launch
+(Aurora compute nodes allowed 1,048,575 descriptors when measured).
 
 ## What the control plane proves
 

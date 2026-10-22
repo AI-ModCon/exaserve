@@ -37,15 +37,9 @@ evidence rather than an unresolved two-node code defect:
 
 ## Known defects to fix
 
-- The bounded default of four client nodes for eval proxy runs is not reached
-  from YAML specs or matrix expansion
-  ([C5](KNOWN_ISSUES.md#c5-client-topology-footgun--open-for-yaml-and-matrix-specs)).
-- HAProxy runs single-threaded when `gateway.worker_count` is 1, which the
-  shipped examples set
-  ([B5](KNOWN_ISSUES.md#b5-haproxy-thread-count-follows-gatewayworker_count--configuration)).
-- Pipeline-parallel compatibility patches fall back to a representative layer
-  instead of failing closed
-  ([D5](KNOWN_ISSUES.md#d5-pipeline-parallel-patches-fall-back-to-a-representative-layer--open)).
+- Rerun the real PP=2 two-node canary under the production layer-fallback
+  policy, and add the fallback warnings to the engine receipt
+  ([D5](KNOWN_ISSUES.md#d5-pipeline-parallel-patches-fall-back-to-a-representative-layer--fails-closed-in-production)).
 
 ## External platform qualification
 

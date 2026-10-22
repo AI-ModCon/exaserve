@@ -30,6 +30,7 @@ from .schedulers import (
     SubmissionRejected,
     default_queue_and_walltime,
     get_scheduler,
+    queue_walltime_violation,
 )
 from .state.atomic import (
     ExclusiveLease,
@@ -356,6 +357,9 @@ def submit_serve(
             f"{site_profile.site_id!r}; supported schedulers: "
             f"{', '.join(site_profile.scheduler_types) or 'none'}"
         )
+    violation = queue_walltime_violation(scheduler.name, resolved_queue, resolved_walltime)
+    if violation is not None:
+        raise ValueError(violation)
     from .site import require_execution_qualification
 
     require_execution_qualification(topology_plan, site_profile)

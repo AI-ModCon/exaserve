@@ -1847,7 +1847,11 @@ class CompositionRoot:
                     )
                 options["request_body_limit_bytes"] = request_body_limit_bytes
                 options["bind_target"] = f"fd@{self._gateway_listener.fileno()}"
-                if not options.get("nbthread"):
+                # worker_count defaults to 1, which as a thread count pins
+                # HAProxy to one core (23% less streaming throughput at 64
+                # nodes). Only a deliberate count above 1 sets nbthread;
+                # otherwise HAProxy picks its automatic thread count.
+                if not options.get("nbthread") and gateway.worker_count > 1:
                     options["nbthread"] = gateway.worker_count
                 config_path = HAProxyProxy().generate_config(endpoints, Path(config_dir), **options)
                 with regular_file_reader(config_path) as config_handle:

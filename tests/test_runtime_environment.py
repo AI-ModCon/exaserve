@@ -41,6 +41,7 @@ def _plan():
         manifest_hash="b" * 64,
         vendor="xpu",
         engine="vllm",
+        validation_mode=False,
         model_storage_path="/lus/flare/models",
         models=(SimpleNamespace(pipeline_parallel_size=1, tensor_parallel_size=1),),
         collect_stats=False,

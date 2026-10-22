@@ -16,6 +16,7 @@ from .compat.collector import deployment_scope
 from .compat.local_ingress import SOCKET_ENV, socket_path_for
 from .compat.profile import (
     MULTIPROC_WORKER_PATCH_GATE,
+    PP_LAYER_FALLBACK_POLICY,
     PP_PATCH_GATE,
     RAY_WORKER_PATCH_GATE,
 )
@@ -58,6 +59,7 @@ _INHERITED_ACTOR_ENV = (
     "EXASERVE_QUALIFIED_PYTHON_SITE_PROFILE_HASH",
     "EXASERVE_COMPAT_OVERLAY_ROOT",
     PP_PATCH_GATE,
+    PP_LAYER_FALLBACK_POLICY,
     RAY_WORKER_PATCH_GATE,
     MULTIPROC_WORKER_PATCH_GATE,
     "EXASERVE_VLLM_PATCH_VERBOSE",

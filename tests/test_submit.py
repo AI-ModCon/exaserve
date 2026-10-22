@@ -10,6 +10,7 @@ from exaserve.schedulers import (
     Submission,
     SubmissionRejected,
     default_queue_and_walltime,
+    queue_walltime_violation,
 )
 from exaserve.submit import serve_url, submit_serve
 
@@ -157,6 +158,38 @@ def test_aurora_scheduler_defaults_cover_exact_queue_boundaries(nodes, expected)
 def test_aurora_scheduler_defaults_reject_invalid_node_counts(invalid):
     with pytest.raises(ValueError, match="positive integer"):
         default_queue_and_walltime(invalid)
+
+
+@pytest.mark.parametrize(
+    ("scheduler", "queue", "walltime", "refused"),
+    [
+        ("pbs", "debug-scaling", "01:00:00", False),
+        ("pbs", "debug-scaling", "01:00:01", True),
+        ("pbs", "debug", "02:00:00", True),
+        ("pbs", "capacity", "02:00:00", False),
+        ("pbs", "prod", "04:00:00", False),
+        ("slurm", "debug", "02:00:00", False),
+    ],
+)
+def test_queue_walltime_check_refuses_only_published_limits(scheduler, queue, walltime, refused):
+    violation = queue_walltime_violation(scheduler, queue, walltime)
+    assert (violation is not None) == refused
+    if refused:
+        assert f"exceeds the {queue} queue's maximum of 01:00:00" in violation
+
+
+def test_submit_refuses_a_walltime_the_queue_cannot_hold_before_creating_artifacts(
+    tmp_path, monkeypatch
+):
+    config_path = tmp_path / "deploy.yaml"
+    _write_config(config_path)
+    monkeypatch.setenv("EXASERVE_DEFAULT_QUEUE", "debug-scaling")
+    monkeypatch.setenv("EXASERVE_DEFAULT_WALLTIME", "02:00:00")
+
+    log_dir = tmp_path / "logs"
+    with pytest.raises(ValueError, match="debug-scaling queue's maximum"):
+        submit_serve(config_path, log_dir=log_dir, dry_run=True)
+    assert not log_dir.exists()
 
 
 def test_submit_environment_overrides_topology_scheduler_defaults(tmp_path, monkeypatch):

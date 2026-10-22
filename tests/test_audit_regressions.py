@@ -146,11 +146,21 @@ def test_status_revision_cas_rejects_aba_stale_writer(tmp_path):
         (DeploymentState.DEPLOYING, DeploymentState.VALIDATING),
         (DeploymentState.VALIDATING, DeploymentState.READY),
     ):
-        store.transition(a, b, reason_code="step")
+        store.transition(a, b, reason_code="step", expected_revision=store.load().revision)
     stale_revision = store.load().revision  # writer's view of READY
     # The record cycles READY -> VALIDATING -> READY behind that writer's back.
-    store.transition(DeploymentState.READY, DeploymentState.VALIDATING, reason_code="loss")
-    store.transition(DeploymentState.VALIDATING, DeploymentState.READY, reason_code="recovered")
+    store.transition(
+        DeploymentState.READY,
+        DeploymentState.VALIDATING,
+        reason_code="loss",
+        expected_revision=stale_revision,
+    )
+    store.transition(
+        DeploymentState.VALIDATING,
+        DeploymentState.READY,
+        reason_code="recovered",
+        expected_revision=stale_revision + 1,
+    )
     with pytest.raises(StatusConflict, match="ABA|revision"):
         store.transition(
             DeploymentState.READY,
