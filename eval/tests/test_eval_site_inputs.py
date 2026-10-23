@@ -159,25 +159,51 @@ def test_eval_launch_and_replay_drop_every_head_side_path_setting(monkeypatch):
     assert "EXASERVE_PAPER_SUITE_ROOT" not in replay
 
 
-def test_a_walltime_refusal_offers_the_allocation_campaign(tmp_path):
+def _refused_cell(tmp_path, *, nodes, stream=False, clean_stage=True, null_compute=False):
     from exaserve.state.status import RunState, StatusStore
 
-    state_path = tmp_path / "run_status.json"
+    state_path = tmp_path / f"run_status_{nodes}_{stream}_{clean_stage}_{null_compute}.json"
     StatusStore.run(state_path).initialize("g/r", RunState.PLANNED)
-    run_plan = SimpleNamespace(
+    deployment = SimpleNamespace(
+        num_nodes=nodes,
+        runtime=SimpleNamespace(clean_stage=clean_stage, null_compute=null_compute),
+        control=SimpleNamespace(watchdog_cleanup_deadline_s=300),
+    )
+    return SimpleNamespace(
         bundle=SimpleNamespace(state_path=str(state_path)),
-        scheduler=SimpleNamespace(type="pbs", queue="debug-scaling", walltime="02:00:00"),
+        scheduler=SimpleNamespace(
+            type="pbs", nodes=nodes, queue="debug-scaling", walltime="02:00:00"
+        ),
+        client=SimpleNamespace(startup_only=False, num_runs=2, stream=stream),
+        semantic_plan=SimpleNamespace(deployment=deployment),
         run_semantic_hash="a" * 64,
         spec_name="s",
         run_group_id="g",
         run_id="r",
     )
+
+
+def test_a_walltime_refusal_names_the_campaign_only_for_a_campaign_shape(tmp_path):
     scheduler = SimpleNamespace(submit=lambda _path: pytest.fail("the scheduler was contacted"))
 
-    kind, detail = run_executor._submit_run_once(run_plan, scheduler, submit_attempt=1)
+    fits = _refused_cell(tmp_path, nodes=64)
+    kind, detail = run_executor._submit_run_once(fits, scheduler, submit_attempt=1)
     assert kind == "invalid"
     assert "choose a longer queue or a shorter walltime" in detail
-    assert detail.endswith(", or run this cell as an allocation-campaign child")
+    assert detail.endswith(", or run this cell as a child of the prod256 allocation campaign")
+
+    for other in (
+        _refused_cell(tmp_path, nodes=192),
+        _refused_cell(tmp_path, nodes=64, stream=True),
+        _refused_cell(tmp_path, nodes=64, clean_stage=False),
+        _refused_cell(tmp_path, nodes=64, null_compute=True),
+    ):
+        kind, detail = run_executor._submit_run_once(other, scheduler, submit_attempt=1)
+        assert kind == "invalid"
+        assert detail.endswith(
+            "; no allocation-campaign shape takes this cell, so use a queue whose limit "
+            "covers its walltime, such as a reservation queue"
+        )
 
 
 def test_ray_environment_script_is_expanded_and_must_be_absolute(tmp_path, monkeypatch):

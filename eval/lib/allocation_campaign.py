@@ -51,6 +51,9 @@ from .utils import dataclass_to_dict
 
 _SCHEMA = 2
 _CLEANUP_S = 900
+# The production campaign's one shape: real children of exactly these sizes in
+# one 256-node prod allocation.
+PRODUCTION_CHILD_NODES = (32, 64, 128)
 _FORCE_S = 30
 _FIELDS = {
     "schema_version",
@@ -210,9 +213,11 @@ def _validate_contract(campaign: dict) -> None:
             )
         if campaign["qualification"] is not None:
             raise ValueError("qualification mode cannot consume another proof")
-    elif (request.nodes, request.queue, logical) != (256, "prod", [32, 64, 128]) or any(
-        child["null_compute"] for child in children
-    ):
+    elif (request.nodes, request.queue, logical) != (
+        256,
+        "prod",
+        list(PRODUCTION_CHILD_NODES),
+    ) or any(child["null_compute"] for child in children):
         raise ValueError("production requires prod256 and real logical32/64/128 children")
     timeout = _positive(campaign["child_timeout_s"], "child_timeout_s")
     walltime = _seconds(request.walltime)
@@ -222,17 +227,31 @@ def _validate_contract(campaign: dict) -> None:
         raise ValueError("walltime cannot cover all child deadlines plus reserved cleanup")
 
 
-def _child_reference(path: str) -> dict:
-    plan = load_run_plan(str(Path(path).resolve()))
+def child_shape_violation(plan) -> str | None:
+    """Why ``plan`` cannot be a campaign child, or None if its own shape allows it.
+
+    Only the checks that need nothing but the plan; the campaign also requires
+    its children's sizes (PRODUCTION_CHILD_NODES), one frozen source and the
+    other conditions that materialize_campaign checks.
+    """
     deployment = plan.semantic_plan.deployment
     if plan.scheduler.type != "pbs" or plan.scheduler.nodes != deployment.num_nodes:
-        raise ValueError("campaign children require exact-size canonical PBS plans")
+        return "campaign children require exact-size canonical PBS plans"
     if plan.client.startup_only or not deployment.runtime.clean_stage:
-        raise ValueError("campaign children require full replay and clean_stage=true")
+        return "campaign children require full replay and clean_stage=true"
     if plan.client.num_runs != 2 or plan.client.stream:
-        raise ValueError("campaign requires two complete non-streaming replay runs")
+        return "campaign requires two complete non-streaming replay runs"
     if deployment.control.watchdog_cleanup_deadline_s > _CLEANUP_S:
-        raise ValueError("child watchdog exceeds campaign's reserved graceful-cleanup budget")
+        return "child watchdog exceeds campaign's reserved graceful-cleanup budget"
+    return None
+
+
+def _child_reference(path: str) -> dict:
+    plan = load_run_plan(str(Path(path).resolve()))
+    reason = child_shape_violation(plan)
+    if reason is not None:
+        raise ValueError(reason)
+    deployment = plan.semantic_plan.deployment
     paths = [
         plan.bundle.run_yaml_path,
         plan.bundle.job_path,
@@ -486,7 +505,7 @@ def materialize_campaign(
             raise ValueError("qualification requires null children and at most one hour")
         if qualification_path is not None:
             raise ValueError("qualification mode does not consume another qualification")
-    elif (physical_nodes, queue, logical) != (256, "prod", [32, 64, 128]):
+    elif (physical_nodes, queue, logical) != (256, "prod", list(PRODUCTION_CHILD_NODES)):
         raise ValueError("current production campaign is exactly prod256 with logical32/64/128")
     if _seconds(walltime) > (3600 if qualification_mode else 21600):
         raise ValueError("campaign exceeds its approved finite walltime budget")

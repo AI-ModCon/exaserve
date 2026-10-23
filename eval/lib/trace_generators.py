@@ -279,8 +279,10 @@ def tokenizer_source_identity(spec: ExperimentSpec) -> dict[str, Any]:
         source = _find_local_model_path(model.model_id, search_roots)
         if source is None:
             raise ValueError(
-                f"model {model.model_id!r} has no local tokenizer source; stage a pinned "
-                "snapshot before materializing a content-addressed trace"
+                f"model {model.model_id!r} has no local tokenizer source under "
+                f"{[str(root) for root in search_roots]}; stage a pinned snapshot there or "
+                "correct deployment.model_storage_path before materializing a "
+                "content-addressed trace"
             )
         models.append(
             {

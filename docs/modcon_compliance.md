@@ -75,7 +75,7 @@ neither this record nor a checked-in JSON file substitutes for those checks.
 | CI/CD test integration | Existing hermetic, randomized-order, installed-wheel, Go, ledger and static jobs retained; portable lock lane added | Required by branch protection, applied before this pull request merged (read-back in #2) |
 | Contribution and AI-assistance policy | [CONTRIBUTING](../CONTRIBUTING.md), [PR template](../.github/pull_request_template.md) | A human must review and approve changes |
 | Conduct policy and issue procedures | [CODE_OF_CONDUCT](../CODE_OF_CONDUCT.md), [issue templates](../.github/ISSUE_TEMPLATE), [SECURITY](../SECURITY.md) | Maintain the private contact and triage reports |
-| Main-branch protection | Administrator instructions below | **Requires GitHub settings; not applied on `AI-ModCon/exaserve` as of 2026-10-21** |
+| Main-branch protection | Administrator instructions below | Applied before this pull request merged (read-back in #2); on 2026-10-21 there was none |
 | Project, author/contact, dependency and Python metadata | [pyproject.toml](../pyproject.toml); Wenyi Wang, `wenyiw@uchicago.edu` | Update contacts whenever ownership changes |
 | Development automation and lock | [Makefile](../Makefile), [uv.lock](../uv.lock), [dependency profiles](../requirements/README.md) | Run the locked portable CI on the current Aurora Python minor version (3.12) |
 | Genesis Mission acknowledgment | [README acknowledgment](../README.md#acknowledgments) credits support for the ModCon Base collaboration | Confirm project-specific wording if an institution requires it |

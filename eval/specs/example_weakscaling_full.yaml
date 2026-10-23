@@ -146,8 +146,8 @@ backend:
         num_workers: 2
         # Passed verbatim to the proxy backend.
         #
-        # LiteLLM-specific option keys currently consumed by src/proxy/litellm_proxy.py:
-        #   master_key: "sk-..."
+        # LiteLLM-specific option keys currently consumed by src/exaserve/proxy/litellm_proxy.py:
+        #   master_key: {secret_ref: "ENV:EXASERVE_LITELLM_MASTER_KEY"}
         #   routing_strategy: "least-busy" | "simple-shuffle" | "latency-based-routing"
         #   num_retries: 2
         #   timeout: 300
@@ -155,7 +155,7 @@ backend:
         #   extra_router: {}
         #   extra_general: {}
         #
-        # HAProxy-specific option keys currently consumed by src/proxy/haproxy_proxy.py:
+        # HAProxy-specific option keys currently consumed by src/exaserve/proxy/haproxy_proxy.py:
         #   balance: "leastconn" | "roundrobin" | "random"
         #   check_interval: 5000
         #   check_fall: 3

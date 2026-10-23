@@ -60,7 +60,8 @@ scheduler:
   nodes: 192
   # A cold 405B run needs more than an hour, so this requests 2 h. Aurora's
   # debug-scaling queue allows at most 1 h, so submit and submit-all refuse
-  # this spec before contacting the scheduler; run it as a child of an
-  # allocation campaign (python3 -m eval.cli allocation ...).
+  # this spec before contacting the scheduler. No public queue takes 192 nodes
+  # for longer and the allocation campaign has no 192-node child, so point
+  # scheduler.queue at a reservation queue to run it.
   queue: debug-scaling
   walltime: '02:00:00'

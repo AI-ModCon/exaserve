@@ -38,7 +38,6 @@ from pathlib import Path
 
 from eval.site_config import get_site_config
 
-DEFAULT_DATA_ROOT = get_site_config().user_data_root
 
 HUMANEVAL_URL = "https://github.com/openai/human-eval/raw/master/data/HumanEval.jsonl.gz"
 # Cleaned single-region BurstGPT trace (≈1.4M rows); closest analogue to the
@@ -203,8 +202,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     p.add_argument(
         "--data-root",
-        default=DEFAULT_DATA_ROOT,
-        help=f"Lustre data root (default: {DEFAULT_DATA_ROOT})",
+        default=None,
+        help="Lustre data root (default: the site configuration's user_data_root)",
     )
     p.add_argument(
         "--datasets",
@@ -226,7 +225,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = p.parse_args(argv)
 
-    data_root = Path(args.data_root)
+    data_root = Path(args.data_root or get_site_config().user_data_root)
     out_dir = data_root / "paper_datasets"
     sharegpt_path = (
         data_root / "input_traces" / "ShareGPT_V3_unfiltered_cleaned_split_no_imsorry.json"

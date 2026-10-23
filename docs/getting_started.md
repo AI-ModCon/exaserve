@@ -24,6 +24,12 @@ cd exaserve
 make install-dev
 ```
 
+On Aurora, the stack loaded in [Prepare the runtime](#prepare-the-runtime)
+puts its own uv 0.10.1 first on `PATH`, which this project refuses. Install the
+pinned uv for your user with `python3 -m pip install --user uv==0.13.4` and
+pass it to make, for example
+`make UV="$(python3 -m site --user-base)/bin/uv" install-dev`.
+
 `make install-dev` synchronizes the portable development and test dependency
 groups from [uv.lock](../uv.lock). The dependency declarations and tool settings
 live in [pyproject.toml](../pyproject.toml). Ray, vLLM, MPI, and accelerator
@@ -206,12 +212,19 @@ materializing a run:
 export EXASERVE_ENV_SCRIPT_AURORA=/absolute/path/to/environment.sh
 export EXASERVE_PROJECT_ROOT=/lus/flare/projects/YOUR_PROJECT
 export EXASERVE_PROJECT_ACCOUNT=YOUR_PROJECT
-python3 -m eval.site_config get env_script_aurora
+PYTHONPATH="$PWD:$PWD/src" python3 -m eval.site_config get env_script_aurora
 ```
 
+Eval and ClientLab run from the checkout and import ExaServe from its `src/`
+tree, as their materialized jobs do: run them from the repository root with
+`PYTHONPATH="$PWD:$PWD/src"`, as in the check above. Do not set it in the
+shell you use for the installed-wheel check or for `exaserve-serve-submit`.
+
 None of these variables has a built-in default. `exaserve-serve-submit` needs
-all three. Its job sources `EXASERVE_ENV_SCRIPT_AURORA`, which must name an
-existing file when you submit. The site profile derives the site's
+the environment script, the project root (or `EXASERVE_MODEL_STORAGE_PATH`)
+and an account (`--project-account` or `EXASERVE_PROJECT_ACCOUNT`). Its job
+sources `EXASERVE_ENV_SCRIPT_AURORA`, which must name an existing file when you
+submit. The site profile derives the site's
 model-storage root from `EXASERVE_PROJECT_ROOT` (or takes
 `EXASERVE_MODEL_STORAGE_PATH`), even when the YAML sets `model_storage_path`;
 a YAML launch with `exaserve-launch-cluster` needs it too. The PBS account

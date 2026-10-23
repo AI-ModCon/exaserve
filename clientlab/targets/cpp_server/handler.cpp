@@ -63,10 +63,11 @@ bool parse_headers(const char* buf, size_t len, ParsedRequest& req, size_t& head
 
     // Parse Content-Length (case-insensitive). Values without digits or above
     // kMaxContentLength (which also rules out overflow) mark the request malformed.
-    const char* cl = find_case_insensitive(buf, end, "Content-Length:");
+    // Headers start after a CRLF, so other names ending in "Content-Length" do not match.
+    const char* cl = find_case_insensitive(buf, end, "\r\nContent-Length:");
     if (cl && cl < end) {
         constexpr uint64_t kMaxContentLength = uint64_t{1} << 30;
-        cl += 15;
+        cl += 17;
         while (cl < end && (*cl == ' ' || *cl == '\t')) cl++;
         uint64_t content_length = 0;
         bool any_digit = false;
@@ -85,9 +86,9 @@ bool parse_headers(const char* buf, size_t len, ParsedRequest& req, size_t& head
 
     // Parse Connection header for keep-alive.
     req.keep_alive = true;
-    const char* conn = find_case_insensitive(buf, end, "Connection:");
+    const char* conn = find_case_insensitive(buf, end, "\r\nConnection:");
     if (conn && conn < end) {
-        conn += 11;
+        conn += 13;
         while (conn < end && (*conn == ' ' || *conn == '\t')) conn++;
         if (has_case_insensitive_prefix(conn, end, "close")) {
             req.keep_alive = false;

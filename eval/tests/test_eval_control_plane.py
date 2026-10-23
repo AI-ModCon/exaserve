@@ -1182,9 +1182,18 @@ def test_a_walltime_the_queue_cannot_hold_is_refused_before_scheduler_contact(tm
 
     state_path = tmp_path / "run_status.json"
     StatusStore.run(state_path).initialize("g/r", RunState.PLANNED)
+    deployment = SimpleNamespace(
+        num_nodes=192,
+        runtime=SimpleNamespace(clean_stage=False, null_compute=False),
+        control=SimpleNamespace(watchdog_cleanup_deadline_s=300),
+    )
     run_plan = SimpleNamespace(
         bundle=SimpleNamespace(state_path=str(state_path)),
-        scheduler=SimpleNamespace(type="pbs", queue="debug-scaling", walltime="02:00:00"),
+        scheduler=SimpleNamespace(
+            type="pbs", nodes=192, queue="debug-scaling", walltime="02:00:00"
+        ),
+        client=SimpleNamespace(startup_only=False, num_runs=6, stream=True),
+        semantic_plan=SimpleNamespace(deployment=deployment),
         run_semantic_hash="a" * 64,
         spec_name="s",
         run_group_id="g",
@@ -1195,6 +1204,7 @@ def test_a_walltime_the_queue_cannot_hold_is_refused_before_scheduler_contact(tm
     kind, detail = run_executor._submit_run_once(run_plan, scheduler, submit_attempt=1)
     assert kind == "invalid"
     assert "debug-scaling queue's maximum of 01:00:00" in detail
+    assert "no allocation-campaign shape takes this cell" in detail
     record = StatusStore.run(state_path).load()
     assert (record.state, record.revision) == ("PLANNED", 0)  # no intent was written
 

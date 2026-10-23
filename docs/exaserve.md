@@ -144,10 +144,14 @@ path was removed.
 Set `EXASERVE_PROJECT_ROOT`, and for materialization and submission also
 `EXASERVE_PROJECT_ACCOUNT` and `EXASERVE_ENV_SCRIPT_AURORA`, as in
 [getting started](getting_started.md#configure-evaluation-environment-preparation);
-even `spec validate` needs the project root. Replace `run0` with the `runN`
-group in the `run.yaml` paths that `run materialize` printed.
+even `spec validate` needs the project root. Run from the repository root
+(the eval tooling imports ExaServe from the checkout's `src/`), and replace
+`run0` with the `runN` group in the `run.yaml` paths that `run materialize`
+printed. Run ClientLab `run` and `smoke` studies in a compute session
+([AGENTS.md](../AGENTS.md)).
 
 ```bash
+export PYTHONPATH="$PWD:$PWD/src"
 python3 -m eval.cli spec validate eval/specs/smoke_haproxy_1node.yaml
 python3 -m eval.cli run materialize eval/specs/smoke_haproxy_1node.yaml
 python3 -m eval.cli run submit-all smoke_haproxy_1node --run-group run0

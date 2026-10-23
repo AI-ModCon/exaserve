@@ -2045,8 +2045,9 @@ Using the WP12 procedure early does not waive the final qualification run.
 
 No GPU, distributed, MPI, or experiment workload runs on the login node. Before
 any cluster action, load the current Aurora workflow instructions. Login-node
-work is limited to brief unit/static/package checks after loading `frameworks`
-and `go` as needed.
+work is limited to brief unit/static/package checks after loading the stack in
+[Prepare the runtime](getting_started.md#prepare-the-runtime), which includes
+`go`, as needed.
 
 Compute-session acquisition and validation:
 

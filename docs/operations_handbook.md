@@ -179,7 +179,13 @@ Request at least about 90 minutes for any cold 405B run, even at four nodes.
 405B specs request two hours below 256 nodes and four from 256.
 At 17-255 nodes that exceeds the one-hour debug-scaling limit, so `submit` and
 `submit-all` refuse those cells before contacting the scheduler and leave them
-PLANNED; run them as allocation-campaign children (below).
+PLANNED. Aurora's public queues give 17-255 nodes no more than one hour (prod
+starts at 256 nodes, capacity stops at 16), so run such cells in a reservation
+queue (set `scheduler.queue` to it). Only the 32-, 64- and 128-node cells of
+`pp405b_pp2_haproxy_nostream_v040` also fit the allocation campaign below,
+which takes real children of exactly those sizes in one 256-node prod
+allocation, each with two non-streaming runs and `clean_stage: true`, and
+needs a passed qualification campaign first.
 Node-local tmpfs is wiped at job end, so every allocation pays the staging cost
 again. Record per-stage transfer times in every large-model run; in one 8-node
 405B run stage 0 moved data about three times slower than stage 1, and the
@@ -515,15 +521,18 @@ summary every 10 s to one collector and the run gets one
 `replica_stats_all.json`; require coverage of every replica and treat a
 missing statistics file as a failure.
 
-**Settings that worked for 405B.** Accepted 405B (TP=8 x PP=2) cells used
-`gpu_memory_utilization` 0.95 (at 0.90 one tile had effectively no KV-cache
-blocks left), `enforce_eager: true`, `max_num_seqs` 8, `max_model_len` 4096,
-`replica_max_ongoing_requests` 16, readiness initial deadline 7,200 s,
-recovery 3,600 s, canary 300 s, `control.watchdog_cleanup_deadline_s` 900,
-`local_stage_path: /tmp/...`, `clean_stage: true`, HAProxy `leastconn` with
-`maxconn` 8000, and a client at 0.2 requests/s per node with at most four
-client nodes and a 3,600 s request timeout. Re-derive memory utilization when
-the model, tensor-parallel size or framework changes.
+**Settings that worked for 405B.** The 405B (TP=8 x PP=2) specs use
+`enforce_eager: true`, `max_num_seqs` 8, `max_model_len` 4096,
+`replica_max_ongoing_requests` 16, `local_stage_path: /tmp/...`, HAProxy
+`leastconn` with `maxconn` 8000, and a client at 0.2 requests/s per node with
+at most four client nodes. The later non-streaming curve
+(`pp405b_pp2_haproxy_nostream_v040`) also used `gpu_memory_utilization` 0.95
+(at 0.90 one tile had effectively no KV-cache blocks left), readiness initial
+deadline 7,200 s, recovery 3,600 s, canary 300 s,
+`control.watchdog_cleanup_deadline_s` 900, `clean_stage: true` and a 3,600 s
+request timeout; the paper's Fig. 5 specs use 0.90 with the default deadlines
+and no `clean_stage`. Re-derive memory utilization when the model,
+tensor-parallel size or framework changes.
 
 **Settings for an 8B model on one node.** With 2,048-token prompts and 128
 output tokens, a node served about 22-25 requests/s (about two per replica) and
@@ -614,9 +623,10 @@ terminal record, never from log keywords or raw exit codes.
 
 **Size the cleanup watchdog for the node count.** At 64 nodes a 120 s cleanup
 watchdog expired after 55 of 64 drain acknowledgements although every node
-was clean. `control.watchdog_cleanup_deadline_s` now defaults to 300 s (the
-405B specs use 900 s); a quarter of the remaining budget is reserved for the
-all-rank drain and goodbye exchange and gateway stop gets at most 30 s. Accept
+was clean. `control.watchdog_cleanup_deadline_s` now defaults to 300 s
+(`pp405b_pp2_haproxy_nostream_v040` uses 900 s); a quarter of the remaining
+budget is reserved for the all-rank drain and goodbye exchange and gateway stop
+gets at most 30 s. Accept
 a run only when its shutdown report shows a clean all-rank drain and goodbye
 with no exhausted deadline.
 
@@ -809,9 +819,9 @@ Deliberate overload cells count only as measured-partial results with every
 request and rank accounted for; never relabel them. Retry a node hardware fault
 on clean nodes under a new identity, and pin the exact result per node count in
 figure inputs. Size from a cost model: bring-up about 4 minutes for 8B, 7 for
-120B, 35 for null compute at 256 nodes with the paper-era
-one-application-per-node layout (about 9-10 minutes with the later
-node-grouped layout) and about 60 for 405B, plus about 2.25 minutes per pass
+120B, 35 for null compute at 256 nodes on the paper-era snapshot (about 9-10
+minutes on later snapshots; see the cold-start table) and about 60 for 405B,
+plus about 2.25 minutes per pass
 (60 s trace and 75 s cooldown). Pilot every cell at two passes (warm-up and one
 measured) before the full sweep, plan re-runs at 256 nodes (node failures are
 more likely), and materialize 128- and 256-node traces on a compute node
@@ -885,10 +895,12 @@ parent-process monkeypatching, and never call an undeclared host executable.
   the new policy
   ([D5](KNOWN_ISSUES.md#d5-pipeline-parallel-patches-fall-back-to-a-representative-layer--fails-closed-in-production)).
 - The slower data rate of pipeline stage 0 in 405B staging.
-- 405B non-streaming at 64 and 128 nodes (`pp405b_pp2_haproxy_nostream_v040`):
-  the sequential allocation-campaign attempt failed during model staging
-  (storage), and those points are missing; the retained records do not
-  diagnose the failure.
+- 405B non-streaming (`pp405b_pp2_haproxy_nostream_v040`): a rerun as a
+  sequential allocation campaign stopped at its 64-node child, whose
+  pipeline-stage broadcast failed with `No space left on device`; every rank
+  that reported it ran on a node the preceding 32-node child had used. Its
+  128-node child never ran. The figure's pinned curve takes its 64- and
+  128-node points from an earlier run, and its 256-node point has not been run.
 - Streaming through one head-node HAProxy beyond 64 nodes (see section 5);
   distributed or hierarchical ingress is the design direction, untested.
 - The rare HAProxy process death at 256 nodes, and Envoy's 64-node streaming

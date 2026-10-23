@@ -279,9 +279,11 @@ instead of copying serving fields.
 Set `EXASERVE_PROJECT_ROOT`, and for materialization and submission also
 `EXASERVE_PROJECT_ACCOUNT` and `EXASERVE_ENV_SCRIPT_AURORA`, as in
 [getting started](docs/getting_started.md#configure-evaluation-environment-preparation);
-even `spec validate` needs the project root.
+even `spec validate` needs the project root. Run from the repository root:
+the eval tooling imports ExaServe from the checkout's `src/`.
 
 ```bash
+export PYTHONPATH="$PWD:$PWD/src"
 python3 -m eval.cli spec validate eval/specs/smoke_haproxy_1node.yaml
 python3 -m eval.cli run materialize eval/specs/smoke_haproxy_1node.yaml
 python3 -m eval.cli run submit-all smoke_haproxy_1node --run-group run0
@@ -323,7 +325,16 @@ frameworks environment.
 
 On Aurora, load the stack in
 [Prepare the runtime](docs/getting_started.md#prepare-the-runtime), which
-includes `go`, before brief static checks. Full test
+includes `go`, before brief static checks. That stack puts its own uv 0.10.1
+first on `PATH`, which this project refuses, so install the pinned uv for your
+user and pass it to make:
+
+```bash
+python3 -m pip install --user uv==0.13.4
+make UV="$(python3 -m site --user-base)/bin/uv" install-dev lint format-check type-check
+```
+
+Use the same `UV=` for `make test`, `test-cov` and `build`. Full test
 suites, package builds, MPI and GPU work require a validated compute session
 and fresh [environment setup](docs/getting_started.md#aurora-development-and-serving). Once in that session
 (or on a suitable non-HPC development machine), use:

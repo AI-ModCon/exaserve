@@ -402,6 +402,7 @@ def test_closed_environment_drops_exaserve_head_configuration(tmp_path):
         "EXASERVE_MODEL_STORAGE_PATH": "/home/user/project/models",
         "EXASERVE_LOCAL_STAGE_PATH": "/tmp/hf_home",
         "EXASERVE_ENV_SCRIPT_AURORA": "/home/user/site/env.sh",
+        "EXASERVE_SUBMISSION_REGISTRY": "/home/user/.cache/exaserve/submissions",
         # The evaluation tooling's site configuration, which users also export.
         "EXASERVE_LITELLM_PYTHON_PATH": "/home/user/litellm/bin/python3",
         "EXASERVE_SITE_CONFIG_LOCAL": "/home/user/exaserve-config/site_config_local.py",

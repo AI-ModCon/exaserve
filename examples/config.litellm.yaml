@@ -12,6 +12,11 @@
 #   export EXASERVE_ENV_SCRIPT_AURORA=/absolute/path/to/environment.sh
 #   export EXASERVE_PROJECT_ROOT=/lus/flare/projects/YOUR_PROJECT
 #   exaserve-serve-submit examples/config.litellm.yaml --project-account YOUR_PROJECT
+# The batch job must also find EXASERVE_LITELLM_MASTER_KEY (gateway.options.
+# master_key below) in its own environment, or the launcher refuses to start
+# LiteLLM. The job does not inherit the submitting shell; set the key where the
+# job reads it, for example in a private (mode 600) file that your shell
+# profile sources.
 
 ray_port: 6379
 node_cpus: 64

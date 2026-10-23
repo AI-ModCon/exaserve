@@ -78,8 +78,11 @@ barrier off for iteration speed.
   dispatch), both streaming and each with a `_nostream` variant; the later
   non-streaming HAProxy curve `full/pp405b_pp2_haproxy_nostream_v040`; and the
   duration tests in `calibration/`. These specs request two hours below 256
-  nodes and four from 256, so their 17-255-node cells exceed the one-hour
-  debug-scaling limit and run only as allocation-campaign children
+  nodes and four from 256, so `submit` refuses their 17-255-node cells, which
+  exceed the one-hour debug-scaling limit; run those in a reservation queue.
+  Only the 32-, 64- and 128-node cells of
+  `full/pp405b_pp2_haproxy_nostream_v040` also fit the allocation campaign
+  (two non-streaming runs, clean staging, after a qualification campaign)
   ([handbook](../../../docs/operations_handbook.md#2-plan-the-allocation)).
 - **SGLang engine (Fig. 6):** `eval/specs/sglang_haproxy_full.yaml`,
   `sglang_direct_full.yaml`, `sglang_direct_n256.yaml` and the saturation
@@ -123,10 +126,9 @@ calibrated rates per workload are listed in the handbook.
 ## Cost model
 
 Per-cell model from measured runs: bring-up about 4 min (8B), 7 min (120B), 35
-min (null compute at 256 nodes with the paper-era one-application-per-node
-layout; about 9-10 min with the later node-grouped layout) and about 60 min
-(405B PP=2, cold); each run about 2.25 min (60 s trace plus 75 s cooldown). A
-validation cell takes about bring-up plus 4.5 min, a six-run full cell
+min (null compute at 256 nodes on the paper-era snapshot; about 9-10 min on
+later snapshots) and about 60 min (405B PP=2, cold); each run about 2.25 min
+(60 s trace plus 75 s cooldown). A validation cell takes about bring-up plus 4.5 min, a six-run full cell
 bring-up plus 13.5 min. Each cell is its own scheduler job (no cluster reuse).
 Queue and walltime per node count come from each spec's derived scheduler
 fields (see
@@ -134,6 +136,22 @@ fields (see
 current site limits before submitting.
 
 ## How to run
+
+Run the commands from the repository root with `PYTHONPATH="$PWD:$PWD/src"`
+and the site variables of
+[getting started](../../../docs/getting_started.md#configure-evaluation-environment-preparation)
+set; the eval tooling imports ExaServe from the checkout's `src/`.
+
+Several specs carry publication placeholders in path fields,
+`/lus/flare/projects/YOUR_PROJECT/YOUR_USER/...` (`<PROJECT>/<user>` in
+`eval/specs/refcard/`): `deployment.model_storage_path` in the 405B and PP
+specs, and `trace.input_prompt_path` or `input_trace_path` in the
+`oat_8b_{burstgpt,chat,code,summary}*` and `dataset_replay_smoke_humaneval`
+specs. A path in a spec overrides the site configuration, so edit these before
+`run materialize`: point `model_storage_path` at the directory that holds the
+staged model, or delete the line to use the site configuration's path, and
+point the dataset paths at the files that `eval/tools/fetch_paper_datasets.py`
+wrote under your `user_data_root`.
 
 In a compute allocation:
 
@@ -150,4 +168,8 @@ Order: `calibration/` first, then the `validation/` pilot, then `full/`.
 
 Figures: `eval/plot/arxiv_submission_full_figures.py` writes to `eval/plot/output/arxiv_submission_full/`
 (gateway scaling from 1 to 256 nodes, SSE against end-to-end, workload sweep,
-64-node latency).
+64-node latency). The 405B figures (`fig_pp405b`, `fig_pp_engines`) need the
+256-node non-streaming HAProxy point that the script pins, and that cell has
+not been run, so a default run stops there; render the other figures one at a
+time with `--only fig1`, `--only fig2`, `--only fig4`, `--only fig5` and
+`--only fig6`.

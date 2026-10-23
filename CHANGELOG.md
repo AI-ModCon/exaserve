@@ -38,11 +38,16 @@ maximum for ExaServe.
   code/package regression results, not a rerun of the scale study. The
   commits after it in the same pull request are covered by that pull
   request's CI run.
-- Two-node validation-mode runs on 2026-10-22 covered the defect fixes below:
-  a null-compute HAProxy deployment, the real PP=2 canary (no layer-fallback
-  warning), the dense single-application layout (2,400 of 2,400 requests, with
-  HAProxy choosing its own thread count) and PP=2 serving (300 of 300
-  requests). They check those changes; they are not a scale rerun.
+- Two-node validation-mode runs on 2026-10-22 exercised five of the defect
+  fixes below and the single-application layout: HAProxy chose its own thread
+  count (64 threads); the derived client count ran on the dense
+  single-application layout (2,400 of 2,400 requests); the real PP=2 canary
+  showed no layer-fallback warning; and the batch-job environment (before its
+  child-environment filter was widened) and the MPI loader ran in a
+  null-compute HAProxy deployment and PP=2 serving (300 of 300 requests). The
+  other fixes below, several made after those runs, are covered by unit tests
+  and the CI-equivalent run only, and the 300 s reconnect grace has not been
+  started on 16 or more nodes. None of these runs is a scale rerun.
 - Focused one-/two-node hardware and regression checks cover particular
   staging, control-plane and pipeline-parallel paths. Their scope stays with
   those checks rather than becoming a system-wide scale restriction.
@@ -71,9 +76,10 @@ maximum for ExaServe.
   of fixed `/tmp` paths that another user could pre-create, store JSON and NPZ
   instead of a pickle, key each cell by its result file and the SLO
   thresholds, and reuse a full build (`--reuse`) only for the same run-group
-  folder and thresholds. Fig. 1's TTFT panel regains the Envoy 256-node
-  streaming point, which a field mix-up in the streaming-cell extraction had
-  dropped since the figures were first drawn.
+  folder and thresholds. The proxy-scaling figure (`fig1_proxy_scaling`, the
+  paper's Fig. 2) now plots the Envoy 256-node streaming point in its TTFT
+  panel; a field mix-up in the streaming-cell extraction had left it out since
+  the figures were first drawn, so the arXiv figure lacks it.
 - HAProxy no longer runs on one thread when `gateway.worker_count` is 1 (the
   value in the examples); a count above 1 or `gateway.options.nbthread` still
   sets the thread count.
@@ -90,12 +96,14 @@ maximum for ExaServe.
 - `submit` and `submit-all` refuse a walltime above the one-hour debug and
   debug-scaling limit before contacting the scheduler. 405B specs request two
   hours below 256 nodes and four from 256 (a cold 405B start took about an
-  hour), so their 17-255-node cells run only as allocation-campaign children;
+  hour), so `submit` refuses their 17-255-node cells, which need a reservation
+  queue; only the 32-, 64- and 128-node cells of
+  `pp405b_pp2_haproxy_nostream_v040` also fit the allocation campaign.
   `pp405b_pp2_proxyfix_4node` now routes 256 nodes to prod. The refusal
-  suggests a longer queue or a shorter walltime; evaluation runs add the
-  allocation-campaign hint.
-- Evaluation materialization rejects a relative or `~` environment script
-  instead of rendering a job that fails after queueing;
+  suggests a longer queue or a shorter walltime; for evaluation cells it adds
+  the allocation campaign only when the campaign would take the cell.
+- Evaluation materialization expands a `~` environment script and rejects a
+  relative one, instead of rendering a job that fails after queueing;
   `eval/scripts/direct_stream_window_analysis.py --help` and `--suite-root`
   work without site configuration; the unused `RuntimeEnvSpec.exports` field
   and `SiteDefaults.project_root` are removed.
@@ -110,12 +118,13 @@ maximum for ExaServe.
   without `EXASERVE_PROJECT_ROOT` or, with it, was refused because the value
   names shared storage. The eval launcher now reads no site configuration and
   passes none to the serving process or the replay client, and the serving
-  runtime drops every path-valued ExaServe variable from child environments:
+  runtime drops ExaServe's head-side path settings from child environments:
   `EXASERVE_PROJECT_ROOT`, `EXASERVE_MODEL_STORAGE_PATH`,
-  `EXASERVE_LOCAL_STAGE_PATH`, `EXASERVE_ENV_SCRIPT_AURORA`, the evaluation
-  path settings, `EXASERVE_LITELLM_PYTHON_PATH`, `EXASERVE_SITE_CONFIG_LOCAL`
-  and `EXASERVE_PAPER_SUITE_ROOT` (a profile export of any of them refused
-  the start before). `run materialize` takes the model storage path from the
+  `EXASERVE_LOCAL_STAGE_PATH`, `EXASERVE_ENV_SCRIPT_AURORA`,
+  `EXASERVE_SUBMISSION_REGISTRY`, the evaluation path settings,
+  `EXASERVE_LITELLM_PYTHON_PATH`, `EXASERVE_SITE_CONFIG_LOCAL` and
+  `EXASERVE_PAPER_SUITE_ROOT` (a profile export of any of them refused the
+  start before). `run materialize` takes the model storage path from the
   local site configuration when neither storage variable is exported.
 - Import MPI only through `exaserve.mpi_loader`, which loads the interpreter's
   own libssl first: on Aurora's current image, source staging and the replay
@@ -175,8 +184,9 @@ maximum for ExaServe.
   that reach vLLM in the API reference.
 - Remove the built-in PBS account and project root: `EXASERVE_PROJECT_ACCOUNT`
   (or `--project-account`, `scheduler.project`, `--account`) and
-  `EXASERVE_PROJECT_ROOT` must now be set, and commands that need them fail with
-  an error that names them. Allocation campaigns record the account they were
+  `EXASERVE_PROJECT_ROOT` (or `EXASERVE_MODEL_STORAGE_PATH`; for evaluation
+  also the local site configuration) must now be set, and commands that need
+  them fail with an error that names them. Allocation campaigns record the account they were
   created with.
 - Replace PBS job identifiers in published records with labels. The legacy
   paper-evidence ledger moves to schema 3 without job identifiers; its loader

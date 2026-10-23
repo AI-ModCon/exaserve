@@ -26,8 +26,10 @@ matrix:
   # take about 47 min), so cells below 256 nodes request 2 h and 256 nodes 4 h.
   # Aurora's debug-scaling queue allows at most 1 h, so submit and submit-all
   # refuse the 17-255-node cells before contacting the scheduler instead of
-  # letting them be killed after staging; run those as children of an
-  # allocation campaign (python3 -m eval.cli allocation ...).
+  # letting them be killed after staging. Aurora's public queues give 17-255
+  # nodes one hour at most, and the allocation campaign takes none of these
+  # cells (it needs two non-streaming runs with clean_stage), so point
+  # scheduler.queue at a reservation queue to run them.
   - path: scheduler.queue
     expr: '"capacity" if num_nodes <= 16 else ("prod" if num_nodes >= 256 else "debug-scaling")'
   - path: scheduler.walltime

@@ -531,8 +531,10 @@ blocks.append(
         "a single HAProxy the service stays within about 5% of direct dispatch through 16 "
         "replicas (4.7 against 4.9 QPS), falls behind from 32 replicas (8.7 against 10.3 "
         "QPS), and completes 22.9 QPS at 0.3% errors (50% efficiency) at 128 replicas. "
-        "These are the corrected values; the paper's Fig. 5 and its text plot and quote "
-        "three points from runs later excluded (see the caption). The paper attributes the remaining efficiency loss to "
+        "These are the corrected values: the paper's Fig. 5 plots three points from runs "
+        "later excluded (see the caption), and its text quotes one of them (HAProxy 4.1 "
+        "against 4.9 QPS at 16 replicas) to say HAProxy falls behind from 16 replicas. "
+        "The paper attributes the remaining efficiency loss to "
         "requests still draining at the end of the fixed measurement window, not to "
         "routing. Non-streaming 405B runs through HAProxy, recorded later on a different "
         "snapshot and settings, are not summarized here.",

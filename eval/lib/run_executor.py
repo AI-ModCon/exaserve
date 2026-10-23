@@ -537,6 +537,22 @@ def _reconcile_one_submission(run_plan, scheduler, identity: str) -> str:
     return job_id
 
 
+def _walltime_refusal(run_plan, violation: str) -> str:
+    """Name the way out of a queue-walltime refusal that the code allows."""
+    from .allocation_campaign import PRODUCTION_CHILD_NODES, child_shape_violation
+
+    if (
+        run_plan.scheduler.nodes in PRODUCTION_CHILD_NODES
+        and not run_plan.semantic_plan.deployment.runtime.null_compute
+        and child_shape_violation(run_plan) is None
+    ):
+        return f"{violation}, or run this cell as a child of the prod256 allocation campaign"
+    return (
+        f"{violation}; no allocation-campaign shape takes this cell, so use a queue "
+        "whose limit covers its walltime, such as a reservation queue"
+    )
+
+
 def _submit_run_once(run_plan, scheduler, *, submit_attempt: int) -> tuple[str, str]:
     """Submit at most once under a per-run cross-process lease.
 
@@ -584,15 +600,15 @@ def _submit_run_once(run_plan, scheduler, *, submit_attempt: int) -> tuple[str, 
             except Exception as exc:
                 return "ambiguous", str(exc)
         # A walltime the queue cannot hold is refused here, once, before any
-        # intent is written: the run stays PLANNED, so it can still run as an
-        # allocation-campaign child.
+        # intent is written: the run stays PLANNED, so a cell whose shape the
+        # production allocation campaign accepts can still run as its child.
         violation = queue_walltime_violation(
             getattr(run_plan.scheduler, "type", "pbs"),
             run_plan.scheduler.queue,
             run_plan.scheduler.walltime,
         )
         if violation is not None:
-            return "invalid", f"{violation}, or run this cell as an allocation-campaign child"
+            return "invalid", _walltime_refusal(run_plan, violation)
 
         try:
             write_run_state(run_plan, "submitting", submit_attempt=submit_attempt)

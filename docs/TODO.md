@@ -68,10 +68,12 @@ a support claim.
 
 - Strong scaling (fixed workload, more nodes) and tail latency (p99 and p999
   from the Go client histograms).
-- 405B non-streaming at 64 and 128 nodes (`pp405b_pp2_haproxy_nostream_v040`):
-  the sequential allocation-campaign attempt failed during model staging
-  (storage), and those points are missing; the retained records do not
-  diagnose the failure.
+- 405B non-streaming (`pp405b_pp2_haproxy_nostream_v040`): a rerun as a
+  sequential allocation campaign stopped at its 64-node child, whose
+  pipeline-stage broadcast failed with `No space left on device`; every rank
+  that reported it ran on a node the preceding 32-node child had used. Its
+  128-node child never ran. The figure's pinned curve takes its 64- and
+  128-node points from an earlier run, and its 256-node point has not been run.
 - Measure latency through a LiteLLM hop, clearly labelled as validation-only
   and not real streaming.
 - Isolate proxy overhead with matched request and client topology.

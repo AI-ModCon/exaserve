@@ -139,10 +139,12 @@ First configure an
 [operator-owned environment file](getting_started.md#configure-evaluation-environment-preparation)
 and export `EXASERVE_PROJECT_ROOT`, plus `EXASERVE_PROJECT_ACCOUNT` and
 `EXASERVE_ENV_SCRIPT_AURORA` for materialization and submission; even
-`spec validate` needs the project root. Then inspect an example specification
-without launching it:
+`spec validate` needs the project root. Then, from the repository root (the
+eval tooling imports ExaServe from the checkout's `src/`), inspect an example
+specification without launching it:
 
 ```bash
+export PYTHONPATH="$PWD:$PWD/src"
 python3 -m eval.cli spec validate eval/specs/smoke_haproxy_1node.yaml
 ```
 
