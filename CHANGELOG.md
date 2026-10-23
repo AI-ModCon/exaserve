@@ -36,7 +36,8 @@ maximum for ExaServe.
   checks on an Aurora compute node. Fixed-order, randomized-order and
   installed-wheel suites each reported **1,771 passed, 40 skipped**. These are
   code/package regression results, not a rerun of the scale study. The
-  documentation update that follows it is covered by the pull request's CI run.
+  documentation and lock updates that follow it are covered by the pull
+  request's CI run.
 - Focused one-/two-node hardware and regression checks cover particular
   staging, control-plane and pipeline-parallel paths. Their scope stays with
   those checks rather than becoming a system-wide scale restriction.
@@ -99,10 +100,10 @@ maximum for ExaServe.
   hardening configurations, frozen evaluation specs and test fixtures; remove
   the personal development scratchpad; regenerate the reference card.
 - Refresh the portable development lock with uv 0.13.4 and fixed releases of
-  Pillow, pytest, Pygments, fontTools, certifi, aiohttp and virtualenv. The lock
-  now resolves Python 3.11–3.13. Server extras and site runtime pins are
-  unchanged; remaining dependency advisories are dispositioned in the
-  AI-ModCon checklist.
+  Pillow, pytest, Pygments, fontTools, certifi, aiohttp, virtualenv and
+  OpenTelemetry. The lock now resolves Python 3.11–3.13. Declared server-extra
+  and site runtime pins are unchanged; remaining dependency advisories are
+  dispositioned in the AI-ModCon checklist.
 - Document deployment trust assumptions in `SECURITY.md` and the request fields
   that reach vLLM in the API reference.
 - Remove the built-in PBS account and project root: `EXASERVE_PROJECT_ACCOUNT`

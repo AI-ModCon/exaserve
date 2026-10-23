@@ -93,7 +93,7 @@ CI policy, plus outdated repository links and disabled security features.
 | Review item | Repository change | Still required |
 |---|---|---|
 | Operational details | Current-tree account paths, compute-node names, allocation-internal addresses, a reservation identifier and PBS job identifiers redacted ([publication redaction](path_migrations.md#publication-redaction)); the allocation name removed from the current tree, with no default PBS account or project root left in code; personal development scratchpad removed; reference card regenerated | Remove the three pre-publication tags and the 15 non-main branches before the visibility change ([decision](#operational-details-kept-for-the-disclosure-decision)) |
-| Dependency alerts | Development lock refreshed; upgrades are expected to resolve 45 of the 92 reviewed alerts once integrated; request chat templates rejected and model types pinned | Verify the upgrade results and review and record the remaining 47 proposed dispositions below |
+| Dependency alerts | Development lock refreshed; upgrades are expected to close 75 of the 126 alerts open on 2026-10-23 once integrated; request chat templates rejected and model types pinned | Verify the upgrade results and review and record the remaining 51 proposed dispositions below |
 | Review and CI enforcement | The [protection payload](../.github/main-branch-protection.json) already names the seven current CI checks and the required review settings | Apply it (step 3 below) and read it back |
 | Repository links | Package metadata, README, documentation and this checklist name `AI-ModCon/exaserve` | — |
 | Security features | Trust assumptions documented in [SECURITY.md](../SECURITY.md#deployment-trust-assumptions) | Enable them (step 5 below) |
@@ -136,15 +136,16 @@ its architecture; and the evaluation tools load tokenizers without remote code.
 
 ### Dependency alerts
 
-The 92 alerts recorded in the 2026-10-21 review came from `uv.lock`. The
-development lock is now generated
-with uv 0.13.4 and resolves Python 3.11–3.13. The test group pins Pillow 13.0.0,
-pytest 9.0.3, Pygments 2.20.0 and fontTools 4.60.2, also in
+On 2026-10-23 GitHub listed 126 open alerts on `main`, all from `uv.lock`: the
+92 recorded in the 2026-10-21 review and 34 filed since. The development lock
+is now generated with uv 0.13.4 and resolves Python 3.11–3.13. The test group
+pins Pillow 13.0.0, pytest 9.0.3, Pygments 2.20.0 and fontTools 4.60.2, also in
 `requirements/ci.lock`, and the transitive certifi (2026.10.19), aiohttp
-(3.14.5) and virtualenv (21.14.5) resolutions were refreshed. These upgrades are
-expected to resolve 45 of the reviewed alerts; verify the result after integration.
+(3.14.5), virtualenv (21.14.5) and OpenTelemetry (1.45.1) resolutions were
+refreshed. These upgrades are expected to close 75 of the open alerts; verify
+the result after integration.
 
-The other 47 cannot be closed by upgrading without changing the qualified
+The other 51 cannot be closed by upgrading without changing the qualified
 serving stack or the audited build tools. Each was checked against the code
 paths that ExaServe uses and against the request surface in the
 [API reference](api.md#inference-http-surface):
@@ -159,15 +160,16 @@ paths that ExaServe uses and against the request surface in the
 | diskcache | 1 | 5.6.3 | Pinned by vLLM 0.15.0; no fixed release | Unreachable: vLLM's outlines cache is never used |
 | datasets | 1 | 4.8.5 | The `paper` extra requires `<5` | Unreachable: no folder-based builder is used |
 | fsspec | 1 | 2026.2.0 | Capped by datasets 4.x | Unreachable: no reference filesystem is opened |
-| virtualenv | 1 | 21.14.5 | 21.14.7 needs packaging 26.3; the test group pins 25.0 | Unreachable: no virtualenv is created or activated |
+| virtualenv | 5 | 21.14.5 | 21.14.7 and later need packaging 26.3; psij-python (the `scheduler` extra) caps packaging at 25.0, which the test group also pins | Unreachable: no virtualenv is created or activated |
 | setuptools | 1 | 78.1.1 | Audited build backend; vLLM 0.15.0 requires `<81` | Accepted: needs non-ASCII exclusions built on macOS APFS/HFS+; releases are built on Linux by the audited builder, which rejects unexpected sdist members |
 
-Have the responsible maintainer review each of the 47 proposed dispositions.
+Have the responsible maintainer review each of the 51 proposed dispositions.
 Record the resolution or justified dismissal with its reason and a comment
 citing the supporting code or document. Every critical and serving-stack
 finding needs an explicit disposition; an empty alert list alone does not
 establish that triage is complete. Review the list again whenever the lock or
-the site stack changes. Requalifying on a newer site stack would close most of
+the site stack changes, and triage new advisories against the pinned stack the
+same way as they arrive. Requalifying on a newer site stack would close most of
 the vLLM alerts by upgrade.
 
 ## Adaptations that preserve ExaServe's contracts
