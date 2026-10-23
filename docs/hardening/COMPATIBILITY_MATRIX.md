@@ -47,20 +47,22 @@ identity change requires its affected release-validation cells to be checked.
 | Exposure | `PROXIED_INTERNAL` on trusted allocation network | `DIRECT_VALIDATION` | public Internet/direct Serve production exposure |
 | API/mode | OpenAI-compatible non-streaming completion | streaming/chat/mixed experiments; LiteLLM buffered throughput/error evidence | buffered, coarse, or unclassified timing represented as incremental TTFT/TBT |
 | Model topology | TP=1/PP=1 serving and multi-node TP/PP inference, including TP=8/PP=2 for 405B | explicitly gated runtime combinations | topology outside the canonical capability set |
-| Scale | Aurora serving evaluations through 256 physical nodes, on earlier snapshots | validation-mode plans up to the 64-node qualification target; the proposed packaged release has a separate exact-candidate ladder | non-validation plans above two nodes; plans above the qualification target |
+| Scale | Aurora serving evaluations through 256 physical nodes, on earlier snapshots | validation-mode plans: up to 64 nodes in the reference envelope, up to the 256-node site maximum in other gateway, exposure, request or streaming dimensions; the proposed packaged release has a separate exact-candidate ladder | non-validation plans above two nodes; reference-envelope plans above 64 nodes; any plan above the site maximum |
 
 The selected release-admission envelope is
 `aurora-xpu-vllm-haproxy-completion-non_streaming-candidate64`. It records
 `supported_max_nodes=2`, `qualification_target_nodes=64`,
 `qualification_target_approved=false` and `validation_mode=false`, and the
-compiler enforces it: a non-validation plan above two nodes fails with
-`exceeds evidence-backed supported maximum 2`, and every production submission
-currently fails closed with `production execution is not qualified`.
-Validation-mode plans in this envelope compile up to its 64-node qualification
-target (`EXASERVE_QUALIFICATION_TARGET_NODES`); plans in other dimensions
-compile, in validation mode only, into the generic envelope up to the site
-maximum (`EXASERVE_SITE_MAX_NODES`, 256 by default). These admission limits
-are separate from the 256-node measurements.
+compiler enforces it: a non-validation plan of 3–64 nodes fails with
+`exceeds evidence-backed supported maximum 2` and a larger one with `exceeds
+candidate qualification target 64`, and a production submission that compiles
+fails closed with `production execution is not qualified`. Validation-mode
+plans in this envelope compile up to its 64-node qualification target
+(`EXASERVE_QUALIFICATION_TARGET_NODES`); plans that differ in gateway, exposure,
+request or streaming mode compile, in validation mode only, into the generic
+envelope up to the site maximum (`EXASERVE_SITE_MAX_NODES`, 256 by default);
+other schedulers, vendors and engines are rejected. These admission limits are
+separate from the 256-node measurements.
 
 ## Scale tiers
 

@@ -146,7 +146,7 @@ refreshed. These upgrades are expected to close 75 of the open alerts; verify
 the result after integration.
 
 The other 51 cannot be closed by upgrading without changing the qualified
-serving stack or the audited build tools. Each was checked against the code
+serving stack, the audited build tools, or the pins and extras named below. Each was checked against the code
 paths that ExaServe uses and against the request surface in the
 [API reference](api.md#inference-http-surface):
 
@@ -160,7 +160,7 @@ paths that ExaServe uses and against the request surface in the
 | diskcache | 1 | 5.6.3 | Pinned by vLLM 0.15.0; no fixed release | Unreachable: vLLM's outlines cache is never used |
 | datasets | 1 | 4.8.5 | The `paper` extra requires `<5` | Unreachable: no folder-based builder is used |
 | fsspec | 1 | 2026.2.0 | Capped by datasets 4.x | Unreachable: no reference filesystem is opened |
-| virtualenv | 5 | 21.14.5 | 21.14.7 and later need packaging 26.3; psij-python (the `scheduler` extra) caps packaging at 25.0, which the test group also pins | Unreachable: no virtualenv is created or activated |
+| virtualenv | 5 | 21.14.5 | 21.14.7 and later need packaging 26.3; the test group and `requirements/ci.lock` pin packaging 25.0, and psij-python 0.9.4 and later (the `scheduler` extra; 0.9.11 is locked) cap it at 25.0 or lower, so lifting the pin would pull psij-python back to 0.9.3 | Unreachable: no virtualenv is created or activated |
 | setuptools | 1 | 78.1.1 | Audited build backend; vLLM 0.15.0 requires `<81` | Accepted: needs non-ASCII exclusions built on macOS APFS/HFS+; releases are built on Linux by the audited builder, which rejects unexpected sdist members |
 
 Have the responsible maintainer review each of the 51 proposed dispositions.

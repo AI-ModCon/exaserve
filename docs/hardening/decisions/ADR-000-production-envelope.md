@@ -42,8 +42,8 @@ mode:
 |---:|---|
 | 1 node | null lifecycle/failure PASS; real XPU PASS; proxy no-delay on/off PASS |
 | 2 nodes | null negative/fault matrix PASS; real PP=2 PASS; supervisor head/worker fault PASS |
-| 4 nodes | not run for final43; authorization and a new predeclared row required |
-| 16 / 64 nodes | not qualified; run only after an owner selects this envelope |
+| 4 nodes | not run for final43; a new candidate and a predeclared row are required |
+| 16 / 64 nodes | not qualified; run only with a new candidate after an owner selects this envelope |
 
 The compiled envelope records `supported_max_nodes=2`,
 `qualification_target_nodes=64`, `qualification_target_approved=false`, and
@@ -85,7 +85,8 @@ readiness, failure, and scale decision.
 
 If 64 nodes is approved:
 
-1. predeclare immutable final43 gates for 4, 16, and 64 nodes;
+1. predeclare 4-, 16- and 64-node gates for one new clean candidate wheel
+   ([hardening status](../STATUS.md), "What a new qualification requires");
 2. use the same HAProxy/non-streaming profile and declared client topology;
 3. compare the 64-node result to a matched HAProxy baseline, not historical
    direct-routing data;

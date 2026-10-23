@@ -6,8 +6,8 @@ behaviour behind these entries, and what to do about it, is in the
 [operations handbook](operations_handbook.md).
 
 No artifact of the current tree is production-qualified
-([hardening status](hardening/STATUS.md)). ExaServe's evaluations, on earlier
-snapshots of this code, reached 256 Aurora nodes; the observations below
+([hardening status](hardening/STATUS.md)). ExaServe's serving evaluations, on
+earlier snapshots of this code, reached 256 Aurora nodes; the observations below
 describe workload- and configuration-specific limits found at scale and do not
 qualify the current tree. Fix-specific regression coverage is recorded in the
 [changelog](../CHANGELOG.md#validation-coverage).
@@ -32,7 +32,8 @@ Ledger: `KI-A1`, `IN_PROGRESS`.
 Earlier 256-node runs showed roughly quadratic proxy and actor-handle work and
 a single-controller bottleneck. ExaServe's readiness processing is indexed,
 bounded, and does not poll the fleet, but it cannot remove or claim to solve
-upstream Ray behaviour. Early deployments of one Serve application with a
+upstream Ray behaviour. On an early snapshot, start-up-only deployments (no
+serving load; not reproduced since) of one Serve application with a
 replica on every GPU tile took about 100 s at 256 nodes, 199 s at 512 and
 1,241 s at 1,024, about six times longer for the last doubling; at 2,048 nodes
 (24,576 replicas) all three attempts reached the 1,200 s driver limit with

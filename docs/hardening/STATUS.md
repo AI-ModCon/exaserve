@@ -26,14 +26,17 @@ does not change this demonstrated scale.
   `SiteProfile` has no measured control and readiness limits, and its proposed
   64-node envelope has no product-owner approval.
 - **Compiled ceiling:** production plans compile to at most two nodes
-  (`supported_max_nodes=2`, the boundary the `final43` package measured); a
-  larger non-validation plan fails with `exceeds evidence-backed supported
-  maximum 2`. Validation-mode plans in the reference HAProxy, completion,
-  non-streaming envelope compile up to its 64-node qualification target
-  (`EXASERVE_QUALIFICATION_TARGET_NODES`); plans in other dimensions compile,
-  in validation mode only, into the generic envelope up to the site maximum
-  (`EXASERVE_SITE_MAX_NODES`, 256 by default). These are admission limits, not
-  the measured scale of the system.
+  (`supported_max_nodes=2`, the boundary the `final43` package measured): a
+  non-validation plan of 3–64 nodes fails with `exceeds evidence-backed
+  supported maximum 2`, a larger one with `exceeds candidate qualification
+  target 64`, and a plan that compiles stops at submission with `production
+  execution is not qualified`. Validation-mode plans in the reference HAProxy,
+  completion, non-streaming envelope compile up to its 64-node qualification
+  target (`EXASERVE_QUALIFICATION_TARGET_NODES`); plans that differ in gateway,
+  exposure, request or streaming mode compile, in validation mode only, into the
+  generic envelope up to the site maximum (`EXASERVE_SITE_MAX_NODES`, 256 by
+  default); other schedulers, vendors and engines are rejected in either mode.
+  These are admission limits, not the measured scale of the system.
 - **Portable tests:** they verify code and package behaviour for the named
   snapshot; they are not hardware qualification.
 - **Target dimensions for the proposed release:** Aurora PBS; Intel PVC/XPU, 12 tiles per

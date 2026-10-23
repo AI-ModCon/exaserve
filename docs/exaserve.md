@@ -174,8 +174,9 @@ docs/figures/fig1_proxy_scaling.png
 docs/figures/fig7_pp405b.png
 ```
 
-The two figures are plots of the measurements in the
-[ExaServe paper](https://arxiv.org/abs/2609.10812); the template must be
+The two figures plot measurements from the evaluation in the
+[ExaServe paper](https://arxiv.org/abs/2609.10812); the 405B figure's HAProxy
+curve is the run before the health-check fix, as its caption says. The template must be
 obtained from its licensed project source. From any working directory, run:
 
 ```bash

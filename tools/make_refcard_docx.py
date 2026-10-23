@@ -278,7 +278,7 @@ why = [
         "Scale evaluations of earlier snapshots reached 256 nodes / 3,072 replicas "
         "behind HAProxy "
         "front end: 27.1k non-streaming QPS with Llama-3-8B (one replica per tile) "
-        "— 96% weak-scaling efficiency at 256 nodes (27.1k of 28.2k offered, 0% errors). "
+        "— 96% of the 28.2k requests/s offered at 256 nodes, with 0% errors. "
         "A quantified comparison of head-node proxies (HAProxy, Envoy, LiteLLM, Ray Serve "
         "proxy) records gateway-specific throughput and latency limits.",
     ),
@@ -323,9 +323,11 @@ blocks.append(
             ],
             [
                 "Inference replicas",
-                "Dense single-model TP=1/PP=1 serving uses one multi-replica model application "
-                "plus node proxies. Sparse, multi-device, pipeline-parallel and multi-model "
-                "plans retain per-replica applications; replicas span devices as planned",
+                "Dense HAProxy plans (one model, TP=1/PP=1, a replica on every device) use one "
+                "multi-replica model application plus node proxies, and dense null-compute plans "
+                "one node-pinned application per node. Other gateways and sparse, multi-device, "
+                "pipeline-parallel and multi-model plans keep one application per replica; "
+                "replicas span devices as planned",
             ],
             [
                 "Head-node proxy",
@@ -486,7 +488,7 @@ blocks.append(
         "fig1_proxy_scaling.png",
         "Weak scaling, 1–256 nodes (Llama-3-8B, 64 in / 64 out, 110 QPS/node offered): "
         "successful throughput and SLO attainment per front end, streaming (solid) vs "
-        "non-streaming (dashed). Non-streaming HAProxy reaches 27.1k QPS; streaming through "
+        "non-streaming (dashed). Non-streaming HAProxy scales near-linearly; streaming through "
         "any centralized proxy plateaus or collapses. “Direct” is the benchmark-only "
         "backend-isolation diagnostic.",
         7.0,
@@ -509,7 +511,8 @@ blocks.append(
         "Models larger than a node are served with pipeline parallelism across node pairs "
         "(Llama-3.1-405B: TP8 within a node × PP2 across two nodes). Shard-aware staging "
         "gives each pipeline stage only its own weight shard (~380 GiB, which fits node-local "
-        "tmpfs) and pins each replica to its nodes. All 405B measurements are streaming: at a "
+        "tmpfs) and pins each replica to its nodes. The 405B numbers quoted here are "
+        "streaming: at a "
         "fixed per-replica offered rate, direct dispatch (the routing-free reference) grows "
         "aggregate successful throughput from 0.7 QPS at 2 replicas to 31.0 QPS at 128 "
         "replicas (4 to 256 nodes), a 67% weak-scaling efficiency vs the 4-node base. Through "
@@ -517,7 +520,8 @@ blocks.append(
         "falls behind from 16 replicas, and completes 22.9 QPS at 0.3% errors (50% "
         "efficiency) at 128 replicas. The paper attributes the remaining efficiency loss to "
         "requests still draining at the end of the fixed measurement window, not to "
-        "routing. A non-streaming 405B configuration has not been measured.",
+        "routing. Non-streaming 405B runs through HAProxy, recorded later on a different "
+        "snapshot and settings, are not summarized here.",
         after=60,
     )
 )
@@ -526,7 +530,9 @@ blocks.append(
         "fig7_pp405b.png",
         "Llama-3.1-405B (TP8 × PP2) weak scaling, 2–128 replicas at a fixed offered rate "
         "per replica. Point labels: successful throughput and weak-scaling efficiency vs "
-        "the 4-node base.",
+        "the 4-node base. The HAProxy curve is the run whose health check probed one "
+        "replica's route: it collapsed to 8.9 QPS at 128 replicas, the failure the paper "
+        "describes. Probing /-/healthz, HAProxy completes 22.9 QPS (50%) at 128 replicas.",
         5.2,
     )
 )
@@ -578,9 +584,9 @@ blocks.append(
         "Cluster bring-up behaves differently: it does not scale, and this is Ray’s key "
         "limitation at HPC scale. Model staging (~50 s for the 8B model), Ray cluster start "
         "(~45 s), and first-request warm-up (~8 s) are roughly flat in node count, but "
-        "Ray Serve’s serve.run phase grows superlinearly — 154 s at 64 nodes, 456 s at 128, "
-        "and 1,767 s (about 30 min) at 256 — and a 512-node bring-up fails outright. The "
-        "growth is "
+        "with one Serve application per node, as in the paper, Ray Serve’s serve.run phase "
+        "grows superlinearly — 154 s at 64 nodes, 456 s at 128, and 1,767 s (about 30 min) "
+        "at 256 — and a 512-node bring-up of that layout fails outright. The growth is "
         "concentrated in the proxy readiness wait: on every deployment broadcast, every "
         "Ray Serve proxy resolves every replica handle against the Ray control store (GCS), "
         "work that is quadratic in node count and reaches 1.38 million GCS lookups at 256 "

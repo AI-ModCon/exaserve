@@ -297,8 +297,10 @@ replica-set broadcast, each proxy re-resolves every replica's actor handle, so
 cluster-wide lookups grow with nodes squared (786,000 lookups per broadcast at
 256 nodes); at 128 nodes the slowest proxy's lookup time matched the wait to
 within 0.4%. No ExaServe change removes this; it needs an upstream Ray Serve
-change. The current tree deploys one application per replica, which changes the
-pattern and has not been re-measured at scale.
+change. The current tree deploys a dense HAProxy model as one application with
+every replica plus per-node proxy anchors; the other layouts are listed under
+"Serve application count dominates bring-up" below. None of them has been
+re-measured at scale.
 
 **Ray's proxy health checks kill busy proxies.** The stock proxy ready check
 (5 s, three failures) is shorter than the 30 s start-up wait above, and busy
@@ -347,7 +349,8 @@ pipeline-parallel and multi-model plans still use one application per replica:
 budget 10-12 minutes of Serve reconciliation at 64 nodes for them, and 9-10
 minutes of control-plane start-up at 256 nodes in any layout.
 
-**One Ray cluster reached about 256 nodes.** At 256 nodes (3,072 replicas) the
+**With one Serve application per node (the paper's layout), one Ray cluster
+reached about 256 nodes.** At 256 nodes (3,072 replicas) the
 serve stage took about 30 minutes and varied widely; at 512 nodes raylets on
 many nodes failed with "Failed to get cluster ID from GCS server" and the
 deploy failed. The current tree raises the GCS bootstrap budgets (connect
@@ -355,7 +358,9 @@ timeout 30 s, reconnect 120 s, worker registration 120 s, 8 GCS server
 threads, a 60 s request timeout) and proves they reached a fresh remote worker
 before deploying. Whether that lifts the 512-node failure is untested. Do not
 plan one Ray cluster beyond 256 nodes without a new boundary measurement, and
-give a 256-node start-up at least an hour.
+give a 256-node start-up at least an hour. Start-up-only results of a
+single-application layout beyond 256 nodes are recorded under
+[known issue A3](KNOWN_ISSUES.md).
 
 **Thread limits at 128 nodes and above.** Each replica holds about 1,500 gRPC
 connections, and the Hugging Face tokenizer lazily builds a thread pool of
