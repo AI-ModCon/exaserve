@@ -1,8 +1,8 @@
 name: oat_8b_baseline_direct_val
 # DISCRIMINATING TEST for the baseline n1->n64 SLO drop.
-# Exact twin of oat_8b_baseline_val EXCEPT dest=direct (no centralized HAProxy
-# in the request/return path). The proxy baseline already uses a distributed
-# MPI client (one rank/node), so HAProxy is the ONLY changed variable here.
+# Twin of oat_8b_baseline_val EXCEPT dest=direct (no centralized HAProxy in
+# the request/return path). Direct dispatch also uses one client rank per node,
+# where the proxy baseline uses at most four client nodes.
 #   - If client TTFT/decode at n64 recover toward the n1 values -> the
 #     centralized HAProxy SSE return path (http-no-delay token fan-through) is
 #     the scale bottleneck.

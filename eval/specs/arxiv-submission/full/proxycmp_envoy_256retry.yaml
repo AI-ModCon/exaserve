@@ -1,6 +1,7 @@
 name: proxycmp_envoy_256retry
 # EXP SET 1 (proxy comparison) — Envoy dispatcher. Same baseline as
-# proxycmp_haproxy; stream=true for P99 TTFT/TBT.
+# proxycmp_haproxy; stream=true for P99 TTFT/TBT. A two-run retry of the
+# 256-node cell of proxycmp_envoy_scale.
 matrix:
   name_template: 'n{num_nodes}'
   axes:

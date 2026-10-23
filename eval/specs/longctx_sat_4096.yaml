@@ -1,11 +1,9 @@
 name: longctx_sat_4096
 # Saturation finder for input_len=4096 at 1n. Sweep rate_per_node finely
-# to find where TTFT starts climbing — the "knee" of the latency curve.
-# Prior data:
-#   rate=4  rps/N: TTFT p99 = 1.05 s (sustained, headroom)
-#   rate=16 rps/N: TTFT p99 = 4.91 s (overloaded)
-# So the knee is between 4 and 16. Sweep {4,6,8,10,12,14} = 6 points.
-# All on debug queue (1 node, ~10 min each, serial 1+1 limit).
+# to find where TTFT starts climbing — the "knee" of the latency curve, which
+# lies between a sustainable 4 rps/N and an overloaded 16 rps/N.
+# Sweep {4,6,8,10,12,14} = 6 points, all on the debug queue (1 node, ~10 min
+# each).
 matrix:
   name_template: 'rps{rate_per_node}'
   axes:

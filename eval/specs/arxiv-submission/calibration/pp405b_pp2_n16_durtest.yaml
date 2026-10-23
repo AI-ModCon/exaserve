@@ -1,32 +1,16 @@
 name: pp405b_pp2_n16_durtest
-# DEFINITIVE TEST for the weak-scaling "efficiency drop" (128n 81% -> 256n 67%).
-#
-# Analysis of the existing direct-mode sweep (proxy REMOVED, so HAProxy is not
-# involved) shows the drop is a fixed-window benchmark artifact, not a scaling
-# limit:
-#   * steady-state throughput tracks offered load (~97%) at every scale;
-#     TTFT p50 (~0.7s) and TBT (~0.23 s/tok) are INVARIANT across 4->256 nodes.
-#   * overall rps = requests / wall-clock, and wall-clock = 120s injection +
-#     a tail "overhang" spent draining the slowest requests. Measured:
-#       eff = T_inject / (T_inject + overhang)  reproduces the sweep EXACTLY
-#       (n64 77.5%, n128 73.4%, n256 60.6% -- overhang 34.8 / 43.4 / 77.9 s).
-#   * the tail is admission QUEUEING, not slow execution: slow requests differ
-#     from the bulk almost entirely in TTFT (n256 top-20: 66.6s TTFT vs 1.8s
-#     bulk) while their decode time / TBT match the bulk. Each replica is driven
-#     at 0.4 rps x ~17.3s service = ~6.9 concurrent vs max_num_seqs=8 (~85% of
-#     batch capacity), so P(replica transiently needs >8 slots) ~26%; excess
-#     requests wait a full ~15s decode cycle. More replicas -> the max over
-#     replicas of that wait grows -> longer drain -> lower wall-clock rps.
+# Tests whether the 405B weak-scaling efficiency drop is an artifact of the
+# fixed measurement window (paper section IV-C). Throughput is requests over
+# wall-clock time, and wall-clock time includes draining the requests still in
+# flight when the 120 s injection stops. Each replica is offered 0.4
+# requests/s, about 6.9 concurrent requests against max_num_seqs=8, so excess
+# requests queue for a decode cycle, and the slowest replica's drain grows with
+# the replica count.
 #
 # TEST: hold scale FIXED at 16 nodes (8 replicas) and vary ONLY the injection
-# duration. If the drop is the fixed-window artifact, efficiency must rise along
-# T/(T+overhang) with overhang ~constant. n16 overhang measured = 28.2s, so:
-#     T=120s -> 81.0% (matches the measured n16 point)
-#     T=300s -> 91.4%
-#     T=600s -> 95.5%
-# A flat/!=predicted result would falsify the explanation. 16 nodes runs on the
-# capacity queue (2h walltime, fast bring-up), so this lands reliably -- unlike
-# the 192-node attempt, which lost 3/3 jobs to shard-aware deploy flakiness.
+# duration T. If the drop is the window artifact, efficiency rises along
+# T / (T + drain) with a roughly constant drain; a flat result would contradict
+# that explanation. 16 nodes fit the capacity queue with a 2 h walltime.
 matrix:
   name_template: 'dur{duration}'
   axes:
@@ -60,7 +44,7 @@ deployment:
   replica_max_ongoing_requests: 16
 client:
   num_runs: 2                # run0 warmup (discard) + run1 measured, as in the sweep
-  dest: direct               # proxy removed, matching the sweep the numbers came from
+  dest: direct               # proxy removed, as in the direct-dispatch sweep
   direct_dispatch: mesh      # PP exposes 8 replica routes across 16 deployment nodes
   stream: true
   num_go_procs: 8

@@ -2,8 +2,10 @@
 # Ray Serve is reachable on each node at http://<node>:8000/. Clients must
 # pick a node themselves. Best for benchmarking the raw Ray Serve path.
 #
-# Run with:
-#   exaserve-serve-submit examples/config.direct.yaml
+# Run with (docs/getting_started.md describes the variables):
+#   export EXASERVE_ENV_SCRIPT_AURORA=/absolute/path/to/environment.sh
+#   export EXASERVE_PROJECT_ROOT=/lus/flare/projects/YOUR_PROJECT
+#   exaserve-serve-submit examples/config.direct.yaml --project-account YOUR_PROJECT
 
 ray_port: 6379
 node_cpus: 64

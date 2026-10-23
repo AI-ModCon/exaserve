@@ -15,7 +15,8 @@ The generated reference card (docs/ExaServe_Reference_Card.docx) takes its page
 layout and styles from the Academy framework reference card template
 (https://academy-agents.org); the template itself is not distributed here.
 
-The vendored yyjson sources in clientlab/targets/cpp_server/vendor retain
-their MIT license and YaoYuan copyright notices in the source files.
+The vendored yyjson 0.13.0 sources (https://github.com/ibireme/yyjson) in
+clientlab/targets/cpp_server/vendor retain their MIT license and YaoYuan
+copyright notices in the source files.
 External dependencies and model weights remain subject to their own terms;
 the project's Apache-2.0 license does not relicense those materials.

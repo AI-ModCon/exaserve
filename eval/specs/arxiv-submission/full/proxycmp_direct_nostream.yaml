@@ -1,10 +1,10 @@
 name: proxycmp_direct_nostream
 # EXP SET 1 (proxy comparison) — Direct-MPI dispatch (one client per node hits
-# its LOCAL Ray Serve port; no shared proxy). Zero-LB upper bound. Mirrors the
-# working weakscaling_direct_short_v3 (proxy type none, dest direct) but adds
-# stream=true for P99 TTFT/TBT and num_go_procs=8 (each rank owns a node).
-# NOTE: validate the 1-node streaming cell first — a prior 1n direct+stream run
-# timed out on the per-node HSN health check; confirm before submit-all.
+# its LOCAL Ray Serve port; no shared proxy). Zero-LB upper bound: proxy type
+# none, dest direct, num_go_procs=8 (each rank owns a node). Non-streaming
+# (stream=false): each request returns its full completion in one response, so
+# results carry end-to-end latency, throughput and errors, not TTFT or TBT.
+# Scale axis is [1,4,16,64]; proxycmp_direct_nostream_scale covers 128 and 256.
 matrix:
   name_template: 'n{num_nodes}'
   axes:

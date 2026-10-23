@@ -32,11 +32,17 @@ strictly validated for numeric bounds, paths, replay topology, and plan hash.
 
 ```bash
 python3 -m eval.cli spec validate <spec>
+python3 -m eval.cli spec list
 python3 -m eval.cli trace materialize <spec>
 python3 -m eval.cli run materialize <spec>
 python3 -m eval.cli run submit <bundle-or-run.yaml> [--dry-run]
-python3 -m eval.cli run submit-all <spec-name> [--dry-run]
+python3 -m eval.cli run submit-all <spec-name> --run-group <runN> [--dry-run]
 python3 -m eval.cli run execute <run.yaml> [--dry-run]
+python3 -m eval.cli allocation materialize <run.yaml>... --output-dir <dir> \
+  --physical-nodes <N> --queue <queue> --walltime <HH:MM:SS> --child-timeout-s <s>
+python3 -m eval.cli allocation submit <campaign.json>
+python3 -m eval.cli allocation execute <campaign.json>
+python3 -m eval.cli derive-params <result_dir>
 ```
 
 Materialized scheduler scripts invoke `run execute` directly. Old

@@ -2,7 +2,7 @@ name: smoke_slo_stream_rayserve_1node
 # Buffering diagnostic: identical streaming workload to smoke_slo_stream_1node
 # (256 in / 64 out, 30 rps, stream=true) but served via the Ray Serve NATIVE
 # proxy (HeadOnly) instead of HAProxy. Compare per-request TBT to the HAProxy
-# run (smoke_slo_stream_1node run3):
+# run (smoke_slo_stream_1node):
 #   ray_serve smooth + haproxy bursty -> HAProxy buffers the token stream
 #   both bursty                       -> Ray Serve proxy or vLLM async cadence
 matrix:

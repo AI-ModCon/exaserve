@@ -1,19 +1,12 @@
 name: pp405b_pp2_n192_durtest
-# DIAGNOSTIC for the weak-scaling "efficiency drop" (128n 81% -> 256n 67%).
-# Data shows the drop is NOT the proxy (present in direct mode) and NOT a real
-# throughput limit (steady-state eff ~97% at every scale). It's a short-benchmark
-# artifact: overall rps = requests / wall-clock over a fixed 120s injection, and
-# the straggler tail-drain grows with replica count (worst-case latency 44->94s
-# from n64->n256). Per-replica load ~6.8 in-flight vs max_num_seqs=8 -> little
-# headroom -> with more replicas the odds of a transiently-overloaded replica
-# (and a slow straggler) rise. Classic tail-at-scale.
-#
-# TEST: fix scale at 192 nodes (96 replicas) and vary ONLY the run duration.
-#   - dur120 = the sweep's window (baseline; also the intermediate scale point)
-#   - dur300 = longer window; if the drop is a ramp+tail artifact, the fixed
-#     overhead amortizes and overall efficiency should rise toward steady-state
-#     (~97%), while steady-state itself stays flat. That confirms the mechanism.
-# Direct mode (no proxy) to match the sweep the numbers came from.
+# The duration test of pp405b_pp2_n16_durtest at 192 nodes (96 replicas), an
+# intermediate scale point. It varies ONLY the run duration:
+#   - dur120 = the sweep's window
+#   - dur300 = a longer window; if the efficiency drop is a ramp-and-drain
+#     artifact of the fixed window, the fixed overhead amortizes and overall
+#     efficiency rises toward the steady-state value, while steady-state
+#     throughput stays flat.
+# Direct dispatch (no proxy), as in the 405B direct-dispatch sweep.
 matrix:
   name_template: 'dur{duration}'
   axes:
@@ -65,5 +58,9 @@ backend:
 scheduler:
   type: pbs
   nodes: 192
+  # A cold 405B run needs more than an hour, so this requests 2 h. Aurora's
+  # debug-scaling queue allows at most 1 h, so submit and submit-all refuse
+  # this spec before contacting the scheduler; run it as a child of an
+  # allocation campaign (python3 -m eval.cli allocation ...).
   queue: debug-scaling
-  walltime: '01:00:00'
+  walltime: '02:00:00'

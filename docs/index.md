@@ -20,9 +20,9 @@ and hardware serving are separate boundaries.
 
 ## Architecture and operational authority
 
-User guides, architecture, hardening records, and research reports share this
-directory. Their authority is unchanged: research reports do not
-override the execution plan or candidate qualification records.
+User guides, architecture, hardening records and the operations handbook share
+this directory. The guides and the handbook do not override the execution plan
+or candidate qualification records.
 
 | Topic | Authoritative document or entry point |
 | --- | --- |

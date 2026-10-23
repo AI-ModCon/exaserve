@@ -30,8 +30,9 @@ and the serving parent use separate environments. See
 
 No. Use a validated compute session for full tests, package/build gates,
 benchmarks, evaluations, MPI, and GPU work. Only brief, clearly lightweight
-checks are suitable for a login node, after loading `frameworks` and `go` when
-needed. A command named `smoke` or an option named `--local` is not sufficient
+checks are suitable for a login node, after loading the stack in
+[Prepare the runtime](getting_started.md#prepare-the-runtime) when needed.
+A command named `smoke` or an option named `--local` is not sufficient
 evidence that it is safe for a shared login node. [AGENTS.md](../AGENTS.md)
 governs the execution location.
 
@@ -112,11 +113,10 @@ ExaServe is distributed under the [Apache License 2.0](../LICENSE). See
 [NOTICE](../NOTICE) for project attribution information. Dependencies remain
 subject to their own licenses.
 
-## Why are there both docs/ and docs/ directories?
+## Where did doc/ and findings/ go?
 
-`docs/` is the public getting-started, usage, and API entry point. The existing
-`docs/` directory retains architecture, hardening decisions, audits, and evidence
-context. The [execution plan](PRODUCTION_HARDENING_EXECUTION_PLAN.md) is
-the sole architecture and implementation specification, while
-[AGENTS.md](../AGENTS.md) controls operational safety. The two directories are
-linked rather than competing specifications.
+Documentation that lived in `doc/` is now under `docs/`. The findings reports,
+run records and audits were removed from the current tree and summarized in
+the [operations handbook](operations_handbook.md); they remain in the
+repository history. The [path migration guide](path_migrations.md) maps each
+old path to its current location.

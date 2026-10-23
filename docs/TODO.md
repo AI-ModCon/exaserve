@@ -37,9 +37,10 @@ evidence rather than an unresolved two-node code defect:
 
 ## Known defects to fix
 
-- Rerun the real PP=2 two-node canary under the production layer-fallback
-  policy, and add the fallback warnings to the engine receipt
+- Add the layer-fallback warnings to the engine receipt
   ([D5](KNOWN_ISSUES.md#d5-pipeline-parallel-patches-fall-back-to-a-representative-layer--fails-closed-in-production)).
+  The real PP=2 two-node canary was rerun on 2026-10-22 under the new
+  layer-fallback policy in validation mode and showed no fallback warning.
 
 ## External platform qualification
 
@@ -67,6 +68,10 @@ a support claim.
 
 - Strong scaling (fixed workload, more nodes) and tail latency (p99 and p999
   from the Go client histograms).
+- 405B non-streaming at 64 and 128 nodes (`pp405b_pp2_haproxy_nostream_v040`):
+  the sequential allocation-campaign attempt failed during model staging
+  (storage), and those points are missing; the retained records do not
+  diagnose the failure.
 - Measure latency through a LiteLLM hop, clearly labelled as validation-only
   and not real streaming.
 - Isolate proxy overhead with matched request and client topology.

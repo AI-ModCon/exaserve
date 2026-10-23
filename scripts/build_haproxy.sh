@@ -6,9 +6,10 @@
 #
 # Usage: HAPROXY_SOURCE_SHA256=<sha256> bash scripts/build_haproxy.sh [version]
 #   version defaults to 3.1.6 (what this project was tested against). The 3.1
-#   branch no longer receives fixes and 3.1.6 is affected by CVE-2025-32464; build
-#   a supported release (3.2 LTS or later) for new deployments and re-run the
-#   HAProxy validation cells.
+#   branch is end of life (its last release is 3.1.17), and 3.1.6 is affected by
+#   CVE-2025-32464 and by later advisories fixed in subsequent 3.1 releases (for
+#   example CVE-2025-11230, fixed in 3.1.9); build a supported release (3.2 LTS or
+#   later) for new deployments and re-run the HAProxy validation cells.
 
 set -euo pipefail
 

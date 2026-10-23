@@ -148,7 +148,8 @@ so HAProxy ran on one core, which cost 23% of streaming throughput at 64 nodes;
 earlier measurements had used HAProxy's automatic thread count. A
 `worker_count` above 1 still sets the thread count, but a value of 1 now leaves
 it to HAProxy, and `gateway.options.nbthread` overrides both
-([composition.py](../src/exaserve/composition.py)).
+([composition.py](../src/exaserve/composition.py)). The new automatic default
+has not been re-measured at scale on the current tree.
 
 ### C1. Server statistics silent/partial success — resolved
 
@@ -282,7 +283,9 @@ band before the job step ends.
 ## Current release blockers
 
 - ADR-000's proposed 64-node ceiling needs a product-owner decision; and
-- if 64 is selected, exact-candidate 4/16/64 qualification remains required.
+- if 64 is selected, exact-candidate 4/16/64 qualification remains required;
+  the hardening status gives the full list under
+  [what a new qualification requires](hardening/STATUS.md#what-a-new-qualification-requires).
 
 See the [hardening status](hardening/STATUS.md) and the
 [compatibility matrix](hardening/COMPATIBILITY_MATRIX.md) for the current

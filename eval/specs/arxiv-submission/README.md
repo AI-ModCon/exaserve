@@ -4,19 +4,19 @@ Experiment specifications for ExaServe's gateway comparison, workload
 robustness, control-plane and pipeline-parallel characterization on Aurora.
 These are the experiments reported in
 [ExaServe: Large-Scale LLM Serving on Exascale HPC Systems](https://arxiv.org/abs/2609.10812)
-(arXiv:2609.10812), after which the folder is named. Each experiment has
-exactly one spec. Measured results, limits and lessons from
-these experiments are in the
+(arXiv:2609.10812), after which the folder is named; the SGLang engine
+experiments are specified outside it ([below](#suite-contents)). Measured
+results, limits and lessons from these experiments are in the
 [operations handbook](../../../docs/operations_handbook.md).
 
 ## Layout
 
 | Folder | What | `num_runs` |
 |---|---|---|
-| `calibration/` | Single-node (or single-replica) saturation finders. Run once per (model, workload); their 90% rates go into the OAT specs. | n/a (binary search) |
-| `validation/` | **Pilot sweep**: the complete experiment set, but each cell runs only `2` (run 0 is warm-up, run 1 the data point). Use it to shake out every cell end to end and to measure real per-cell cost before the full sweep. Spec names carry a `_val` suffix so results land in separate run groups. | 2 |
-| `full/` | The full sweep. Specs mirror `validation/` minus the suffix: `6` runs for N≤64 (warm-up plus 5 data runs) and `3` for the 128- and 256-node cells (warm-up plus 2). Both SSE (`stream: true`) and end-to-end (`_nostream`) variants. | 6 / 3 |
-| `smokes/` | One- and two-node infrastructure checks and canaries (below); re-run them after stack changes. | 1 |
+| `calibration/` | Single-node (or single-replica) saturation finders, run once per (model, workload); their 90% rates go into the OAT specs. Also the fixed-rate 120B re-calibration (`sat_120b_paper_recal`) and the 405B duration tests at 16 and 192 nodes (`pp405b_pp2_n16_durtest`, `pp405b_pp2_n192_durtest`). | n/a for the finders (binary search); 2 for the others |
+| `validation/` | **Pilot sweep**: two-run pilots of the gateway and OAT experiments (run 0 is warm-up, run 1 the data point), 256-node pilots and HAProxy reproducers (below), a direct-dispatch twin of the OAT baseline, the null-compute `n256_r12` cell and the bring-up instrumentation of the paper's Table II. Use it to shake out cells end to end and to measure real per-cell cost before the full sweep. Spec names carry a `_val` suffix so results land in separate run groups. | 2; 1 for the start-up-only `nullcompute_scaling_val` and `bringup_inst_real_val`; 6 for `proxycmp_haproxy_256_diag_val` |
+| `full/` | The full sweep. Where a pilot exists, the full spec has its name without the suffix. `full/` also holds specs without a pilot: the 128- and 256-node gateway cells (`_scale`), most `_nostream` variants, the 405B PP sweeps, `direct_topology`, `nullcompute_haproxy_scale_to256_v040` and `proxycmp_envoy_256retry`. | 6 (warm-up plus 5 data runs); 3 (warm-up plus 2) for the streaming `proxycmp_<proxy>_scale` specs; 2 for `pp405b_pp2_haproxy_nostream_v040`, `direct_topology` (per arm) and `proxycmp_envoy_256retry`; 1 for the start-up-only null-compute specs |
+| `smokes/` | Infrastructure checks and canaries on one to four nodes (below), except `pp405b_pp2_proxyfix_4node`, which sweeps 4-256 nodes. Re-run them after stack changes. | 1 or 2 |
 
 Spec names must be unique across the whole `eval/specs/` tree (the catalog
 resolves by filename stem), hence the `_val` suffix convention.
@@ -31,7 +31,8 @@ data from that suite stage. A run group's `run.yaml` binds the absolute path it
 was written to; to read groups recorded under another folder, set
 `EXASERVE_PAPER_SUITE_ROOT` to that folder instead of moving them.
 
-All `validation/` and `full/` specs set `launch.clean_stage: true`. Under the
+All `validation/` and `full/` specs set `launch.clean_stage: true`, except the
+four `full/pp405b_pp2_scale*.yaml` specs, which leave it off. Under the
 current immutable-cache contract this is a non-destructive, all-rank
 reconciliation barrier: every rank returns a cleanup receipt, but normal
 startup never deletes a content-addressed cache or ambiguously owned debris
@@ -40,28 +41,57 @@ uniquely named failed attempt removes that candidate. Consequently,
 `clean_stage` alone is no longer a claim of cold model bytes. A cold-start
 experiment must use a fresh allocation/local cache root and record that fact in
 its run evidence. Source/runtime artifacts use their own content-addressed,
-generation-scoped lifecycle. `calibration/` and most `smokes/` leave the
+generation-scoped lifecycle. `calibration/` and half of `smokes/` leave the
 barrier off for iteration speed.
 
 ## Suite contents
 
 - **Set 1, gateway comparison:** `proxycmp_{haproxy,envoy,litellm,rayserve,direct}`,
   N ∈ {1,4,16,64}, extended to {128,256} via `proxycmp_<proxy>_scale`. Each also
-  has a `_nostream` end-to-end variant at N≤64.
+  has a `_nostream` end-to-end variant at both scales (`proxycmp_<proxy>_nostream`
+  and `proxycmp_<proxy>_nostream_scale`); the paper's non-streaming HAProxy
+  result at 256 nodes is the 256-node cell of `proxycmp_haproxy_nostream_scale`.
+  The streaming `_scale` specs run each cell 3 times, not the six times the
+  paper describes. `proxycmp_envoy_256retry` is a two-run retry of Envoy's
+  streaming 256-node cell, and `validation/` holds 256-node HAProxy and
+  direct-dispatch pilots.
 - **Set 2, workload robustness (OAT):**
   `oat_8b_{baseline,poisson,2kx2k,4kx4k,code,chat,summary,burstgpt}` and
   `oat_120b` (rate 9 from `calibration/sat_120b_paper_recal`; the
-  throughput-knee rate failed the latency objective), N ∈ {1,64}.
-- **Set 3, control-plane null compute:** `nullcompute_scaling` (validation is
-  the single `n256_r12` cell; full is the (N, R) matrix to 1,024 nodes, which
-  has not been run).
-- **Multi-node PP:** demonstration `smokes/pp405b_verify_2node`; an OAT-style
-  rate via `calibration/sat_405b_pp2`.
+  throughput-knee rate failed the latency objective), N ∈ {1,64}, each with a
+  `_nostream` variant in `full/`. `validation/oat_8b_baseline_direct_val`
+  repeats the baseline pilot with direct dispatch.
+- **Set 3, control-plane null compute:** `nullcompute_scaling`. Validation is
+  the single `n256_r12` cell. The full spec is the (N, R) matrix to 1,024
+  nodes, which has not been run and cannot be submitted as checked in: its
+  cells request three hours on debug-scaling, which `submit` refuses before
+  contacting the scheduler; cells above 256 nodes do not compile unless
+  `EXASERVE_SITE_MAX_NODES` is raised; and the R = 24 and 48 cells exceed 12
+  GPUs per node and are rejected. `full/nullcompute_haproxy_scale_to256_v040`
+  measures null-compute HAProxy bring-up at 32-256 nodes.
+- **Bring-up breakdown (Table II):** `validation/bringup_inst_real_val`
+  instruments real-engine bring-up at 64, 128 and 256 nodes.
+- **Multi-node PP (Llama-3.1-405B, TP=8 x PP=2):** the demonstration
+  `smokes/pp405b_verify_2node`; the single-replica rate
+  `calibration/sat_405b_pp2`; the weak-scaling sweep of the paper's Fig. 5,
+  `full/pp405b_pp2_scale` (HAProxy) and `full/pp405b_pp2_scale_direct` (direct
+  dispatch), both streaming and each with a `_nostream` variant; the later
+  non-streaming HAProxy curve `full/pp405b_pp2_haproxy_nostream_v040`; and the
+  duration tests in `calibration/`. These specs request two hours below 256
+  nodes and four from 256, so their 17-255-node cells exceed the one-hour
+  debug-scaling limit and run only as allocation-campaign children
+  ([handbook](../../../docs/operations_handbook.md#2-plan-the-allocation)).
+- **SGLang engine (Fig. 6):** `eval/specs/sglang_haproxy_full.yaml`,
+  `sglang_direct_full.yaml`, `sglang_direct_n256.yaml` and the saturation
+  finder `sglang_sat_v1.yaml`. The default Aurora site profile rejects the
+  SGLang engine, so these specs need a site profile that admits it
+  ([open work](../../../docs/TODO.md#external-platform-qualification)).
 
 `validation/` also holds the reproducers of the 256-node HAProxy investigation
 (diagnostic, `nbthread`, no-delay and client-count cells). They now carry
-`maxconn` 8000 and one HAProxy thread, unlike the original measurements; see
-the handbook's gateway section before re-running them.
+`maxconn` 8000, unlike the original measurements; with `num_workers: 1`
+HAProxy picks its own thread count, as it did then (the `nbthread` cells set it
+explicitly). See the handbook's gateway section before re-running them.
 
 ## Metrics
 
@@ -88,16 +118,18 @@ calibrated rates per workload are listed in the handbook.
 | `pp2_verify_2node`, `pp2_serve_2node` | 2 | PP=2 replicas serving across two stage nodes |
 | `pp2_shard_4node` | 4 | shard-aware PP staging: each stage node receives only its shards |
 | `pp405b_verify_2node` | 2 | multi-node PP demonstration with the 405B model |
-| `pp405b_pp2_proxyfix_4node` | 4 | HAProxy health checks against `/-/healthz` with PP replicas |
+| `pp405b_pp2_proxyfix_4node` | 4-256 | HAProxy health checks against `/-/healthz` with PP replicas |
 
 ## Cost model
 
 Per-cell model from measured runs: bring-up about 4 min (8B), 7 min (120B), 35
-min (null compute at 256 nodes) and about 60 min (405B PP=2, cold); each run
-about 2.25 min (60 s trace plus 75 s cooldown). A validation cell takes about
-bring-up plus 4.5 min, a full cell bring-up plus 13.5 min. Each cell is its own
-scheduler job (no cluster reuse). Queue and walltime per node count come from
-each spec's derived scheduler fields (see
+min (null compute at 256 nodes with the paper-era one-application-per-node
+layout; about 9-10 min with the later node-grouped layout) and about 60 min
+(405B PP=2, cold); each run about 2.25 min (60 s trace plus 75 s cooldown). A
+validation cell takes about bring-up plus 4.5 min, a six-run full cell
+bring-up plus 13.5 min. Each cell is its own scheduler job (no cluster reuse).
+Queue and walltime per node count come from each spec's derived scheduler
+fields (see
 [scheduler abstraction](../../../docs/design/scheduler_abstraction.md)); check
 current site limits before submitting.
 
@@ -106,9 +138,13 @@ current site limits before submitting.
 In a compute allocation:
 
 ```bash
-python -m eval.cli run materialize <spec> && python -m eval.cli run submit-all <spec>
-python -m eval.plot.goodput -e <spec> --preset paper   # score
+python -m eval.cli run materialize <spec-path>   # prints run.yaml paths under a new runN
+python -m eval.cli run submit-all <spec-name> --run-group <runN>   # the runN printed above
+python -m eval.plot.goodput -e <spec-name> --run-group-name <runN> --preset paper   # score
 ```
+
+`run materialize` takes a spec path (or a unique spec name); `run submit-all`
+and the scorer take the spec name, the file name without `.yaml`.
 
 Order: `calibration/` first, then the `validation/` pilot, then `full/`.
 

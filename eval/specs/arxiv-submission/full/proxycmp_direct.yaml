@@ -1,17 +1,11 @@
 name: proxycmp_direct
 # EXP SET 1 (proxy comparison) — Direct-MPI dispatch (one client per node hits
-# its LOCAL Ray Serve port; no shared proxy). Zero-LB upper bound. Mirrors the
-# working weakscaling_direct_short_v3 (proxy type none, dest direct) but adds
-# stream=true for P99 TTFT/TBT and num_go_procs=8 (each rank owns a node).
-# NOTE: validate the 1-node streaming cell first — a prior 1n direct+stream run
-# timed out on the per-node HSN health check; confirm before submit-all.
-#
-# The first run of this spec did NOT actually dispatch node-locally despite the
-# description above: the Go client hash-routed every request across all N node
-# URLs, so it was an N x N mesh. client.direct_dispatch (default local) fixed
-# this; later runs are genuinely node-local. Measured at n128, mesh vs local makes
-# almost no difference (82.6 vs 81.0 QPS/node), so the per-node streaming
-# decline with N is NOT cross-node token delivery — see direct_topology.yaml.
+# its LOCAL Ray Serve port; no shared proxy). Zero-LB upper bound: proxy type
+# none, dest direct, stream=true for P99 TTFT/TBT and num_go_procs=8 (each rank
+# owns a node).
+# client.direct_dispatch: local (also the default) keeps each rank's requests
+# on its own node; direct_topology.yaml compares local, mesh and paired
+# dispatch.
 matrix:
   name_template: 'n{num_nodes}'
   axes:

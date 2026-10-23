@@ -2,11 +2,11 @@ name: sat_405b_pp2
 # Rate calibration for the multi-node-PP row: Llama-3.1-405B TP=8 x PP=2 on 2
 # whole nodes (same deployment as smokes/pp405b_verify_2node). The allocation
 # head streams one PP stage to each node-local cache. Binary-searches
-# single-REPLICA saturation;
-# the verify run suggests the knee is well under 1 req/s, so the search starts
-# at 1 and the 15 s steps keep the sweep short. Expect a long bring-up
-# (distribution plus 405B engine load) before the search even starts -> 1 h walltime
-# is tight; prefer a >=90 min window or capacity.
+# single-REPLICA saturation; the knee is expected well under 1 req/s, so the
+# search starts at 1 and the 15 s steps keep the sweep short. Expect a long
+# bring-up (head-side model verification, distribution and 405B engine load,
+# about an hour cold) before the search starts, so the job requests 2 h on the
+# capacity queue.
 matrix:
   name_template: baseline
   axes:
@@ -70,4 +70,4 @@ backend:
 scheduler:
   type: pbs
   queue: capacity
-  walltime: 01:00:00
+  walltime: 02:00:00

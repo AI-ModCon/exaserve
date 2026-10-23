@@ -1,5 +1,5 @@
 name: pp405b_verify_2node
-# Multi-node PP row (option c): Llama-3.1-405B-Instruct (bf16, 756 GB) GENUINELY
+# Multi-node PP row: Llama-3.1-405B-Instruct (bf16, 756 GB) GENUINELY
 # requires >1 node: legal TP is {1,2,4,8} (128 heads; TP=12 illegal per vLLM
 # head-divisibility) and a TP=8 stage has ~420 GiB usable -> 756 GB needs PP>=2.
 # Config: TP=8 x PP=2 = one replica spanning 2 whole nodes (8/12 tiles each);
@@ -8,7 +8,9 @@ name: pp405b_verify_2node
 # STAGING: the full 756 GB model does not fit on either node. Global allocation
 # rank 0 follows the shared source snapshot once and streams the two ~380 GiB
 # PP stage views to their exact recipient ranks. Each engine loads only its
-# node-local stage; debug 1h walltime remains tight for distribution + load.
+# node-local stage. A cold run needs about an hour (head-side model
+# verification, distribution and engine load), so the job requests 2 h on the
+# capacity queue.
 matrix:
   name_template: '{num_nodes}_nodes'
   axes:
@@ -67,4 +69,4 @@ backend:
 scheduler:
   type: pbs
   queue: capacity
-  walltime: 01:00:00
+  walltime: 02:00:00

@@ -76,10 +76,10 @@ worker loss, the pinned Ray driver may retry failed GCS/task notifications until
 its 120-second reconnect timeout. ExaServe preserves first cause and bounded
 cleanup, but does not claim instantaneous recovery.
 
-`proxy_config.type: none` is validation-direct exposure only. An eval client
-choosing a direct destination does not alter the deployment's compiled
-gateway/exposure contract. Production direct exposure requires a new security,
-readiness, failure, and scale decision.
+`exposure.mode: DIRECT_VALIDATION` (no gateway) is validation-only exposure.
+An eval client choosing a direct destination does not alter the deployment's
+compiled gateway/exposure contract. Production direct exposure requires a new
+security, readiness, failure, and scale decision.
 
 ## Qualification after approval
 

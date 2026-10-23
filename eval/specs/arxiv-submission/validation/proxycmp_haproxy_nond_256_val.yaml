@@ -1,11 +1,9 @@
 name: proxycmp_haproxy_nond_256_val
-# REGRESSION CONFIRMATION: HAProxy non-stream 256n WITHOUT http-no-delay.
-# Identical to proxycmp_haproxy_nostream n256 (rate 110, 64/64, stream=false,
-# num_go_procs 4) except options.http_no_delay=false (reverts to the Apr cfg).
-# Old (Apr, no http-no-delay): 26.9k rps / 0.04% err / 63s / p99 6.3s.
-# Today (Jun, with http-no-delay): 10.9k rps / ~3% err / 154s / p99 146.7s.
-# If this recovers toward ~27k, the regression is commit 30e6a30 (global
-# http-no-delay). prod queue (>=256n).
+# HAProxy non-stream 256n WITHOUT http-no-delay.
+# Identical to the n256 cell of proxycmp_haproxy_nostream_val (rate 110, 64/64,
+# stream=false, num_go_procs 4, client=4) except options.http_no_delay=false,
+# to check whether the option changes non-streaming throughput at scale (it
+# also applies to non-streaming responses). prod queue (>=256n).
 matrix:
   name_template: 'n{num_nodes}'
   axes:

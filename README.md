@@ -15,7 +15,7 @@ streaming, direct Serve exposure and other gateways are rejected or
 validation-only under the default `SiteProfile`; other platforms need their own
 runtime profiles and validation.
 
-The design and its measurements on Aurora are described in
+The original design and its measurements on Aurora are described in
 [ExaServe: Large-Scale LLM Serving on Exascale HPC Systems](https://arxiv.org/abs/2609.10812).
 The 256-node evaluations establish the demonstrated scale of the system for
 those workloads; they are not release evidence for the current tree. Focused
@@ -24,6 +24,26 @@ regression checks for later fixes have their own coverage, recorded in the
 redefine that demonstrated scale. No artifact of the current tree is
 production-qualified, and production submission fails closed; see
 [`docs/hardening/STATUS.md`](docs/hardening/STATUS.md).
+
+**Differences from the paper.** The current tree differs from the design the
+paper describes in five ways:
+
+- The deployment YAML is one flat mapping. The paper's nested
+  `ray_cluster_config`, `model_deployment_config` and `proxy_config` sections
+  are rejected ([canonical deployment YAML](#canonical-deployment-yaml)).
+- Compatibility patches are applied to hash-checked copies of the installed
+  Ray and vLLM modules, which stay unmodified, and the compiled plan selects
+  the patches. The paper's corrected Ray Serve file copies and its per-patch
+  environment switches are gone.
+- Readiness is a generation-bound predicate over the plan, not the stdout
+  markers the paper describes
+  ([readiness and compatibility](#readiness-and-compatibility)).
+- A dense HAProxy deployment is one model application holding every replica,
+  plus a proxy-anchor application on each node, instead of one Serve
+  application per node.
+- Only the allocation head reads or writes shared storage during a run. It
+  broadcasts each pipeline stage's shards to the nodes that run that stage; in
+  the paper, each node read its 405B stage from Lustre.
 
 ## Documentation and AI-ModCon preparation
 
@@ -84,18 +104,19 @@ function by function, worked against the canonical two-node HAProxy example.
 Prepare the site runtime using the
 [deployment setup guide](docs/getting_started.md#aurora-development-and-serving).
 The current serving profile requires the qualified site-local interpreter, not
-a home-directory virtualenv. In a validated compute session, check the
-site-provisioned environment:
+a home-directory virtualenv. In a validated compute session, load the profiled
+stack as [Prepare the runtime](docs/getting_started.md#prepare-the-runtime)
+shows (the default `frameworks` module fails ExaServe's compatibility check),
+then check the site-provisioned environment:
 
 ```bash
-module load frameworks
-unset ONEAPI_DEVICE_SELECTOR
 PYTHONNOUSERSITE=1 PYTHONSAFEPATH=1 python3 -c 'import sys, exaserve; print(sys.executable); print(exaserve.__file__)'
 command -v mpiexec
 command -v haproxy
 ```
 
-Ray, vLLM, MPI, and the XPU stack come from Aurora's `frameworks` module. The
+Ray, vLLM, MPI, and the XPU stack come from Aurora's `frameworks/2025.3.1`
+module, loaded from the 26.26.0 image's module tree as that section shows. The
 selected Python and package paths must match the intended approved runtime and
 ExaServe artifact, not an incidental checkout. If the package is unavailable,
 have the operator provision the exact wheel and control-plane dependencies for
@@ -123,12 +144,17 @@ production envelope, so submitting the canonical HAProxy example currently
 fails with `production execution is not qualified`. That is a release gate, not
 a setup error. After `docs/hardening/STATUS.md` records the required measurements
 and approval, copy the canonical HAProxy example and change the shared model
-path:
+path. Submission also needs the site variables described in
+[getting started](docs/getting_started.md#configure-evaluation-environment-preparation):
 
 ```bash
 cp examples/config.haproxy.yaml my_config.yaml
 $EDITOR my_config.yaml
 
+# The job sources this site environment script; submission requires it.
+export EXASERVE_ENV_SCRIPT_AURORA=/absolute/path/to/environment.sh
+# The site profile derives its model-storage root from this, even when the YAML sets model_storage_path.
+export EXASERVE_PROJECT_ROOT=/lus/flare/projects/YOUR_PROJECT
 exaserve-serve-submit my_config.yaml \
   --project-account YOUR_PROJECT \
   --wait
@@ -154,7 +180,7 @@ Useful commands:
 
 ```bash
 # For an authorized validation or qualified production config, render without submitting.
-exaserve-serve-submit my_config.yaml --dry-run --log-dir ./submit-preview
+exaserve-serve-submit my_config.yaml --project-account YOUR_PROJECT --dry-run --log-dir ./submit-preview
 
 # Resolve an already submitted job; add --wait to poll canonical status.
 exaserve-serve-url JOB_ID --wait
@@ -219,8 +245,10 @@ limit when allowed. Aurora compute nodes allowed 1,048,575 descriptors when
 measured in October 2026 (login nodes allow 16,384). Size `maxconn` to the
 offered rate times end-to-end latency, plus headroom.
 
-See [`examples/config.reference.yaml`](examples/config.reference.yaml) for the
-complete schema. [`examples/config.direct.yaml`](examples/config.direct.yaml)
+[`examples/config.reference.yaml`](examples/config.reference.yaml) is a
+reference configuration of the commonly used fields; the accepted keys are
+defined in [`src/exaserve/plan/compiler.py`](src/exaserve/plan/compiler.py).
+[`examples/config.direct.yaml`](examples/config.direct.yaml)
 is explicitly `DIRECT_VALIDATION`, and `config.litellm.yaml` is a
 validation-only alternate-gateway example. NGINX, Envoy, and Pingora adapters
 exist for future qualification/benchmark work, but no shipped example or
@@ -247,6 +275,11 @@ process role; there is no full-file Ray overlay or source-tree replacement.
 The eval control plane compiles an immutable `RunPlan` containing the exact
 `DeploymentPlan`; its runtime manifest references the plan by path and SHA-256
 instead of copying serving fields.
+
+Set `EXASERVE_PROJECT_ROOT`, and for materialization and submission also
+`EXASERVE_PROJECT_ACCOUNT` and `EXASERVE_ENV_SCRIPT_AURORA`, as in
+[getting started](docs/getting_started.md#configure-evaluation-environment-preparation);
+even `spec validate` needs the project root.
 
 ```bash
 python3 -m eval.cli spec validate eval/specs/smoke_haproxy_1node.yaml
@@ -288,7 +321,9 @@ This is not a claim that a GPU stack or every interpreter is qualified.
 site runtime record. Do not use `uv sync --all-extras` to replace the Aurora
 frameworks environment.
 
-On Aurora, load `frameworks` and `go` before brief static checks. Full test
+On Aurora, load the stack in
+[Prepare the runtime](docs/getting_started.md#prepare-the-runtime), which
+includes `go`, before brief static checks. Full test
 suites, package builds, MPI and GPU work require a validated compute session
 and fresh [environment setup](docs/getting_started.md#aurora-development-and-serving). Once in that session
 (or on a suitable non-HPC development machine), use:

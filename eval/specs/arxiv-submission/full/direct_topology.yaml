@@ -1,28 +1,18 @@
 name: direct_topology
 # WHY THIS EXPERIMENT
-# The paper reports direct-dispatch STREAMING per-node completions falling
-# 99 (n1) -> 71 (n256) QPS/node while non-streaming direct holds ~106 flat, and
-# attributes the gap, hedged, to Ray's control-plane footprint. Re-analysis of
-# the full-sweep shards (eval/plot and a separate analysis) says the
-# attribution is untested and probably wrong on the mechanism:
-#   * the client dispatches perfectly (issue span 60.0s, lag p50 0.00s) at
-#     every N -- the offered rate really is 110 QPS/node everywhere;
-#   * the per-node service rate is already lower in the FIRST 5s, before any
-#     queue exists: 99.6 (n4) / 97.3 (n16) / 91.2 (n64) / 84.6 (n128) /
-#     78.3 (n256) QPS/node;
-#   * for queue-free requests (issued in the first 3s) TTFT barely moves
-#     (0.16 -> 0.21s) but end-to-end grows 1.95 -> 2.64s, i.e. the whole cost
-#     is in the per-token DELIVERY phase, ~+10ms/token at 256 nodes;
-#   * non-streaming is immune (per-target mean latency spread 1.03x at n256,
-#     vs 3.7x streaming), so the nodes themselves are homogeneous.
-# The overlooked confound: "direct" is not node-local. The Go client picks
+# In the paper's direct-dispatch STREAMING baseline, per-node completions fall
+# from about 99 QPS/node at one node to 71 at 256 nodes, while non-streaming
+# direct dispatch holds about 106. The paper attributes the decline to the
+# fixed measurement window: requests are still draining when injection stops,
+# and the slowest node's drain grows with node count (section IV-C). This spec
+# checks whether the routing topology of direct dispatch contributes as well.
+# With direct_dispatch: mesh, each client rank picks
 #   target = fnv1a64(req_id) % len(base_urls)
 # over ALL N node URLs, so direct dispatch is a full N x N mesh -- every node
-# streams SSE to N remote peers. The spec comment claiming "one client per node
-# hits its LOCAL Ray Serve port" has never matched the code.
+# streams SSE to N remote peers.
 #
 # ARMS (all three replayed against ONE bring-up, results/<arm>/):
-#   mesh   - today's behaviour: rank hash-routes across all N nodes
+#   mesh   - rank hash-routes across all N nodes
 #   local  - rank hits only its own node: loopback, one peer, zero fabric
 #   paired - rank hits exactly one REMOTE node: still crosses the fabric, but
 #            one peer per node instead of N
@@ -66,7 +56,7 @@ deployment:
 client:
   # 2 runs per arm (run0 warm-up, run1 data) x 3 arms keeps the whole ablation
   # inside the 1h debug-scaling walltime even at 192 nodes, where serve.run
-  # alone costs ~10-15 min (tab:startup).
+  # alone takes about 10-15 min.
   num_runs: 2
   dest: direct
   stream: true

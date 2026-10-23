@@ -1,12 +1,10 @@
 name: sglang_direct_full
-# SGLang backend, Direct-MPI dispatch weak scaling n1..n128 — completes the
-# direct series begun by sglang_direct_n256 (n256 banked in its run4 with the
-# GCS-bootstrap hardening). Identical paper protocol to sglang_haproxy_full
-# run8 (Meta-Llama-3-8B-Instruct, seqs64/ongoing256, rate 15 = 0.9*S); only
-# the dispatch path differs (client rank per node -> local Serve port, no
-# proxy). Client mirrors proxycmp_direct (num_go_procs=8, one rank per node).
-# NOTE (from proxycmp_direct): a prior 1n direct+stream run timed out on the
-# per-node HSN health check — validate n1 before submit-all.
+# SGLang backend, Direct-MPI dispatch weak scaling n1..n128; sglang_direct_n256
+# holds the 256-node point of the direct series. Identical paper protocol to
+# sglang_haproxy_full (Meta-Llama-3-8B-Instruct, seqs64/ongoing256, rate 15 =
+# 0.9*S); only the dispatch path differs (client rank per node -> local Serve
+# port, no proxy). Client mirrors proxycmp_direct (num_go_procs=8, one rank per
+# node).
 matrix:
   name_template: 'n{num_nodes}'
   axes:

@@ -1,9 +1,9 @@
 name: proxycmp_haproxy_n64_nbthread1_val
 # Control: pin HAProxy to nbthread=1 at n64 streaming (NOT network-collapsed, so the
-# thread->CPU->throughput relationship is visible, unlike 256n). Prediction: 1 thread
-# saturates ~1 core (CPU <=100%) and throughput drops vs the default-64-thread n64
-# (5850 rps). Confirms the ~4 cores HAProxy used were real work (threads matter at the
-# low end), even though >4 are idle (I/O-bound). http-no-delay ON (real streaming).
+# thread->CPU->throughput relationship is visible, unlike 256n). Expectation: one
+# thread saturates about one core and throughput drops below the 64-node cell with
+# HAProxy's automatic thread count (proxycmp_haproxy_val). http-no-delay ON (real
+# streaming).
 matrix:
   name_template: 'n{num_nodes}'
   axes:

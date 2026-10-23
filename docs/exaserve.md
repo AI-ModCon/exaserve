@@ -18,8 +18,7 @@ The reference deployment uses:
 
 - ALCF Aurora, native PBS;
 - Intel PVC/XPU, 12 accelerator tiles per node;
-- vLLM under the exact compatibility profile shipped with the current Aurora
-  frameworks environment;
+- vLLM under the exact compatibility profile of Aurora frameworks/2025.3.1;
 - HAProxy on the allocation head;
 - non-streaming OpenAI-compatible requests; and
 - trusted allocation-internal network exposure.
@@ -41,11 +40,12 @@ The presence of an implementation interface is not a support claim.
 Use the operator-provisioned site interpreter and ExaServe artifact described
 in [getting started](getting_started.md#aurora-development-and-serving).
 Job isolation disables user-site packages, so installing only with `--user`
-does not provision the serving runtime. Check the selected environment:
+does not provision the serving runtime. Load the profiled stack as
+[Prepare the runtime](getting_started.md#prepare-the-runtime) shows (the
+default `frameworks` module fails the compatibility check), then check the
+selected environment:
 
 ```bash
-module load frameworks
-unset ONEAPI_DEVICE_SELECTOR
 PYTHONNOUSERSITE=1 PYTHONSAFEPATH=1 python3 -c 'import sys, exaserve; print(sys.executable); print(exaserve.__file__)'
 command -v mpiexec
 command -v haproxy
@@ -58,6 +58,10 @@ submission; the current default profile fails production admission closed.
 ```bash
 cp examples/config.haproxy.yaml my_config.yaml
 # Edit model_storage_path.
+# The job sources this site environment script; submission requires it.
+export EXASERVE_ENV_SCRIPT_AURORA=/absolute/path/to/environment.sh
+# The site profile derives its model-storage root from this, even when the YAML sets model_storage_path.
+export EXASERVE_PROJECT_ROOT=/lus/flare/projects/YOUR_PROJECT
 exaserve-serve-submit my_config.yaml --project-account YOUR_PROJECT --wait
 ```
 
@@ -137,10 +141,16 @@ path was removed.
 
 ## Eval and ClientLab
 
+Set `EXASERVE_PROJECT_ROOT`, and for materialization and submission also
+`EXASERVE_PROJECT_ACCOUNT` and `EXASERVE_ENV_SCRIPT_AURORA`, as in
+[getting started](getting_started.md#configure-evaluation-environment-preparation);
+even `spec validate` needs the project root. Replace `run0` with the `runN`
+group in the `run.yaml` paths that `run materialize` printed.
+
 ```bash
 python3 -m eval.cli spec validate eval/specs/smoke_haproxy_1node.yaml
 python3 -m eval.cli run materialize eval/specs/smoke_haproxy_1node.yaml
-python3 -m eval.cli run submit-all smoke_haproxy_1node
+python3 -m eval.cli run submit-all smoke_haproxy_1node --run-group run0
 
 python3 -m clientlab plan client_microbench
 python3 -m clientlab smoke client_microbench
@@ -175,10 +185,16 @@ docs/figures/fig1_proxy_scaling.png
 docs/figures/fig7_pp405b.png
 ```
 
-The two figures plot measurements from the evaluation in the
-[ExaServe paper](https://arxiv.org/abs/2609.10812); the 405B figure's HAProxy
-curve is the run before the health-check fix, as its caption says. The template must be
-obtained from its licensed project source. From any working directory, run:
+The two figures are Figs. 2 and 5 of the
+[ExaServe paper](https://arxiv.org/abs/2609.10812), rasterized from its arXiv
+source with `pdftoppm -r 220 -png -singlefile`. Three points of Fig. 5 come
+from runs that were later excluded because they attached the deployment to a
+256-node Ray cluster: HAProxy at 32 and 64 nodes and direct dispatch at 64
+nodes. The card's text uses the corrected values in
+`eval/plot/pp405b_legacy_evidence.yaml`, and the figure's caption says so. The
+template is not distributed with ExaServe or with the public Academy
+repository; ask the Academy maintainers for it. From any working directory,
+run:
 
 ```bash
 python3 /path/to/exaserve/tools/make_refcard_docx.py

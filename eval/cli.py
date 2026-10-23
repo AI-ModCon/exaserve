@@ -8,9 +8,11 @@ Subcommands:
   trace materialize <spec>          — generate cached trace artifacts for a spec
   run materialize <spec>            — create run bundles (traces + PBS jobs + run.yaml)
   run submit <target>               — qsub the PBS job for a materialized run bundle
-  run submit-all <spec_name>       — submit all pending runs for a spec, respecting queue limits
+  run submit-all <spec_name> --run-group <runN>
+                                    — submit one run group's pending runs, respecting queue limits
   run execute <run.yaml>            — execute a run inside a PBS job (called by job.pbs)
   allocation materialize/submit/execute — finite parent allocation for frozen logical children
+  derive-params <result_dir>        — derive client parameters from Phase 0 saturation results
 
 Scheduler job bodies are rendered by the shared scheduler backend. A finite
 allocation controller may invoke frozen ``run execute`` children; only those

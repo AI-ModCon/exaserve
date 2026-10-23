@@ -1,9 +1,9 @@
 name: proxycmp_haproxy_256_nbthread32_val
-# Does giving HAProxy more THREADS relieve the 256n streaming collapse? The collapse
-# was connection/network-bound with HAProxy using only ~4 of 208 cores (peak 427%).
+# Does giving HAProxy more THREADS relieve the 256n streaming collapse?
 # Same as the streaming 256n cell (http-no-delay ON = real streaming, client=4) but
-# nbthread=32 (vs default). If throughput jumps -> it was thread-bound; if it still
-# collapses -> confirms NIC/connection-bound (threads don't help). debug-scaling (1h).
+# nbthread=32 instead of HAProxy's automatic count. If throughput jumps -> it was
+# thread-bound; if it still collapses -> it is NIC/connection-bound (threads don't
+# help). debug-scaling (1h).
 matrix:
   name_template: 'n{num_nodes}'
   axes:

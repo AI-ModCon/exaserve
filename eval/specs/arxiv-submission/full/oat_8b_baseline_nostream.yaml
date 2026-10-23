@@ -1,8 +1,8 @@
 name: oat_8b_baseline_nostream
 # EXP SET 2 (OAT robustness) - baseline row. 8B, 64/64, fixed-interval at 90% of
-# single-node saturation (109 -> 98 rps/node), HAProxy, stream=true, 4 runs.
-# tab:robust reports eta_SLO(64) = G_SLO(64)/(64*G_SLO(1)) -> needs N in {1,64}.
-# N=256 (for the scaling-curve figure) is a separate capacity run.
+# single-node saturation (109 -> 98 rps/node), HAProxy, non-streaming
+# (stream=false): end-to-end latency, throughput and errors only, no SLO.
+# N in {1,64}, as in the streaming robustness row.
 matrix:
   name_template: 'n{num_nodes}'
   axes:

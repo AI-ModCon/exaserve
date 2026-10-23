@@ -2,6 +2,8 @@ name: oat_8b_burstgpt_nostream
 # EXP SET 2 (OAT) - arrival perturbation: real BurstGPT trace replay (production
 # bursty arrivals + per-request token counts via the azure_trace column-map for
 # 'Request tokens'/'Response tokens'). Densest 60s window (sampling=peak).
+# Non-streaming variant (stream=false): end-to-end latency, throughput and
+# errors only, no SLO.
 matrix:
   name_template: 'n{num_nodes}'
   axes:

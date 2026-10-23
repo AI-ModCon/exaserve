@@ -36,14 +36,16 @@ tracked in the hardening status.
 
 ## 1. Prepare the site and the job environment
 
-**Use the site runtime exactly as profiled.** The serving stack comes from the
-site frameworks module (Python 3.12, Ray 2.53.0, vLLM 0.15.0+xpu, mpi4py 4.1.1);
-Go comes from the go module. In every session load both, unset
-`ONEAPI_DEVICE_SELECTOR`, and compare module versions with the compatibility
-profile before a campaign. The profile pins Python, Ray, vLLM and mpi4py and
-fails closed on a mismatch: a changed module is a new profile that needs new
-hardware evidence, never a bypass. Do not depend on host tools that the job
-environment does not declare.
+**Use the site runtime exactly as profiled.** The serving stack comes from
+Aurora's `frameworks/2025.3.1` module (Python 3.12, Ray 2.53.0, vLLM 0.15.0+xpu,
+mpi4py 4.1.1), loaded from the 26.26.0 image's module tree with the recipe in
+[getting started](getting_started.md#prepare-the-runtime); the default
+`frameworks` module (2026.1.0) fails the compatibility check. Go comes from the
+go module. In every session load both, unset `ONEAPI_DEVICE_SELECTOR`, and
+compare module versions with the compatibility profile before a campaign. The
+profile pins Python, Ray, vLLM and mpi4py and fails closed on a mismatch: a
+changed module is a new profile that needs new hardware evidence, never a
+bypass. Do not depend on host tools that the job environment does not declare.
 
 **Import MPI only through `exaserve.mpi_loader`.** On Aurora's current default
 image the OS libssl needs symbols (`OPENSSL_3.0.1`) that the frameworks stack's
@@ -174,7 +176,7 @@ defaults:
 | Null compute (no model), HAProxy, 12 replicas per node | READY 29-30 s at 32 nodes, about 40 s at 64 nodes and 549-555 s at 256 nodes |
 
 Request at least about 90 minutes for any cold 405B run, even at four nodes.
-The checked-in 405B spec asks for two hours below 256 nodes and four from 256.
+405B specs request two hours below 256 nodes and four from 256.
 At 17-255 nodes that exceeds the one-hour debug-scaling limit, so `submit` and
 `submit-all` refuse those cells before contacting the scheduler and leave them
 PLANNED; run them as allocation-campaign children (below).
@@ -427,7 +429,7 @@ about 109), so attainment figures are a saturation stress:
 | Direct dispatch, one client per node (validation only) | 372-392, 1,475-1,495 and 5,323-5,584 requests/s at 4, 16 and 64 nodes; 18.1-19.4 thousand streaming at 256 nodes with no errors |
 | Envoy (validation only) | clean through 16 nodes; 64-node non-streaming 6.8 thousand with no errors; 64-node streaming at its limit (one clean pass at 4.9 thousand, three passes with 20-37% HTTP 503 connect timeouts) |
 | Ray Serve head-only proxy (validation only) | clean at one node; at 4 nodes non-streaming p50 13.9 s; at 16 nodes 55% and 31% success, at 64 nodes 31% and 15% (non-streaming and streaming) |
-| LiteLLM, eight workers (validation only) | 107 requests/s non-streaming at one node; 92% success non-streaming and 49% streaming at 16 nodes; 90% and 40% at 64 nodes |
+| LiteLLM, eight workers (validation only) | 107 requests/s non-streaming at one node; 92% success non-streaming and 49% streaming at 16 nodes; 90% and 40% at 64 nodes (from a later preview on a different snapshot with relaxed start-up and request budgets; in the paper's run LiteLLM's streaming success fell to 7.7% by 64 nodes) |
 
 Even without collapse, HAProxy adds time to first token at 64 nodes: at a
 below-knee rate, direct dispatch cut median TTFT from 1.22 s to 0.64 s.
@@ -489,9 +491,11 @@ LiteLLM initializes every worker before binding (51-59 s), so the compiler
 gives it at least 120 s to start. An apparent LiteLLM scaling loss at 16 and
 32 nodes was client starvation, but even with enough client concurrency one
 LiteLLM gateway saturates from about 4 nodes (streaming) and 16 nodes
-(non-streaming): use it for small-scale validation only. It buffers streamed
-responses, so its runs contribute throughput, errors and end-to-end latency
-only, never time to first token or time between tokens.
+(non-streaming): use it for small-scale validation only. On one node it added
+about 0 ms of latency at low load and about 40 ms at the median under
+overload; its latency overhead at larger scale has not been measured. It
+buffers streamed responses, so its runs contribute throughput, errors and
+end-to-end latency only, never time to first token or time between tokens.
 
 **Overload experiments.** Under deliberate overload READY is revoked while
 canaries time out and re-granted after the drain. A saturated 64-node pass took
@@ -566,13 +570,6 @@ per deployment node unless the matrix targeted or derived the count; check the
 client node count in the materialized `run.yaml` before comparing with them
 ([C5](KNOWN_ISSUES.md#c5-client-topology-footgun--resolved)).
 
-**LiteLLM.** An apparent LiteLLM scaling loss at 16 and 32 nodes was client
-starvation; the gateway's own overhead at adequate concurrency has not been
-measured (on one node it added about 0 ms at low load and about 40 ms at the
-median under overload). LiteLLM buffers streamed responses, so its runs
-contribute throughput, errors and end-to-end latency only, never time to first
-token or time between tokens.
-
 **Newer Ray releases.** Ray Serve 2.55 and later can let HAProxy route straight
 to HTTP servers inside ingress replicas, with gRPC between deployments, which
 removes the Python proxy from the request path. On the pinned Ray 2.53 the best
@@ -631,9 +628,10 @@ stdout line proves nothing about the failing phase.
 
 **Cleanup is scoped and proven per host.** Cleanup signals only strictly older
 generations of the same deployment identity, a node-local guardian owns the
-Ray process group, and `clean_stage` removes only candidate paths, never
-another attempt's published cache. Prove cleanup with per-host process audits
-keyed by deployment and generation; a launcher's exit does not show that remote
+Ray process group, and `clean_stage` is a non-destructive barrier: only the
+owner of a failed attempt removes its candidate, never another attempt's
+published cache. Prove cleanup with per-host process audits keyed by
+deployment and generation; a launcher's exit does not show that remote
 processes are gone.
 
 ## 7. Measuring correctly
@@ -685,12 +683,16 @@ overshoot `max_model_len` (about 6% of one workload's requests did); trace
 generation now re-checks the token count.
 
 **Calibrate load against the objective, not only the throughput knee.** The
-characterization objective was TTFT at most 1 s and a per-request p99 TBT at
-most 250 ms (streaming). Large models become TBT-bound before throughput
+paper's objective is TTFT at most 2 s and a per-request p99 TBT at most 250 ms
+(streaming). The 8B rates below are 90% of single-node saturation. The 120B
+rate was chosen against TTFT at most 1 s and the same TBT bound, the objective
+the scoring tools used at the time; that is stricter than the paper's, so the
+120B rate is conservative. Large models become TBT-bound before throughput
 saturates: for a 120B model the knee rate gave p99 TBT 568 ms and attainment
-0.14, while 9 requests/s per node met the objective. Calibrate each model and
-workload on one node by binary search, run robustness cells at about 90% of
-saturation, and say whether each cell is meant to sit below or above the knee.
+0.14, while 9 requests/s per node met the stricter objective. Calibrate each
+model and workload on one node by binary search, run robustness cells at about
+90% of saturation, and say whether each cell is meant to sit below or above
+the knee.
 Rates used, in requests/s per node:
 
 | Workload (8B unless noted) | Rate |
@@ -749,9 +751,9 @@ the typed `Ireduce`. Qualify aggregation with multi-rank payloads well above
 ## 8. Qualification and evidence
 
 **What exists today.** No artifact of the current tree is production-qualified;
-production submission fails with `production execution is not qualified`. All
-hardware campaigns so far ran with `validation_mode: true`; do not set it to
-get past the error. See the [hardening status](hardening/STATUS.md).
+production submission fails with `production execution is not qualified`.
+Hardening-era hardware campaigns ran with `validation_mode: true`; do not set
+it to get past the error. See the [hardening status](hardening/STATUS.md).
 
 **A runtime, storage or control-plane change invalidates earlier evidence.**
 Rerun every point of a scaling curve from one snapshot, or label it a
@@ -807,12 +809,14 @@ Deliberate overload cells count only as measured-partial results with every
 request and rank accounted for; never relabel them. Retry a node hardware fault
 on clean nodes under a new identity, and pin the exact result per node count in
 figure inputs. Size from a cost model: bring-up about 4 minutes for 8B, 7 for
-120B, 35 for null compute at 256 nodes and about 60 for 405B, plus about 2.25
-minutes per pass (60 s trace and 75 s cooldown). Pilot every cell at two passes
-(warm-up and one measured) before the full sweep, plan re-runs at 256 nodes
-(node failures are more likely), and materialize 128- and 256-node traces on a
-compute node (planner workers grew to about 2.7 GiB each). Spec names must be
-unique across `eval/specs` because lookup uses the file name.
+120B, 35 for null compute at 256 nodes with the paper-era
+one-application-per-node layout (about 9-10 minutes with the later
+node-grouped layout) and about 60 for 405B, plus about 2.25 minutes per pass
+(60 s trace and 75 s cooldown). Pilot every cell at two passes (warm-up and one
+measured) before the full sweep, plan re-runs at 256 nodes (node failures are
+more likely), and materialize 128- and 256-node traces on a compute node
+(planner workers grew to about 2.7 GiB each). Spec names must be unique across
+`eval/specs` because lookup uses the file name.
 
 **The allocation must match the deployment.** Runs that attached a 32- or
 64-node deployment to a 256-node Ray cluster had to be excluded. The compiler
@@ -865,9 +869,10 @@ parent-process monkeypatching, and never call an undeclared host executable.
 
 ## 10. Open problems
 
-- Proxy start-up cost of the current one-application-per-replica layout at
-  scale, and whether `RAY_SERVE_RUN_ROUTER_IN_SEPARATE_LOOP=1` removes proxy
-  stalls.
+- Proxy start-up cost at scale of the current layouts (one application plus
+  proxy anchors for dense HAProxy plans; one application per replica for most
+  others, see section 4), and whether `RAY_SERVE_RUN_ROUTER_IN_SEPARATE_LOOP=1`
+  removes proxy stalls.
 - Whether the raised GCS budgets let one Ray cluster pass 512 nodes; whether
   more GCS server threads raise read throughput.
 - Real-runtime proof of the shared-filesystem rule: a non-head syscall trace of
@@ -875,11 +880,15 @@ parent-process monkeypatching, and never call an undeclared host executable.
   Only the native bootstrap has a syscall-level proof (two nodes).
 - Measured site control and readiness limits, and a recorded decision on the
   release ceiling.
-- Whether the real PP=2 canary relies on a pipeline-parallel layer fallback,
-  which production plans now refuse
-  ([D5](KNOWN_ISSUES.md#d5-pipeline-parallel-patches-fall-back-to-a-representative-layer--fails-closed-in-production));
-  use PP canaries that check output correctness.
+- Output-correctness canaries for pipeline-parallel topologies and models
+  beyond the real PP=2 canary, which showed no layer fallback when rerun under
+  the new policy
+  ([D5](KNOWN_ISSUES.md#d5-pipeline-parallel-patches-fall-back-to-a-representative-layer--fails-closed-in-production)).
 - The slower data rate of pipeline stage 0 in 405B staging.
+- 405B non-streaming at 64 and 128 nodes (`pp405b_pp2_haproxy_nostream_v040`):
+  the sequential allocation-campaign attempt failed during model staging
+  (storage), and those points are missing; the retained records do not
+  diagnose the failure.
 - Streaming through one head-node HAProxy beyond 64 nodes (see section 5);
   distributed or hierarchical ingress is the design direction, untested.
 - The rare HAProxy process death at 256 nodes, and Envoy's 64-node streaming

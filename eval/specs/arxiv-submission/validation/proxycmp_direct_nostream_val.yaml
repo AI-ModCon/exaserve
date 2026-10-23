@@ -3,8 +3,7 @@ name: proxycmp_direct_nostream_val
 # n64 only. Pairs with proxycmp_haproxy_nostream n64 to show whether non-stream
 # proxy E2E recovers toward direct, and with proxycmp_direct_val (streaming) n64
 # to test whether streaming backpressure inflated direct's E2E. No TTFT/TBT
-# (paper SLO N/A) — judge by E2E latency / throughput / errors. The streaming
-# direct n256 (19.4k rps, linear) is the "good" reference for the 256n retest.
+# (paper SLO N/A) — judge by E2E latency / throughput / errors.
 matrix:
   name_template: 'n{num_nodes}'
   axes:

@@ -1,13 +1,12 @@
 name: proxycmp_haproxy_256_nodelayoff_stream_val
-# TASK 3: streaming HAProxy 256n with http-no-delay OFF (coalescing on) +
-# server-side stats. Hypothesis: coalescing collapses the ~1.8M pkt/s token
-# storm into far fewer packets, so the proxy SURVIVES (vs the no-delay-on
-# congestion collapse). Client TBT will be bursty (~230ms, INVALID for the SLO)
-# but server-side TTFT/TBT (collected) are proxy-immune and ARE valid. client=4
-# (correct bounded topology). Compare to:
-#   - stream + no-delay ON  (collapsed: ~5k rps / 7M retransmits)
-#   - non-stream            (27k rps)
-#   - direct stream         (19.4k rps)
+# Streaming HAProxy 256n with http-no-delay OFF (coalescing on) + server-side
+# stats. Tests whether coalescing turns the per-token packet storm into far
+# fewer packets, so the proxy avoids the congestion collapse that 256-node
+# streaming with http-no-delay ON shows (handbook section 5). Client TBT is
+# then bursty (about 230 ms, INVALID for the SLO), but server-side TTFT/TBT
+# (collected) are proxy-immune and ARE valid. client=4 (bounded topology).
+# Compare with streaming with http-no-delay ON, with non-streaming and with
+# direct-dispatch streaming at the same scale.
 matrix:
   name_template: 'n{num_nodes}'
   axes:

@@ -1,6 +1,6 @@
 name: bringup_inst_real_val
-# tab:gcs re-run — instrumented REAL serving runs (weights loaded, forward pass
-# real), replacing the earlier null-compute-only GCS instrumentation.
+# Instrumented REAL serving bring-up (weights loaded, forward pass real) for the
+# paper's Table II (serve.run breakdown and proxy-side GCS load).
 #
 # Same overlay probes as nullcompute_scaling (instrumentation=true) so we get
 # GetActorInfo counts + per-proxy ray.get_actor "Max GCS" alongside
@@ -8,7 +8,7 @@ name: bringup_inst_real_val
 # replicas load real 8B weights. startup_only=true: the data is the bring-up
 # itself; no replay client.
 #
-# Scale axis N in {64,128,256} to match the real tab:startup rows.
+# Scale axis N in {64,128,256} to match the rows of Table II.
 # Queue derived by N: n64/n128 -> debug-scaling (1h), n256 -> prod (3h).
 #
 # !!! READ BEFORE SUBMITTING !!!

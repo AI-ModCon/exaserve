@@ -1,8 +1,8 @@
 name: serverstats_ttft_ondelay_1node
-# Task 1 validation + Task 2 "on" arm. 1 node, low rate (20 << ~109 knee) so
-# TTFT/TBT reflect proxy coalescing, not queueing. http-no-delay ON (default).
-# stream + collect_stats => exercises the fixed server-side collector AND gives
-# the baseline for the on-vs-off TTFT comparison.
+# Server-statistics check and the http-no-delay "on" arm. 1 node, low rate
+# (20 << ~109 knee) so TTFT/TBT reflect proxy coalescing, not queueing.
+# http-no-delay ON (default). stream + collect_stats => exercises the
+# server-side collector AND gives the baseline for the on-vs-off TTFT comparison.
 matrix:
   name_template: 'n{num_nodes}'
   axes:

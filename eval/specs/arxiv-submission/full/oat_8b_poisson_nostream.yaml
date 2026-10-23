@@ -1,7 +1,9 @@
 name: oat_8b_poisson_nostream
 # EXP SET 2 (OAT) - arrival perturbation: Poisson at the baseline mean rate.
-# Identical to oat_8b_baseline except workload.arrival: poisson. Tests whether
-# the headline efficiency survives bursty (non-deterministic) arrivals.
+# Identical to oat_8b_baseline_nostream except workload.arrival: poisson. Tests
+# whether the headline efficiency survives bursty (non-deterministic) arrivals.
+# Non-streaming variant (stream=false): end-to-end latency, throughput and
+# errors only, no SLO.
 matrix:
   name_template: 'n{num_nodes}'
   axes:

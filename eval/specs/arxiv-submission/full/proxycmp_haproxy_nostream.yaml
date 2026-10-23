@@ -1,8 +1,9 @@
 name: proxycmp_haproxy_nostream
 # EXP SET 1 (proxy comparison at scale) — HAProxy dispatcher.
-# Baseline workload, stream=true so P99 TTFT and P99 TBT are captured per proxy.
-# Scale axis is [1,4,16,64] (each fits debug-scaling 1h). To extend to 256n
-# (HAProxy plateau finding), run on capacity with a longer walltime.
+# Baseline workload, non-streaming (stream=false): each request returns its
+# full completion in one response, so results carry end-to-end latency,
+# throughput and errors, not TTFT or TBT.
+# Scale axis is [1,4,16,64]; proxycmp_haproxy_nostream_scale covers 128 and 256.
 matrix:
   name_template: 'n{num_nodes}'
   axes:

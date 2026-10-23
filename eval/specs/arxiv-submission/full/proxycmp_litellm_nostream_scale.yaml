@@ -1,6 +1,7 @@
 name: proxycmp_litellm_nostream_scale
 # EXP SET 1 (proxy comparison) — LiteLLM dispatcher. Same baseline as
-# proxycmp_haproxy; stream=true for P99 TTFT/TBT.
+# proxycmp_haproxy, non-streaming (stream=false): end-to-end latency,
+# throughput and errors only, no TTFT or TBT.
 matrix:
   name_template: 'n{num_nodes}'
   axes:

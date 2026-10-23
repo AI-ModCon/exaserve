@@ -1,8 +1,9 @@
 name: proxycmp_haproxy_256_diag_val
-# Re-run canonical 256n streaming (http-no-delay ON, client=4) with the enhanced
-# diag (resource-exhaustion capture) to root-cause the HAProxy PROCESS DEATH seen
-# in prior 256n runs (warmup served ~10k/99.6%, then proxy died -> data run 100%
-# ECONNREFUSED). Watch: fork canary (EAGAIN), thread/fd vs limits, dmesg on death.
+# Canonical 256n streaming (http-no-delay ON, client=4, six runs) with
+# server-side stats, to capture the cause of the rare HAProxy PROCESS DEATH at
+# 256 nodes (known issue B2): a healthy warm-up, then refused connections.
+# Watch thread and descriptor counts against their limits, and the kernel log
+# when the process dies.
 matrix:
   name_template: 'n{num_nodes}'
   axes:

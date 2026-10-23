@@ -276,9 +276,10 @@ why = [
     (
         "Demonstrated scale",
         "Scale evaluations of earlier snapshots reached 256 nodes / 3,072 replicas "
-        "behind HAProxy "
+        "behind an HAProxy "
         "front end: 27.1k non-streaming QPS with Llama-3-8B (one replica per tile) "
-        "— 96% of the 28.2k requests/s offered at 256 nodes, with 0% errors. "
+        "— 96% of the 28.2k requests/s offered at 256 nodes, with 0.04% errors (0.0% as "
+        "rounded in the paper). "
         "A quantified comparison of head-node proxies (HAProxy, Envoy, LiteLLM, Ray Serve "
         "proxy) records gateway-specific throughput and latency limits.",
     ),
@@ -362,7 +363,10 @@ blocks.append(bold_lead("ALCF Aurora"))
 blocks.append(
     body_par(
         "Use the operator-provisioned site interpreter and ExaServe wheel together with "
-        "the profiled Ray, vLLM, MPI and accelerator stack. Job isolation disables "
+        "the profiled Ray, vLLM, MPI and accelerator stack. On the current Aurora image the "
+        "default frameworks module (2026.1.0) fails ExaServe's compatibility check; load "
+        "frameworks/2025.3.1 from the 26.26.0 image's module tree with the recipe in "
+        "docs/getting_started.md, saved as a site environment script. Job isolation disables "
         "user-site packages, so an installation made only with --user is not a serving "
         "runtime. The README and getting-started guide describe provisioning and preflight.",
         after=60,
@@ -370,8 +374,8 @@ blocks.append(
 )
 blocks.append(
     code_block(
-        "module load frameworks\n"
-        "unset ONEAPI_DEVICE_SELECTOR\n"
+        "export EXASERVE_ENV_SCRIPT_AURORA=/lus/flare/projects/YOUR_PROJECT/site-env.sh\n"
+        'source "$EXASERVE_ENV_SCRIPT_AURORA"   # frameworks/2025.3.1 recipe\n'
         "PYTHONNOUSERSITE=1 PYTHONSAFEPATH=1 python3 -c \\\n"
         "  'import sys, exaserve; print(sys.executable); print(exaserve.__file__)'\n"
         "command -v mpiexec\n"
@@ -381,8 +385,8 @@ blocks.append(
 blocks.append(
     body_par(
         "One-time extras: provision HAProxy with scripts/build_haproxy.sh on a compute "
-        "node; build the evaluation load generator with "
-        "module load go && make -C eval/go_client."
+        "node; build the evaluation load generator with make -C eval/go_client after "
+        "sourcing the site environment script, which loads go."
     )
 )
 
@@ -395,12 +399,16 @@ blocks.append(
         "example uses two nodes for readability. Before submission, select an authorized "
         "validation configuration or an admitted release profile; the current default "
         "profile fails production admission closed. Submission itself runs from a login "
-        "node; query the endpoint only after canonical READY:",
+        "node with the site's project directory (from which the model storage root is "
+        "derived) and the job's environment script exported; query the endpoint only after "
+        "canonical READY:",
         after=60,
     )
 )
 blocks.append(
     code_block(
+        "export EXASERVE_PROJECT_ROOT=/lus/flare/projects/YOUR_PROJECT\n"
+        "export EXASERVE_ENV_SCRIPT_AURORA=$EXASERVE_PROJECT_ROOT/site-env.sh\n"
         "exaserve-serve-submit my_config.yaml --project-account YOUR_PROJECT --wait\n"
         "# 1234567.aurora-pbs-0001...          <- PBS job id\n"
         "# http://<head-node>:4001             <- service URL\n"
@@ -448,9 +456,10 @@ blocks.append(
 blocks.append(
     callout(
         "Learn more:",
-        "the README and docs/usage.md cover submission and --dry-run previews, "
-        "docs/getting_started.md covers interactive allocations (exaserve-launch-cluster), "
-        "and examples/config.reference.yaml annotates every configuration field.",
+        "the README and docs/usage.md cover submission and --dry-run previews, docs/api.md "
+        "lists the installed commands (including exaserve-launch-cluster for interactive "
+        "allocations), and examples/config.reference.yaml shows the commonly used fields; "
+        "src/exaserve/plan/compiler.py defines every accepted key.",
         LEARN_BG,
     )
 )
@@ -473,7 +482,8 @@ blocks.append(
     body_par(
         "All client traffic enters through the head-node proxy. Non-streaming completions "
         "scale nearly linearly through a single HAProxy — 27.1k QPS with Llama-3-8B "
-        "at 256 nodes / 3,072 single-tile replicas, 0% errors. Streaming (SSE) is harder on "
+        "at 256 nodes / 3,072 single-tile replicas, 0.04% errors (0.0% as rounded in the "
+        "paper). Streaming (SSE) is harder on "
         "a centralized front end: the per-token delivery path saturates the head node’s "
         "network at large node counts, so requests still complete but slowly — streaming "
         "throughput plateaus around 4.7k QPS from 128 nodes, and p99 end-to-end "
@@ -486,11 +496,13 @@ blocks.append(
 blocks.append(
     figure(
         "fig1_proxy_scaling.png",
-        "Weak scaling, 1–256 nodes (Llama-3-8B, 64 in / 64 out, 110 QPS/node offered): "
-        "successful throughput and SLO attainment per front end, streaming (solid) vs "
-        "non-streaming (dashed). Non-streaming HAProxy scales near-linearly; streaming through "
-        "any centralized proxy plateaus or collapses. “Direct” is the benchmark-only "
-        "backend-isolation diagnostic.",
+        "Fig. 2 of the paper, from its arXiv source: weak scaling, 1–256 nodes (Llama-3-8B, "
+        "64 in / 64 out, 110 QPS/node offered), successful throughput and attainment of the "
+        "two SLO components (P99 TBT ≤ 250 ms, TTFT ≤ 2 s) per front end, streaming (solid) "
+        "vs non-streaming (dashed). Non-streaming HAProxy scales near-linearly; streaming "
+        "through any centralized proxy plateaus or collapses. “Direct” is the benchmark-only "
+        "backend-isolation diagnostic. The TTFT panel lacks Envoy's 256-node streaming point "
+        "because of a plotting defect since fixed in eval/plot.",
         7.0,
     )
 )
@@ -516,9 +528,11 @@ blocks.append(
         "fixed per-replica offered rate, direct dispatch (the routing-free reference) grows "
         "aggregate successful throughput from 0.7 QPS at 2 replicas to 31.0 QPS at 128 "
         "replicas (4 to 256 nodes), a 67% weak-scaling efficiency vs the 4-node base. Through "
-        "a single HAProxy the service tracks direct dispatch within 5% through 8 replicas, "
-        "falls behind from 16 replicas, and completes 22.9 QPS at 0.3% errors (50% "
-        "efficiency) at 128 replicas. The paper attributes the remaining efficiency loss to "
+        "a single HAProxy the service stays within about 5% of direct dispatch through 16 "
+        "replicas (4.7 against 4.9 QPS), falls behind from 32 replicas (8.7 against 10.3 "
+        "QPS), and completes 22.9 QPS at 0.3% errors (50% efficiency) at 128 replicas. "
+        "These are the corrected values; the paper's Fig. 5 and its text plot and quote "
+        "three points from runs later excluded (see the caption). The paper attributes the remaining efficiency loss to "
         "requests still draining at the end of the fixed measurement window, not to "
         "routing. Non-streaming 405B runs through HAProxy, recorded later on a different "
         "snapshot and settings, are not summarized here.",
@@ -528,11 +542,13 @@ blocks.append(
 blocks.append(
     figure(
         "fig7_pp405b.png",
-        "Llama-3.1-405B (TP8 × PP2) weak scaling, 2–128 replicas at a fixed offered rate "
-        "per replica. Point labels: successful throughput and weak-scaling efficiency vs "
-        "the 4-node base. The HAProxy curve is the run whose health check probed one "
-        "replica's route: it collapsed to 8.9 QPS at 128 replicas, the failure the paper "
-        "describes. Probing /-/healthz, HAProxy completes 22.9 QPS (50%) at 128 replicas.",
+        "Fig. 5 of the paper, from its arXiv source: Llama-3.1-405B (TP8 × PP2) weak "
+        "scaling, 2–128 replicas at a fixed offered rate per replica; point labels give "
+        "successful throughput and weak-scaling efficiency vs the 4-node base. Three points "
+        "come from runs later excluded because they attached the deployment to a 256-node "
+        "Ray cluster: HAProxy at 32 and 64 nodes (4.1 and 5.9 QPS; corrected 4.7 and 8.7) "
+        "and direct dispatch at 64 nodes (10.6; corrected 10.3). The corrected values are "
+        "in eval/plot/pp405b_legacy_evidence.yaml.",
         5.2,
     )
 )
@@ -619,7 +635,11 @@ blocks.append(
                 "runtime.null_compute: true",
                 "Skip the engine and simulate latency — control-plane stress tests",
             ],
-            ["runtime.clean_stage: true", "Request a fresh staged-model validation run"],
+            [
+                "runtime.clean_stage: true",
+                "Run a non-destructive all-rank cache reconciliation barrier before staging "
+                "(not a cold-cache guarantee)",
+            ],
         ],
         [3300, 6924],
     )
@@ -679,14 +699,18 @@ blocks.append(
         [
             ["Resource", "Location"],
             ["Source code", "github.com/AI-ModCon/exaserve"],
-            ["Documentation", "README.md — install, configuration, console-script reference"],
+            [
+                "Documentation",
+                "README.md — install and configuration; docs/api.md — console-script reference",
+            ],
             [
                 "Machine-actionable card",
                 "docs/exaserve.md — markdown version of this card for coding agents",
             ],
             [
                 "Deployment templates",
-                "examples/ — HAProxy, LiteLLM, and a fully annotated reference config",
+                "examples/ — HAProxy, LiteLLM, and a reference configuration of the commonly "
+                "used fields",
             ],
             [
                 "Benchmark specs",

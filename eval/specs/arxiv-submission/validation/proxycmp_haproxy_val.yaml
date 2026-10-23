@@ -1,8 +1,8 @@
 name: proxycmp_haproxy_val
 # EXP SET 1 (proxy comparison at scale) — HAProxy dispatcher.
 # Baseline workload, stream=true so P99 TTFT and P99 TBT are captured per proxy.
-# Scale axis is [1,4,16,64] (each fits debug-scaling 1h). To extend to 256n
-# (HAProxy plateau finding), run on capacity with a longer walltime.
+# Scale axis is [1,4,16,64] (each fits a 1h debug or debug-scaling job);
+# proxycmp_haproxy_256_val is the 256-node pilot.
 matrix:
   name_template: 'n{num_nodes}'
   axes:

@@ -1,8 +1,8 @@
 name: oat_8b_baseline
 # EXP SET 2 (OAT robustness) - baseline row. 8B, 64/64, fixed-interval at 90% of
-# single-node saturation (109 -> 98 rps/node), HAProxy, stream=true, 4 runs.
-# tab:robust reports eta_SLO(64) = G_SLO(64)/(64*G_SLO(1)) -> needs N in {1,64}.
-# N=256 (for the scaling-curve figure) is a separate capacity run.
+# single-node saturation (109 -> 98 rps/node), HAProxy, stream=true.
+# The paper's robustness table (Table IV) reports SLO attainment at N=1 and
+# N=64 and the change between them, hence N in {1,64}.
 matrix:
   name_template: 'n{num_nodes}'
   axes:

@@ -35,8 +35,14 @@ maximum for ExaServe.
   gather the plotting scripts" passed the seven portable CI-equivalent
   checks on an Aurora compute node. Fixed-order, randomized-order and
   installed-wheel suites each reported **1,771 passed, 40 skipped**. These are
-  code/package regression results, not a rerun of the scale study. The later
-  commits on this branch are covered by the pull request's CI run.
+  code/package regression results, not a rerun of the scale study. The
+  commits after it in the same pull request are covered by that pull
+  request's CI run.
+- Two-node validation-mode runs on 2026-10-22 covered the defect fixes below:
+  a null-compute HAProxy deployment, the real PP=2 canary (no layer-fallback
+  warning), the dense single-application layout (2,400 of 2,400 requests, with
+  HAProxy choosing its own thread count) and PP=2 serving (300 of 300
+  requests). They check those changes; they are not a scale rerun.
 - Focused one-/two-node hardware and regression checks cover particular
   staging, control-plane and pipeline-parallel paths. Their scope stays with
   those checks rather than becoming a system-wide scale restriction.
@@ -58,7 +64,16 @@ maximum for ExaServe.
 
 - The `paper` SLO preset of `eval.plot.goodput` and the preview figures'
   combined attainment use TTFT ≤ 2 s, the bound the paper and the full-sweep
-  figures use; they used 1 s.
+  figures use; they used 1 s. The latency-CDF caption file names the same
+  bound.
+- The paper figure scripts keep their caches in a private per-user folder
+  (`$XDG_CACHE_HOME`, by default `~/.cache`, under `exaserve/figures/`) instead
+  of fixed `/tmp` paths that another user could pre-create, store JSON and NPZ
+  instead of a pickle, key each cell by its result file and the SLO
+  thresholds, and reuse a full build (`--reuse`) only for the same run-group
+  folder and thresholds. Fig. 1's TTFT panel regains the Envoy 256-node
+  streaming point, which a field mix-up in the streaming-cell extraction had
+  dropped since the figures were first drawn.
 - HAProxy no longer runs on one thread when `gateway.worker_count` is 1 (the
   value in the examples); a count above 1 or `gateway.options.nbthread` still
   sets the thread count.
@@ -73,18 +88,35 @@ maximum for ExaServe.
 - Status writes (`StatusStore.transition` and `update`) require the
   `expected_revision` the writer read.
 - `submit` and `submit-all` refuse a walltime above the one-hour debug and
-  debug-scaling limit before contacting the scheduler. The 405B
-  characterization spec asks for two hours below 256 nodes, so its 17-255-node
-  cells run only as allocation-campaign children.
+  debug-scaling limit before contacting the scheduler. 405B specs request two
+  hours below 256 nodes and four from 256 (a cold 405B start took about an
+  hour), so their 17-255-node cells run only as allocation-campaign children;
+  `pp405b_pp2_proxyfix_4node` now routes 256 nodes to prod. The refusal
+  suggests a longer queue or a shorter walltime; evaluation runs add the
+  allocation-campaign hint.
+- Evaluation materialization rejects a relative or `~` environment script
+  instead of rendering a job that fails after queueing;
+  `eval/scripts/direct_stream_window_analysis.py --help` and `--suite-root`
+  work without site configuration; the unused `RuntimeEnvSpec.exports` field
+  and `SiteDefaults.project_root` are removed.
+- The synthetic C++ target closes a connection whose `Content-Length` has no
+  digits or exceeds 1 GiB, instead of overflowing an `int` and parsing the
+  body as the next request.
+- Spec comments state what each spec varies and why; run histories, dated
+  results and run-group names were removed, and the `_nostream` headers match
+  their YAML.
 - Batch jobs no longer fail on ExaServe's own configuration variables. Since
   the built-in project root was removed, an eval job either failed at launch
   without `EXASERVE_PROJECT_ROOT` or, with it, was refused because the value
   names shared storage. The eval launcher now reads no site configuration and
   passes none to the serving process or the replay client, and the serving
-  runtime drops
+  runtime drops every path-valued ExaServe variable from child environments:
   `EXASERVE_PROJECT_ROOT`, `EXASERVE_MODEL_STORAGE_PATH`,
-  `EXASERVE_LOCAL_STAGE_PATH` and `EXASERVE_ENV_SCRIPT_AURORA` from child
-  environments.
+  `EXASERVE_LOCAL_STAGE_PATH`, `EXASERVE_ENV_SCRIPT_AURORA`, the evaluation
+  path settings, `EXASERVE_LITELLM_PYTHON_PATH`, `EXASERVE_SITE_CONFIG_LOCAL`
+  and `EXASERVE_PAPER_SUITE_ROOT` (a profile export of any of them refused
+  the start before). `run materialize` takes the model storage path from the
+  local site configuration when neither storage variable is exported.
 - Import MPI only through `exaserve.mpi_loader`, which loads the interpreter's
   own libssl first: on Aurora's current image, source staging and the replay
   engine failed to import mpi4py once `hashlib` had loaded the stack's
@@ -103,7 +135,12 @@ maximum for ExaServe.
   the personal development scratchpad; regenerate the reference card.
 - Refresh the portable development lock with uv 0.13.4 and fixed releases of
   Pillow, pytest, Pygments, fontTools, certifi, aiohttp, virtualenv and
-  OpenTelemetry. The lock now resolves Python 3.11–3.13. Declared server-extra
+  OpenTelemetry, and pin pip 26.2.2, whose vendored CA bundle drops the
+  compromised emSign root, in the dev group, `requirements/ci.lock`, CI and the
+  packaged gate. uv 0.13.4 is pinned in the dev group and
+  `requirements/ci.lock`; `[tool.uv] required-version` accepts 0.13.4 or later
+  so that Dependabot's own uv can update the lock. The lock now resolves
+  Python 3.11–3.13. Declared server-extra
   and site runtime pins are unchanged; remaining dependency advisories are
   dispositioned in the AI-ModCon checklist.
 - Name the paper's evaluation suite after its arXiv submission: specs live under
@@ -115,11 +152,25 @@ maximum for ExaServe.
   renamed; set `EXASERVE_PAPER_SUITE_ROOT` to that folder to read them in place.
 - Name GitHub's private vulnerability reporting in `SECURITY.md` beside the
   e-mail route. Document that the HAProxy build helper's 3.1.6 default is end of
-  life and affected by CVE-2025-32464, and that the Pingora benchmark's declared
-  0.5 range has published advisories.
+  life (the 3.1 line ended with 3.1.17) and affected by CVE-2025-32464 and later
+  advisories such as CVE-2025-11230, that the NGINX (1.27.3) and Envoy
+  (v1.32.3) helper defaults are out of support with published advisories, and
+  that the Pingora benchmark's declared 0.5 range has published advisories.
 - The reference card regenerates byte for byte (fixed timestamps for the
   embedded figures), drops an unused template hyperlink, and names the documents
   that cover interactive allocations; `NOTICE` credits the card's template.
+- The reference card embeds the paper's own Figs. 2 and 5 (rasterized from the
+  arXiv source) instead of earlier renders. Its 405B text uses the corrected
+  evidence: HAProxy stays within about 5% of direct dispatch through 16
+  replicas and falls behind from 32 (8.7 against 10.3 QPS); the Fig. 5 caption
+  names the three points that came from runs later excluded. The card gives the
+  27.1k-request/s run's 0.04% error rate (0.0% as rounded in the paper), the
+  frameworks/2025.3.1 setup, the variables a submission needs, and where the
+  installed commands and accepted configuration keys are documented.
+- `LICENSE` is now byte for byte the Apache-2.0 text from apache.org (the
+  title line's leading whitespace was missing). The vendored yyjson moves to
+  0.13.0 (GHSA-f4vc-345x-4mvm affects 0.12.0 and earlier; the synthetic target
+  parses only its own configuration with it), and `NOTICE` names the version.
 - Document deployment trust assumptions in `SECURITY.md` and the request fields
   that reach vLLM in the API reference.
 - Remove the built-in PBS account and project root: `EXASERVE_PROJECT_ACCOUNT`
@@ -131,11 +182,22 @@ maximum for ExaServe.
   paper-evidence ledger moves to schema 3 without job identifiers; its loader
   reads them from the pinned PBS stdout file name.
 - Remove maintainer home-directory defaults. The serving launcher sources the
-  script that `EXASERVE_ENV_SCRIPT_AURORA` names (otherwise it loads the
-  frameworks module); allocation campaigns record the site environment script
-  and PBS output directory in a schema-2 campaign identity; eval run snapshots and
-  benchmark results default to the configured data root; the LiteLLM interpreter
-  and environment scripts have no default location.
+  script that `EXASERVE_ENV_SCRIPT_AURORA` names; allocation campaigns record
+  the site environment script and PBS output directory in a schema-2 campaign
+  identity; eval run snapshots and benchmark results default to the configured
+  data root; the LiteLLM interpreter and environment scripts have no default
+  location.
+- Document how to load the profiled frameworks/2025.3.1 stack on Aurora's
+  current image: the default `frameworks` module is now 2026.1.0, which the
+  compatibility check rejects, so `docs/getting_started.md` gives the module
+  recipe the validation runs used (the 26.26.0 image's module tree), and every
+  setup instruction points to it. `exaserve-serve-submit` requires
+  `EXASERVE_ENV_SCRIPT_AURORA` and checks that the script exists before
+  writing anything, instead of falling back to the default module; a retry
+  whose environment script differs from a stored, unsubmitted intent is
+  refused. The serving instructions now export the variables a submission
+  needs, and the eval quick start configures the environment before its first
+  command.
 - Publish `main` only (the path migration guide says so) and keep the issues
   that recurred on the retired branches in `docs/KNOWN_ISSUES.md`.
 - Gather every plotting script in `eval/plot/` under a descriptive name (the
@@ -153,7 +215,8 @@ maximum for ExaServe.
 - Reject request-supplied chat templates and reserved `chat_template_kwargs`
   keys with HTTP 400, require a model configuration's `model_type` to match its
   reviewed architecture before broadcast, and load evaluation tokenizers
-  without remote code.
+  without remote code. A `temperature` or `top_p` too large to convert to a
+  float (for example 10**400) now gets HTTP 400 instead of 500.
 
 ### Documentation paths
 
@@ -170,10 +233,21 @@ maximum for ExaServe.
   fixes), name the exact `setup-python` release, and check out without
   persisted credentials.
 - Check the local links and `#fragment`s of every tracked Markdown file against
-  GitHub's heading anchors, not only `docs/` and four root guides.
+  GitHub's heading anchors, not only `docs/` and four root guides. `make lint`
+  runs the same check first, as CI does.
+- The Go setup step no longer tries to restore a module cache; the replay
+  client uses only the standard library and has no `go.sum`.
 - A test keeps the server and paper extras' exact pins equal to the Aurora
   frameworks lock, so an automated bump of vLLM, Ray or Transformers fails CI
   until the site stack is requalified.
+- Tests set ExaServe's site placeholders themselves, so values a developer
+  exports no longer change results (the installed-wheel gate stopped at a
+  dry-run test when `EXASERVE_ENV_SCRIPT_AURORA` was exported, as the guide
+  says to). The link checker's anchors follow GitHub's renderer more closely
+  (setext and blockquote headings, emphasis, entities, image text, fences,
+  comments, footnotes, duplicate suffixes); new tests cover it, the
+  pipeline-parallel fallback policy's model-layer and KV-cache paths, and the
+  2 s paper SLO.
 - Give GitHub-hosted staging tests a separate `/tmp` tmpfs so real shared/local
   filesystem guards can run without assuming Aurora's mount layout.
 - Declare Ray/FastAPI requirements for optional Serve graph tests and keep
@@ -190,7 +264,9 @@ maximum for ExaServe.
   route for this layout, Serve's router does. Sparse, multi-device,
   pipeline-parallel and multi-model topologies keep one application per
   replica, and dense null-compute keeps its node-grouped applications.
-  Covered by hermetic tests only; no hardware qualification is implied.
+  No hardware qualification is implied; bring-up measurements of earlier
+  snapshots are in the operations handbook, and a two-node validation run of
+  this layout succeeded on 2026-10-22.
 
 ### Repository preparation for AI-ModCon
 
@@ -198,7 +274,8 @@ maximum for ExaServe.
 - Add contribution and conduct policies, private security reporting, and issue
   and pull-request templates with human-review and AI-assistance disclosure.
 - Add a `docs/` navigation and onboarding layer while retaining the existing
-  `doc/` architecture contracts, design notes, and immutable evidence references.
+  `doc/` architecture contracts, design notes, and immutable evidence references
+  (later consolidated under `docs/`).
 - Add locked portable development tooling, coverage configuration, build
   automation, and a transfer/branch-protection checklist.
 - Preserve the existing hermetic, randomized, installed-wheel, static, and Go

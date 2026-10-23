@@ -1,10 +1,10 @@
 name: oat_120b
 # EXP SET 2 (OAT) - model perturbation: GPT-OSS-120B (MXFP4, 122 GB) from the
 # shared hub, TP=8 (8/12 tiles, 4 idle), planner auto-packs 1 replica/node.
-# Rate: 9 rps/node — highest fixed rate meeting the PAPER SLO (p99 TBT<=250ms)
-# per calibration/sat_120b_paper_recal (r9: attain 1.000, aggregate TBT p99
-# 175ms; r12: 0.94 but TBT p99 382ms). The throughput-knee rate (17.1, from
-# sat_120b_64x64) busted the SLO at sustained load (attain 0.14).
+# Rate: 9 rps/node, the highest fixed rate in calibration/sat_120b_paper_recal
+# that met TTFT <= 1 s and p99 TBT <= 250 ms (stricter than the paper's
+# TTFT <= 2 s). The throughput-knee rate (17.1, from sat_120b_64x64) failed
+# that objective at sustained load.
 matrix:
   name_template: 'n{num_nodes}'
   axes:

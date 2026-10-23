@@ -12,14 +12,15 @@ name: nullcompute_scaling
 #               whether the O(N^2) constant scales with R.
 #
 # !!! READ BEFORE SUBMITTING !!!
-#  - CAPACITY ONLY: every cell exceeds debug-scaling's 1h cap (256n serve.run is
-#    ~31min and grows superlinearly). Submit on a capacity allocation with a
-#    multi-hour walltime; never submit the whole matrix at once.
+#  - Every cell needs more than debug-scaling's 1h cap (256n serve.run is
+#    ~31min and grows superlinearly) and requests 3 h, so submit and submit-all
+#    refuse the cells before contacting the scheduler; run them in an
+#    allocation with a multi-hour walltime. Never submit the whole matrix at
+#    once.
 #  - VALIDATE n256_r12 FIRST. Only after it succeeds, run larger N.
-#  - R>12 OVERSUBSCRIBES the 12 physical tiles. It is only meaningful under
-#    null-compute (no real device use) and requires the replica to request 0
-#    GPUs; num_cpus_per_replica=1 keeps 48 replicas within 64 CPUs. Confirm the
-#    replica GPU request is 0 before running the r24/r48 cells.
+#  - On the default site profile, cells above 256 nodes do not compile (raise
+#    EXASERVE_SITE_MAX_NODES), and the compiler rejects R>12 (at most 12 GPUs
+#    per node), so the r24/r48 cells cannot run.
 matrix:
   name_template: 'n{num_nodes}_r{num_gpus_per_node}'
   combine: cartesian

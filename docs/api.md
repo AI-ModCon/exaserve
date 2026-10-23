@@ -180,7 +180,8 @@ outside their required allocation and supervision context.
 
 ## Repository-local control planes
 
-`python3 -m eval.cli` exposes `spec`, `trace`, `run`, and `allocation` commands;
+`python3 -m eval.cli` exposes `spec`, `trace`, `run`, `allocation`, and
+`derive-params` commands;
 [`eval/cli.py`](../eval/cli.py) defines the parser. `run submit-all` requires an
 explicit `--run-group`. See [usage](usage.md) and [eval design](../eval/DESIGN.md).
 

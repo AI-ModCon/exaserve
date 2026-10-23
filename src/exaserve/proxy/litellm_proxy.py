@@ -45,10 +45,6 @@ class LiteLLMProxy(ProxyBackend):
         Write a litellm_config.yaml to output_dir.
 
         Options (all optional):
-            python_path (str):         Path to the Python interpreter to use for
-                                       launching litellm.  Use this when litellm is
-                                       installed in a separate venv from Ray/vLLM.
-                                       Default: sys.executable (current interpreter).
             master_key, db_url:        Not read here and have no default. Set them
                                        as {secret_ref: "ENV:<name>"} gateway options;
                                        composition passes them to LiteLLM as

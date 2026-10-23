@@ -60,8 +60,9 @@ architecture's `model_type`, but these checks are not a sandbox. Stage only mode
 their own chat template.
 
 Ray, vLLM, PyTorch and Transformers come from the qualified Aurora
-`frameworks/2025.3.1` module (see
-[`requirements/aurora-frameworks-2025.3.1.lock`](requirements/aurora-frameworks-2025.3.1.lock))
+`frameworks/2025.3.1` module, loaded from the 26.26.0 image's module tree (see
+[getting started](docs/getting_started.md#prepare-the-runtime) and
+[`requirements/aurora-frameworks-2025.3.1.lock`](requirements/aurora-frameworks-2025.3.1.lock)),
 and change only through requalification. Advisories against those versions are
 assessed against the request surface in
 [docs/api.md](docs/api.md#inference-http-surface). Low-severity engine defects
