@@ -166,6 +166,14 @@ maximum for ExaServe.
 
 ### Portable CI
 
+- Test the Go replay client with Go 1.27.3 (the 1.23 line no longer receives
+  fixes), name the exact `setup-python` release, and check out without
+  persisted credentials.
+- Check the local links and `#fragment`s of every tracked Markdown file against
+  GitHub's heading anchors, not only `docs/` and four root guides.
+- A test keeps the server and paper extras' exact pins equal to the Aurora
+  frameworks lock, so an automated bump of vLLM, Ray or Transformers fails CI
+  until the site stack is requalified.
 - Give GitHub-hosted staging tests a separate `/tmp` tmpfs so real shared/local
   filesystem guards can run without assuming Aurora's mount layout.
 - Declare Ray/FastAPI requirements for optional Serve graph tests and keep
