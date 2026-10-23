@@ -1,13 +1,14 @@
 # ADR-000: Initial production envelope and scale topology
 
 **Status:** TECHNICALLY SELECTED, AWAITING EXPLICIT PRODUCT-OWNER SCOPE
-APPROVAL. Last reconciled 2026-08-30. Final43 remains the packaged
-one-/two-node hardware-evidence artifact. The `release-v0.4.0` successor clean
-package gate passes, but its scale ladder cannot inherit final43 receipts. The
-evidence-derived production maximum remains two nodes.
+APPROVAL. Last reconciled 2026-10-23. This ADR describes a proposed packaged
+production release, separate from ExaServe's evaluations through 256 Aurora
+nodes on earlier snapshots of the code. Earlier package and fix-specific
+verification coverage is recorded in the
+[changelog](../../../CHANGELOG.md#validation-coverage).
 
-No worker or agent may fill the missing approval identity/evidence, and no
-historical scale result may qualify this exact candidate.
+No worker or agent may fill the missing approval identity/evidence or assign
+another artifact's receipts to this exact release candidate.
 
 ## Proposed decision
 
@@ -34,7 +35,8 @@ HAProxy/non-streaming 4/16/64 ladder declared by this ADR.
 
 Wheel
 `1041be53eb5b5875d198d5ee6c6664718b4085775dcba99107873dd3d1fcdff2`
-passed the clean installed-package gate and these Aurora cells:
+passed the clean installed-package gate and these Aurora cells in validation
+mode:
 
 | Tier | Exact-candidate result |
 |---:|---|
@@ -45,8 +47,10 @@ passed the clean installed-package gate and these Aurora cells:
 
 The compiled envelope records `supported_max_nodes=2`,
 `qualification_target_nodes=64`, `qualification_target_approved=false`, and
-`validation_mode=false`. That is the current evidence boundary, not an implicit
-two-node product decision.
+`validation_mode=false`, and the compiler enforces these limits today. That is
+the current evidence boundary for production admission, not an implicit
+two-node product decision, and not the highest node count at which ExaServe
+has been evaluated.
 
 The site profile declares no parallel production envelopes for other gateways,
 request modes, or streaming. Unmatched dimensions fail normal compilation.
@@ -55,14 +59,16 @@ production support claim.
 
 ## Scale-topology rationale
 
-The proposed pass excludes 128/256-node service and would qualify
-1→2→4→16→64. This reduction is not frozen until an owner, timestamp, evidence
-reference, and exact scope are recorded.
+The proposed first-release pass would certify 1→2→4→16→64 for its exact wheel
+and selected dimensions. Its scope is not frozen until an owner, timestamp,
+evidence reference and exact scope are recorded. ExaServe's 256-node
+evaluations, made on earlier snapshots of the code, are a separate measurement
+record.
 
 Historical Ray Serve/GCS actor-handle, controller-pressure, proxy-cliff,
 shared-filesystem, and streaming-failure evidence remains relevant risk
-context. It does not require a Ray fork in the qualified one/two-node path, nor
-does it prove that the upstream limits are solved at 64 nodes. Those behaviors
+context. It does not establish that upstream limits are solved for every
+gateway, workload or new release. Those behaviors
 must be remeasured at the approved boundary.
 
 The final43 supervisor campaign also shows that, after catastrophic head or
@@ -92,8 +98,8 @@ research runs cannot substitute.
 
 ## Rejected alternatives
 
-- Claiming 256 nodes from historical evidence: no exact-candidate qualification
-  or approved topology exists.
+- Treating the 256-node research evaluation as certification of every later
+  release artifact or topology: exact-candidate release evidence is still required.
 - Selecting LiteLLM as the production gateway: its historical fake-streaming
   semantics do not satisfy the selected contract.
 - Self-approving two nodes merely because it is measured: technical evidence

@@ -5,9 +5,16 @@ The authoritative architecture and acceptance contract is
 [`PRODUCTION_HARDENING_EXECUTION_PLAN.md`](PRODUCTION_HARDENING_EXECUTION_PLAN.md);
 the live release verdict is [`hardening/STATUS.md`](hardening/STATUS.md).
 
-## Current support boundary
+## Demonstrated scale and reference runtime
 
-The only production candidate is:
+ExaServe has been evaluated on **up to 256 Aurora nodes**, including
+HAProxy-fronted Llama-3-8B inference and pipeline-parallel Llama-3.1-405B
+serving, on earlier snapshots of this code; the current tree has not been
+re-measured at that scale. The [paper](https://arxiv.org/abs/2609.10812) and
+[operations handbook](operations_handbook.md) describe the workloads, measured
+throughput, gateway behaviour and limits.
+
+The reference deployment uses:
 
 - ALCF Aurora, native PBS;
 - Intel PVC/XPU, 12 accelerator tiles per node;
@@ -17,10 +24,13 @@ The only production candidate is:
 - non-streaming OpenAI-compatible requests; and
 - trusted allocation-internal network exposure.
 
-The evidence-backed maximum is two nodes. The proposed 64-node ladder remains a
-candidate pending explicit product-owner scope approval and final-architecture
-4/16/64-node evidence. Historical 128/256-node results are useful regression
-context but do not qualify this architecture.
+Fix-specific regression coverage is recorded in the
+[changelog](../CHANGELOG.md#validation-coverage). It does not reduce the
+system's demonstrated 256-node scale. No artifact of the current tree is
+production-qualified: production plans compile to at most two nodes, and
+production submission fails closed. Formal production-release admission
+remains a separate, artifact-specific process in the
+[hardening status](hardening/STATUS.md).
 
 Slurm/PSI-J, CUDA/ROCm, SGLang, streaming, public exposure, direct Serve
 exposure, and LiteLLM/NGINX/Envoy/Pingora are unsupported or validation-only.
@@ -28,10 +38,24 @@ The presence of an implementation interface is not a support claim.
 
 ## Run
 
+Use the operator-provisioned site interpreter and ExaServe artifact described
+in [getting started](getting_started.md#aurora-development-and-serving).
+Job isolation disables user-site packages, so installing only with `--user`
+does not provision the serving runtime. Check the selected environment:
+
 ```bash
 module load frameworks
-python3 -m pip install --user .
+unset ONEAPI_DEVICE_SELECTOR
+PYTHONNOUSERSITE=1 PYTHONSAFEPATH=1 python3 -c 'import sys, exaserve; print(sys.executable); print(exaserve.__file__)'
+command -v mpiexec
+command -v haproxy
+```
 
+The following compact example uses two nodes for readability. Select an
+authorized validation configuration or an admitted release profile before
+submission; the current default profile fails production admission closed.
+
+```bash
 cp examples/config.haproxy.yaml my_config.yaml
 # Edit model_storage_path.
 exaserve-serve-submit my_config.yaml --project-account YOUR_PROJECT --wait
@@ -128,16 +152,15 @@ real deployment study must bind its RunPlan, trace, generation, and status
 directory. Neither subsystem owns a private scheduler, serving lifecycle, or
 readiness protocol.
 
-## Historical measurements
+## Measured scaling
 
-Earlier research campaigns measured up to 256 Aurora nodes, including
-HAProxy/non-streaming and pipeline-parallel workloads, before the final hardened
-control plane. Their results and lessons are summarized in the
-[operations handbook](operations_handbook.md); the original records remain in
-the repository history. They may be used as regression baselines, not as current
-release evidence. A support statement requires the final code, exact packaged
-artifact, approved envelope, canonical status/receipt chain, and required tier
-to pass together.
+Scale evaluations reached 256 Aurora nodes with HAProxy/non-streaming and
+pipeline-parallel workloads, on earlier snapshots of this code. Their results
+and lessons are summarized in the [operations handbook](operations_handbook.md);
+original records remain in the repository history. These measurements establish
+the system's demonstrated research scale; they are not release evidence for the
+current tree. Verification of subsequent changes is recorded separately in the
+changelog, and release admission binds a particular artifact and profile.
 
 ## Regenerating the Word reference card
 

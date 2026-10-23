@@ -26,8 +26,12 @@ changes do not create new hardware or scale qualification.
 ### Validation evidence (2026-10-20)
 
 The runtime/CI repair candidate is `67253ade6c3b9689f335bf51bf1473696467a9a8`.
-Its [GitHub CI run](https://github.com/AI-ModCon/exaserve/actions/runs/39469369504)
-records the exact source identity and individual check results:
+Its own GitHub CI run was cancelled, so it is not the record; CI passed on
+`main` with this candidate in
+[run 39470617396](https://github.com/AI-ModCon/exaserve/actions/runs/39470617396)
+(`d12f972`) and
+[run 39637778628](https://github.com/AI-ModCon/exaserve/actions/runs/39637778628)
+(`3487041`). The results recorded for the candidate were:
 
 - Python 3.12 fixed-order coverage suite: **1,720 passed, 42 skipped**;
   portable branch/statement coverage is 60%, with an uploaded XML report.
@@ -55,8 +59,8 @@ are unit-test results, not qualification of either serving stack.
 
 At the owner's request, current CI targets Python 3.12, matching Aurora's
 current Python 3.12.12. The earlier Python 3.10 job is superseded and is not a
-release gate. The final CI/protection/checklist changes leave the tested Python
-runtime code unchanged.
+release gate. Later commits change runtime code, so the CI run on the final
+pull request, not this record, covers the published tree.
 Check the final `main` CI run and live GitHub protection after integration;
 neither this record nor a checked-in JSON file substitutes for those checks.
 

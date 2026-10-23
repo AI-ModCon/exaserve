@@ -16,10 +16,13 @@ and personal agent state are outside this documentation cleanup.
 
 ## Historical evidence
 
-The [findings ledger](hardening/FINDINGS.yaml) is moved without modifying its
-bytes. Existing artifact manifests, receipts, source commits, hashes, recorded
-commands and qualification metadata retain their original identities, so paths
-they cite may still use `doc/` or `findings/`. Consult cited files at their
+The initial move of the [findings ledger](hardening/FINDINGS.yaml) preserved its
+bytes. The later retirement of run records updates baseline, affected-region
+and evidence references in the current ledger; recorded finding statuses,
+decisions and artifact hashes retain their original values. Existing artifact
+manifests, receipts, source commits, recorded commands and qualification
+metadata retain their original identities, so paths they cite may still use
+`doc/` or `findings/`. Consult cited files at their
 recorded source commit to interpret original line numbers and exact bytes; the
 table above locates their current descendants, and removed records remain in the
 repository history.
@@ -58,8 +61,9 @@ The legacy paper-evidence ledger
 schema 3) no longer stores job identifiers. In each run cell its loader selects
 the retained PBS stdout file whose bytes match the pinned SHA-256 (a cell can
 keep several from resubmissions) and reads the job identifier and server from
-that file's name. Measurements, evidence hashes and the findings ledger bytes
-are unchanged. The original text remains at each record's source commit.
+that file's name. Measurements and pinned evidence hashes are unchanged. Ledger
+reference updates are described above; the original text remains at each
+record's source commit.
 This redaction applies to the current tree; Git history is not rewritten
 ([disclosure decision](modcon_compliance.md#operational-details-kept-for-the-disclosure-decision)).
 

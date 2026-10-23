@@ -49,8 +49,10 @@ class LiteLLMProxy(ProxyBackend):
                                        launching litellm.  Use this when litellm is
                                        installed in a separate venv from Ray/vLLM.
                                        Default: sys.executable (current interpreter).
-            master_key (str):          Bearer token required from callers.
-                                       Default: "sk-aurora" (set a real secret in prod).
+            master_key, db_url:        Not read here and have no default. Set them
+                                       as {secret_ref: "ENV:<name>"} gateway options;
+                                       composition passes them to LiteLLM as
+                                       LITELLM_MASTER_KEY and DATABASE_URL.
             routing_strategy (str):    LiteLLM router strategy.
                                        "least-busy" | "simple-shuffle" | "latency-based-routing"
                                        Default: "least-busy".
@@ -61,8 +63,6 @@ class LiteLLMProxy(ProxyBackend):
                                        instead of network downloads. Default: true.
             keepalive_timeout (int):   Idle client-connection lifetime in
                                        seconds. Default: 120.
-            db_url (str):              SQLAlchemy URL for usage DB.
-                                       Default: "sqlite:///litellm_usage.db" (local file).
             extra_general (dict):      Merged verbatim into general_settings.
             extra_router (dict):       Merged verbatim into router_settings.
         """

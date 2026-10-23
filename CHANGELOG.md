@@ -1,10 +1,58 @@
 # Changelog
 
-This records project changes, not an assertion that a deployment or release has
-passed hardware qualification. Exact artifacts and scope are recorded in
-[`docs/hardening/STATUS.md`](docs/hardening/STATUS.md) and the linked evidence.
+This records project changes and the verification scope of individual updates.
+ExaServe's scale evaluations reached 256 Aurora nodes on earlier snapshots of
+this code; smaller checks for a particular fix do not redefine the system's
+demonstrated scale, and neither qualifies the current tree. Formal release
+admission is tracked in [`docs/hardening/STATUS.md`](docs/hardening/STATUS.md).
 
 ## Unreleased
+
+### Scale descriptions and reference card
+
+- Describe ExaServe's demonstrated 1–256-node Aurora scale, measured on earlier
+  snapshots of this code, in the overview, reference card and scale matrix.
+  Keep fix-specific test coverage separate from system capability and
+  packaged-release admission, and keep the verdict that no artifact is
+  production-qualified.
+- Refresh the generated Word reference card: the dense single-model Serve
+  layout, the public arXiv citation and the operator-provisioned runtime setup
+  replace stale descriptions, and the figures quoted from the paper are
+  corrected. Refresh the scale and run sections of its Markdown companion.
+- Document the reference updates to `docs/hardening/FINDINGS.yaml` when run
+  records were retired; historical finding statuses, decisions and artifact
+  hashes retain their recorded values.
+
+### Validation coverage
+
+The 256-node evaluations, made on earlier snapshots of this code, are
+documented in the [paper](https://arxiv.org/abs/2609.10812) and
+[operations handbook](docs/operations_handbook.md). Later regression checks
+record the coverage of individual changes; their node counts are not a new
+maximum for ExaServe.
+
+- The implementation snapshot committed as "Cite the paper on arXiv and
+  gather the plotting scripts" passed the seven portable CI-equivalent
+  checks on an Aurora compute node. Fixed-order, randomized-order and
+  installed-wheel suites each reported **1,771 passed, 40 skipped**. These are
+  code/package regression results, not a rerun of the scale study. The
+  documentation update that follows it is covered by the pull request's CI run.
+- Focused one-/two-node hardware and regression checks cover particular
+  staging, control-plane and pipeline-parallel paths. Their scope stays with
+  those checks rather than becoming a system-wide scale restriction.
+- Earlier packaged candidate `final43` passed one- and two-node null/real XPU,
+  PP=2 and failure-handling cells in validation mode. Its wheel SHA-256 is
+  `1041be53eb5b5875d198d5ee6c6664718b4085775dcba99107873dd3d1fcdff2`.
+  The successor `release-v0.4.0-rc2` passed a clean package gate; its wheel
+  SHA-256 is
+  `75bab1c97948d29237000d5fa087f3ed1f1d18e5ef3233fe2c759b4faf0e32f8`.
+  These receipts remain tied to those artifacts.
+- The default `SiteProfile`'s production-admission envelope records
+  `supported_max_nodes=2`, `qualification_target_nodes=64` and
+  `qualification_target_approved=false`, and the compiler enforces it:
+  non-validation plans above two nodes fail, and validation-mode plans in that
+  envelope stop at 64 nodes. These are admission limits, not the measured scale
+  of the framework; this documentation update does not change them.
 
 ### Defect fixes
 
@@ -95,8 +143,9 @@ passed hardware qualification. Exact artifacts and scope are recorded in
 - Consolidate architecture, hardening records and research findings under
   `docs/`.
 - Update documentation, analysis and reference-card paths; check local links in
-  CI against tracked files. Historical ledger bytes and qualification/profile
-  identities are preserved through documented legacy-reference resolution.
+  CI against tracked files. The later retirement of run records updates ledger
+  references while preserving recorded finding dispositions, artifact hashes
+  and qualification/profile identities.
 
 ### Portable CI
 

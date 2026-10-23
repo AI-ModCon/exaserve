@@ -116,7 +116,9 @@ one replica is what produced the 405B/256-node backend flap.
 
 ## Scope
 
-This describes the code path, not a support claim. The evidence-backed maximum
-for the current candidate is two nodes; see
-[`../hardening/STATUS.md`](../hardening/STATUS.md) and
-[`../hardening/decisions/ADR-000-production-envelope.md`](../hardening/decisions/ADR-000-production-envelope.md).
+The worked configuration is a compact example of the code path. ExaServe's
+scale evaluations reached 256 Aurora nodes on earlier snapshots of this code;
+this example's size does not set the system's scale. See the
+[hardening status](../hardening/STATUS.md) for release admission and the
+[changelog](../../CHANGELOG.md#validation-coverage) for fix-specific
+verification coverage.

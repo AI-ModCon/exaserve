@@ -244,11 +244,14 @@ blocks.append(
         "allocation (e.g. a PBS job) into a "
         "single OpenAI-compatible inference service: it launches a Ray cluster over the "
         "allocation, stages model weights to node-local storage with an MPI broadcast, deploys "
-        "vLLM inference replicas as separate Ray Serve applications, and fronts them with one "
+        "vLLM replicas in plan-derived Ray Serve applications, and fronts them with one "
         "head-owned HAProxy. A companion evaluation harness measures deployments end to end. "
-        "The current evidence-backed production maximum is two Aurora nodes; larger historical "
-        "measurements below predate the hardened architecture and are research context, not a "
-        "current support or qualification claim.",
+        "ExaServe has been evaluated from 1 to 256 Aurora nodes, including Llama-3-8B "
+        "serving and pipeline-parallel Llama-3.1-405B inference, on earlier snapshots of "
+        "this code; the current tree has not been re-measured at that scale. This is "
+        "development and research source: no artifact is production-qualified, and "
+        "production submission fails closed. Fix-specific regression coverage belongs to "
+        "the changelog and does not redefine the system's demonstrated scale.",
         after=100,
     )
 )
@@ -271,18 +274,20 @@ why = [
         "knowledge.",
     ),
     (
-        "Historical scale evidence",
-        "Earlier deployments measured to 256 nodes / 3,072 replicas behind HAProxy "
+        "Demonstrated scale",
+        "Scale evaluations of earlier snapshots reached 256 nodes / 3,072 replicas "
+        "behind HAProxy "
         "front end: 27.1k non-streaming QPS with Llama-3-8B (one replica per tile) "
         "— 96% weak-scaling efficiency at 256 nodes (27.1k of 28.2k offered, 0% errors). "
         "A quantified comparison of head-node proxies (HAProxy, Envoy, LiteLLM, Ray Serve "
-        "proxy) guides qualification work, but those runs do not qualify the hardened path.",
+        "proxy) records gateway-specific throughput and latency limits.",
     ),
     (
         "Frontier-model research",
         "Multi-node pipeline parallelism serves Llama-3.1-405B (TP8 × PP2, two nodes per "
         "replica) with shard-aware weight staging, demonstrated from 2 to 128 replicas "
-        "(4 to 256 nodes) at 67% weak-scaling efficiency (streaming) on the historical path.",
+        "(4 to 256 nodes, streaming): 67% weak-scaling efficiency with direct dispatch "
+        "and 50% through HAProxy.",
     ),
     (
         "Measurement built in",
@@ -318,13 +323,13 @@ blocks.append(
             ],
             [
                 "Inference replicas",
-                "vLLM replicas as independent Ray Serve applications — one per GPU "
-                "tile (12 per Aurora node) for single-tile models, or spanning multiple tiles and "
-                "nodes via tensor/pipeline parallelism for larger models",
+                "Dense single-model TP=1/PP=1 serving uses one multi-replica model application "
+                "plus node proxies. Sparse, multi-device, pipeline-parallel and multi-model "
+                "plans retain per-replica applications; replicas span devices as planned",
             ],
             [
                 "Head-node proxy",
-                "One head-owned HAProxy — the sole current production gateway — exposes a "
+                "One head-owned HAProxy in the Aurora reference deployment exposes a "
                 "single allocation-internal endpoint",
             ],
             [
@@ -354,28 +359,27 @@ blocks.append(
 blocks.append(bold_lead("ALCF Aurora"))
 blocks.append(
     body_par(
-        "The package installs into the Python provided by Aurora’s frameworks module, "
-        "which already ships Ray, vLLM, MPI, and the oneAPI toolchain; pip adds only the "
-        "exaserve package itself.",
+        "Use the operator-provisioned site interpreter and ExaServe wheel together with "
+        "the profiled Ray, vLLM, MPI and accelerator stack. Job isolation disables "
+        "user-site packages, so an installation made only with --user is not a serving "
+        "runtime. The README and getting-started guide describe provisioning and preflight.",
         after=60,
     )
 )
 blocks.append(
     code_block(
         "module load frameworks\n"
-        "git clone https://github.com/AI-ModCon/exaserve && cd exaserve\n"
-        "python3 -m pip install --user .\n"
-        "\n"
-        "# console scripts land in a frameworks-versioned bin dir; add it to PATH:\n"
-        "export PATH=\"$(python3 -c 'import sysconfig; "
-        'print(sysconfig.get_path("scripts", "posix_user"))\'):$PATH"\n'
-        "which exaserve-serve-submit   # verify"
+        "unset ONEAPI_DEVICE_SELECTOR\n"
+        "PYTHONNOUSERSITE=1 PYTHONSAFEPATH=1 python3 -c \\\n"
+        "  'import sys, exaserve; print(sys.executable); print(exaserve.__file__)'\n"
+        "command -v mpiexec\n"
+        "command -v haproxy"
     )
 )
 blocks.append(
     body_par(
-        "One-time extras: build HAProxy with scripts/build_haproxy.sh for the production "
-        "gateway; build the evaluation load generator with "
+        "One-time extras: provision HAProxy with scripts/build_haproxy.sh on a compute "
+        "node; build the evaluation load generator with "
         "module load go && make -C eval/go_client."
     )
 )
@@ -385,9 +389,11 @@ blocks.append(heading(4, "Example"))
 blocks.append(bold_lead("ALCF Aurora"))
 blocks.append(
     body_par(
-        "One flat canonical YAML file describes deployment semantics. Submit it from a login "
-        "node (no allocation needed), "
-        "then query the printed URL from anywhere that can reach the head node:",
+        "One flat canonical YAML file describes deployment semantics. This compact "
+        "example uses two nodes for readability. Before submission, select an authorized "
+        "validation configuration or an admitted release profile; the current default "
+        "profile fails production admission closed. Submission itself runs from a login "
+        "node; query the endpoint only after canonical READY:",
         after=60,
     )
 )
@@ -448,12 +454,15 @@ blocks.append(
 )
 
 # 5 Scaling
-blocks.append(heading(5, "Historical scale evidence (not current qualification)"))
+blocks.append(heading(5, "Measured scaling on Aurora"))
 blocks.append(
     body_par(
-        "All measurements in this section were conducted on the pre-cutover ALCF Aurora "
-        "path. They are regression context only. The hardened architecture must be re-run at "
-        "each approved tier before any larger support claim is published.",
+        "The published evaluations span 1–256 Aurora nodes and were made on earlier "
+        "snapshots of this code; the current tree has not been re-measured at that scale. "
+        "These measurements describe the tested workloads, runtime configurations and "
+        "gateway modes; individual fixes have their own verification coverage. "
+        "Production-release admission remains artifact-specific and is recorded in the "
+        "hardening status.",
         after=80,
     )
 )
@@ -501,12 +510,14 @@ blocks.append(
         "(Llama-3.1-405B: TP8 within a node × PP2 across two nodes). Shard-aware staging "
         "gives each pipeline stage only its own weight shard (~380 GiB, which fits node-local "
         "tmpfs) and pins each replica to its nodes. All 405B measurements are streaming: at a "
-        "fixed per-replica offered rate, aggregate successful throughput grows from "
-        "0.7 QPS at 2 replicas to 31.0 QPS at 128 replicas (4 to 256 nodes) — 67% "
-        "weak-scaling efficiency vs the 4-node base, sublinear rather than linear. Through a "
-        "single HAProxy the service tracks the proxy-bypass diagnostic up to 64 nodes "
-        "(9.3 QPS, 80%) before the same head-node streaming ceiling appears; a "
-        "non-streaming 405B configuration has not been measured.",
+        "fixed per-replica offered rate, direct dispatch (the routing-free reference) grows "
+        "aggregate successful throughput from 0.7 QPS at 2 replicas to 31.0 QPS at 128 "
+        "replicas (4 to 256 nodes), a 67% weak-scaling efficiency vs the 4-node base. Through "
+        "a single HAProxy the service tracks direct dispatch within 5% through 8 replicas, "
+        "falls behind from 16 replicas, and completes 22.9 QPS at 0.3% errors (50% "
+        "efficiency) at 128 replicas. The paper attributes the remaining efficiency loss to "
+        "requests still draining at the end of the fixed measurement window, not to "
+        "routing. A non-streaming 405B configuration has not been measured.",
         after=60,
     )
 )
@@ -536,14 +547,14 @@ blocks.append(
     data_table(
         [
             ["Perturbation", "attain (N=1)", "attain (N=64)", "Δ"],
-            ["(baseline) 8B, 64/64, fixed-interval", "0.91", "0.43", "−0.48"],
-            ["Workload: ShareGPT 2K/2K", "1.00", "0.90", "−0.10"],
+            ["(baseline) 8B, 64/64, fixed-interval", "0.94", "0.65", "−0.29"],
+            ["Workload: ShareGPT 2K/2K", "1.00", "0.98", "−0.02"],
             ["Workload: ShareGPT 4K/4K", "1.00", "1.00", "0.00"],
             ["Workload: Code (HumanEval)", "1.00", "1.00", "0.00"],
             ["Workload: Chat (ShareGPT natural)", "0.99", "0.99", "0.00"],
             ["Workload: Summarization", "1.00", "1.00", "0.00"],
             ["Model: 120B (TP=8, rate 9)", "0.98", "0.97", "−0.01"],
-            ["Arrival: Poisson", "0.89", "0.35", "−0.54"],
+            ["Arrival: Poisson", "0.92", "0.60", "−0.32"],
             ["Arrival: BurstGPT trace †", "0.46", "0.46", "0.00"],
         ],
         [4424, 2000, 2000, 1800],
@@ -567,8 +578,9 @@ blocks.append(
         "Cluster bring-up behaves differently: it does not scale, and this is Ray’s key "
         "limitation at HPC scale. Model staging (~50 s for the 8B model), Ray cluster start "
         "(~45 s), and first-request warm-up (~8 s) are roughly flat in node count, but "
-        "Ray Serve’s serve.run phase grows superlinearly — 171 s at 64 nodes, 470 s at 128, "
-        "and 1,857 s (~31 min) at 256 — and a 512-node bring-up fails outright. The growth is "
+        "Ray Serve’s serve.run phase grows superlinearly — 154 s at 64 nodes, 456 s at 128, "
+        "and 1,767 s (about 30 min) at 256 — and a 512-node bring-up fails outright. The "
+        "growth is "
         "concentrated in the proxy readiness wait: on every deployment broadcast, every "
         "Ray Serve proxy resolves every replica handle against the Ray control store (GCS), "
         "work that is quadratic in node count and reaches 1.38 million GCS lookups at 256 "
@@ -617,8 +629,9 @@ blocks.append(
     callout(
         "Portability.",
         "The code has scheduler, gateway, vendor, and engine interfaces, but interfaces are not "
-        "support claims. The default Aurora SiteProfile qualifies only PBS, XPU, vLLM, and "
-        "HAProxy. Slurm/PSI-J, CUDA/ROCm, SGLang, streaming, direct exposure, and alternate "
+        "support claims. The default Aurora SiteProfile admits only PBS, XPU, vLLM, and "
+        "HAProxy as candidate dimensions, and production submission currently fails closed. "
+        "Slurm/PSI-J, CUDA/ROCm, SGLang, streaming, direct exposure, and alternate "
         "gateways fail closed or require explicit validation-only plans until separately proven.",
         NOTE_BG,
     )
@@ -687,20 +700,25 @@ blocks.append(
 blocks.append(heading(8, "Citation"))
 blocks.append(
     body_par(
-        "The system and its 1–256-node evaluation are described in an SC26 workshop "
-        "paper (in preparation):",
+        "The system and its 1–256-node evaluation are described in ExaServe: Large-Scale "
+        "LLM Serving on Exascale HPC Systems, arXiv:2609.10812. "
+        "https://arxiv.org/abs/2609.10812",
         after=60,
     )
 )
 blocks.append(
     code_block(
         "@misc{wang2026exaserve,\n"
-        "    title = {ExaServe: Deploying and Measuring Large-Scale\n"
-        "             Ray Serve for LLM Inference on Aurora System},\n"
-        "    author = {Wenyi Wang and Shu Shi and Yadu Nand Babuji and\n"
+        "    title = {ExaServe: Large-Scale LLM Serving on\n"
+        "             Exascale HPC Systems},\n"
+        "    author = {Wenyi Wang and Shu Shi and Yadu Babuji and\n"
         "              Ian Foster and Kyle Chard},\n"
-        "    note = {SC26 workshop paper, in preparation},\n"
-        "    year = {2026}\n"
+        "    year = {2026},\n"
+        "    eprint = {2609.10812},\n"
+        "    archivePrefix = {arXiv},\n"
+        "    primaryClass = {cs.DC},\n"
+        "    doi = {10.48550/arXiv.2609.10812},\n"
+        "    url = {https://arxiv.org/abs/2609.10812}\n"
         "}"
     )
 )

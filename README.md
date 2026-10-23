@@ -1,23 +1,29 @@
 # ExaServe
 
 ExaServe is an allocation-scoped Ray Serve control plane for OpenAI-compatible
-LLM inference on ALCF Aurora. The current production candidate is deliberately
-narrow: Aurora PBS, Intel PVC/XPU, vLLM, HAProxy, non-streaming requests, and a
-trusted allocation-internal network. Slurm, CUDA/ROCm, SGLang, streaming, direct
-Serve exposure, and alternate gateways are rejected or validation-only unless a
-separately qualified `SiteProfile` says otherwise.
+LLM inference on ALCF Aurora. **ExaServe has been evaluated from 1 to 256 Aurora
+nodes**, including HAProxy-fronted Llama-3-8B serving and multi-node,
+pipeline-parallel Llama-3.1-405B inference. The non-streaming study reached
+27.1k requests/s at 256 nodes; streaming and gateway-specific limits are
+documented in the [operations handbook](docs/operations_handbook.md). These
+measurements were made on earlier snapshots of this code; the current tree has
+not been re-measured at that scale.
+
+The reference runtime is Aurora PBS, Intel PVC/XPU, vLLM, HAProxy, non-streaming
+completions and a trusted allocation-internal network. Slurm, CUDA/ROCm, SGLang,
+streaming, direct Serve exposure and other gateways are rejected or
+validation-only under the default `SiteProfile`; other platforms need their own
+runtime profiles and validation.
 
 The design and its measurements on Aurora are described in
 [ExaServe: Large-Scale LLM Serving on Exascale HPC Systems](https://arxiv.org/abs/2609.10812).
-Historical package and hardware receipts qualify their exact artifacts, not
-every later commit, and the paper's measurements are not release evidence or
-cross-platform support claims.
-
-Qualification is immutable-candidate and dimension specific. The proposed
-64-node target is not a support claim: it needs product-owner scope approval
-and the predeclared exact-candidate ladder. See
-[`docs/hardening/STATUS.md`](docs/hardening/STATUS.md) for the current
-qualification state, evidence-backed maximum, and unresolved gates.
+The 256-node evaluations establish the demonstrated scale of the system for
+those workloads; they are not release evidence for the current tree. Focused
+regression checks for later fixes have their own coverage, recorded in the
+[changelog](CHANGELOG.md#validation-coverage); their allocation size does not
+redefine that demonstrated scale. No artifact of the current tree is
+production-qualified, and production submission fails closed; see
+[`docs/hardening/STATUS.md`](docs/hardening/STATUS.md).
 
 ## Documentation and AI-ModCon preparation
 
@@ -336,7 +342,7 @@ Repository infrastructure and community guidance draw on
 [AI-ModCon/BaseTemplate](https://github.com/AI-ModCon/BaseTemplate).
 We acknowledge the U.S. Department of Energy's Genesis Mission support for
 the ModCon Base collaboration. This statement does not assert a project-specific
-award or a completed repository transfer.
+award.
 
 ## License
 

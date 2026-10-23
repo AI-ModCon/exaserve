@@ -14,8 +14,12 @@ exists), the [known issues](KNOWN_ISSUES.md), and the
 
 Unless a section says otherwise, numbers come from Aurora (Intel PVC, 12 tiles
 per node) with Ray 2.53.0, vLLM 0.15.0 and Llama-3-8B with one replica per tile.
-They were measured on earlier snapshots, often in validation mode, so use them
-for sizing and as regression context, not as qualification of the current tree.
+The scale evaluations reached **256 Aurora nodes**. They were measured on
+earlier snapshots of this code, often in validation mode: use them for sizing
+and as regression baselines, not as qualification of the current tree.
+Verification of later fixes is recorded separately in the
+[changelog](../CHANGELOG.md#validation-coverage); packaged-release admission is
+tracked in the hardening status.
 
 **Contents**
 

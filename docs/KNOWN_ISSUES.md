@@ -6,9 +6,11 @@ behaviour behind these entries, and what to do about it, is in the
 [operations handbook](operations_handbook.md).
 
 No artifact of the current tree is production-qualified
-([hardening status](hardening/STATUS.md)). Large-scale observations below are
-diagnostic context; they do not qualify the current architecture or establish a
-support envelope.
+([hardening status](hardening/STATUS.md)). ExaServe's evaluations, on earlier
+snapshots of this code, reached 256 Aurora nodes; the observations below
+describe workload- and configuration-specific limits found at scale and do not
+qualify the current tree. Fix-specific regression coverage is recorded in the
+[changelog](../CHANGELOG.md#validation-coverage).
 
 ## Current unresolved scale and scope observations
 
