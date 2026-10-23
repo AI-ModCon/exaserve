@@ -1,7 +1,7 @@
 # Portable hermetic CI profile. Every direct and transitive Python dependency
 # used by the unit/package/static gates is exact. Regenerate deliberately and
 # exercise the supported portable interpreter (Python 3.12) before changing a pin.
-pip==26.2.1
+pip==26.2.2
 uv==0.13.4
 PyYAML==6.0.3
 packaging==25.0

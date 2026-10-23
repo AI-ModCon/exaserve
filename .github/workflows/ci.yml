@@ -72,6 +72,7 @@ jobs:
       - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
         with:
           go-version: "1.27.3"
+          cache: false
       - name: Check Go formatting
         working-directory: eval/go_client
         run: test -z "$(gofmt -l .)"
@@ -109,7 +110,7 @@ jobs:
           test "$(stat -c %d /tmp)" != "$(stat -c %d /home)"
       - name: Install (core + dev, no GPU stack)
         run: |
-          python -m pip install pip==26.2.1
+          python -m pip install pip==26.2.2
           pip install -r requirements/ci.lock
           pip install --no-deps -e .
       - name: Assert no undeclared host tools are needed
@@ -171,7 +172,7 @@ jobs:
           test "$(stat -c %d /tmp)" != "$(stat -c %d /home)"
       - name: Build the wheel
         run: |
-          python -m pip install pip==26.2.1
+          python -m pip install pip==26.2.2
           pip install -r requirements/ci.lock
           # The wheel is built from a freshly extracted sdist and its package
           # members must exactly match src/ plus declared package data. A plain
@@ -185,7 +186,7 @@ jobs:
           # venv and running the suite against the INSTALLED package is what
           # proves the artifact a user would get actually works.
           python -m venv /tmp/pkg
-          /tmp/pkg/bin/pip install pip==26.2.1
+          /tmp/pkg/bin/pip install pip==26.2.2
           /tmp/pkg/bin/pip install -r requirements/ci.lock
           /tmp/pkg/bin/pip install --no-deps dist/*.whl
           # Use a dedicated empty cwd. A shared /tmp can contain unrelated
@@ -217,7 +218,7 @@ jobs:
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: "3.12"
-      - run: python -m pip install pip==26.2.1 && pip install -r requirements/ci.lock
+      - run: python -m pip install pip==26.2.2 && pip install -r requirements/ci.lock
       - name: Validate every record against plan section 8
         run: python scripts/hardening/validate_findings.py
 
@@ -231,7 +232,7 @@ jobs:
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: "3.12"
-      - run: python -m pip install pip==26.2.1 && pip install -r requirements/ci.lock
+      - run: python -m pip install pip==26.2.2 && pip install -r requirements/ci.lock
       - name: Check documentation links against tracked repository paths
         run: python scripts/check_documentation_links.py
       - name: Ruff format (release-gating)

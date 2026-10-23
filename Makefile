@@ -13,7 +13,7 @@ help:
 	  '  install / install-dev  Sync locked portable dev and test groups; no GPU extras' \
 	  '  lock                   Deliberately update uv.lock from dependency metadata' \
 	  '  lock-check             Check uv.lock without changing it' \
-	  '  lint                   Run the existing correctness, runtime, and security rules' \
+	  '  lint                   Check documentation links, then run the correctness, runtime, and security rules' \
 	  '  format-check           Check formatting without rewriting source' \
 	  '  type-check             Check the typed contract core' \
 	  '  test                   Run the fixed-order portable suite' \
@@ -35,6 +35,7 @@ lock-check:
 	$(UV) lock --check --no-build --no-python-downloads
 
 lint:
+	$(UV) run --locked python scripts/check_documentation_links.py
 	$(UV) run --locked ruff check .
 	$(UV) run --locked ruff check --select E4,E7,F src/exaserve eval/lib eval/cli.py clientlab tests conftest.py
 	$(UV) run --locked ruff check --select S102,S307,S602,S608,S609 src/exaserve eval/lib clientlab

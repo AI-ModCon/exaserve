@@ -54,7 +54,7 @@ trap cleanup EXIT
 
 python3 -m venv "$scratch/venv"
 python_bin="$scratch/venv/bin/python"
-"$python_bin" -m pip install pip==26.2.1
+"$python_bin" -m pip install pip==26.2.2
 "$python_bin" -m pip install -r "$repo_root/requirements/ci.lock"
 "$python_bin" -m pip install --no-deps "$wheel"
 

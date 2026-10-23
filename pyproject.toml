@@ -74,7 +74,7 @@ paper = [
 # requirements/ci.lock environment; runtime/site stacks are not installed here.
 [dependency-groups]
 dev = [
-    "pip==26.2.1",
+    "pip==26.2.2",
     "uv==0.13.4",
     "build==1.4.0",
     "pyproject-hooks==1.2.0",
@@ -112,7 +112,7 @@ test = [
 ]
 
 [tool.uv]
-required-version = "==0.13.4"
+required-version = ">=0.13.4"
 default-groups = ["dev", "test"]
 # This is the reproducible development lock's envelope, not a new hardware
 # support claim. vLLM 0.15.0's optional published extra requires Python <3.14;
