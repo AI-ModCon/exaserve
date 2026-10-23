@@ -1,5 +1,6 @@
 #include "handler.hpp"
 #include <cctype>
+#include <cstdint>
 #include <cstring>
 #include <ctime>
 #include <string>
@@ -60,17 +61,26 @@ bool parse_headers(const char* buf, size_t len, ParsedRequest& req, size_t& head
         req.method = ParsedRequest::UNKNOWN;
     }
 
-    // Parse Content-Length (case-insensitive).
+    // Parse Content-Length (case-insensitive). Values without digits or above
+    // kMaxContentLength (which also rules out overflow) mark the request malformed.
     const char* cl = find_case_insensitive(buf, end, "Content-Length:");
     if (cl && cl < end) {
+        constexpr uint64_t kMaxContentLength = uint64_t{1} << 30;
         cl += 15;
         while (cl < end && (*cl == ' ' || *cl == '\t')) cl++;
-        int content_length = 0;
+        uint64_t content_length = 0;
+        bool any_digit = false;
         while (cl < end && *cl >= '0' && *cl <= '9') {
-            content_length = (content_length * 10) + (*cl - '0');
+            content_length = (content_length * 10) + static_cast<uint64_t>(*cl - '0');
+            any_digit = true;
+            if (content_length > kMaxContentLength) break;
             cl++;
         }
-        req.content_length = content_length;
+        if (!any_digit || content_length > kMaxContentLength) {
+            req.malformed = true;
+        } else {
+            req.content_length = static_cast<int>(content_length);
+        }
     }
 
     // Parse Connection header for keep-alive.

@@ -181,11 +181,26 @@ _AMBIENT_DISCARD_KEYS = {
     # ExaServe's own head-side configuration: read when plans are compiled and
     # jobs are submitted, never by ranks or engines. Users export it in their
     # shell profile, so batch jobs inherit it, and its values name shared
-    # storage; drop it rather than report it as a leak.
+    # storage; drop it rather than report it as a leak. The second group is the
+    # evaluation tooling's site configuration (eval/site_config.py), which this
+    # package cannot import; tests/test_runtime_environment.py keeps the two
+    # lists in step. EXASERVE_NUM_GPUS_PER_NODE is not here: ranks read it.
     "EXASERVE_PROJECT_ROOT",
     "EXASERVE_MODEL_STORAGE_PATH",
     "EXASERVE_LOCAL_STAGE_PATH",
     "EXASERVE_ENV_SCRIPT_AURORA",
+    "EXASERVE_SITE_CONFIG_LOCAL",
+    "EXASERVE_PAPER_SUITE_ROOT",
+    "EXASERVE_USER_DATA_ROOT",
+    "EXASERVE_INPUT_TRACE_PATH",
+    "EXASERVE_INPUT_PROMPT_PATH",
+    "EXASERVE_OUTPUT_TRACE_DIR",
+    "EXASERVE_EXPERIMENTS_ROOT",
+    "EXASERVE_LITELLM_PYTHON_PATH",
+    "EXASERVE_SNAPSHOT_DIR",
+    "EXASERVE_BENCH_RESULTS_DIR",
+    "EXASERVE_ENV_SCRIPT_LITELLM",
+    "EXASERVE_SGLANG_PYTHON_PATH",
 }
 _OVERWRITTEN_PATH_KEYS = {
     "PWD",

@@ -27,3 +27,12 @@ def test_buffered_and_legacy_timing_cannot_satisfy_token_delivery_slo() -> None:
 
 def test_e2e_only_slo_remains_available_for_buffered_response() -> None:
     assert _request_meets_slo(_request("buffered_response"), SLO_PRESETS["e2e_2s"])
+
+
+def test_paper_preset_scores_ttft_against_two_seconds() -> None:
+    # The paper SLO is TTFT <= 2 s and per-request P99 TBT <= 250 ms.
+    within, beyond = _request("incremental_sse"), _request("incremental_sse")
+    within["ttft_s"], beyond["ttft_s"] = 1.5, 2.5
+    assert SLO_PRESETS["paper"].ttft_s == 2.0
+    assert _request_meets_slo(within, SLO_PRESETS["paper"])
+    assert not _request_meets_slo(beyond, SLO_PRESETS["paper"])

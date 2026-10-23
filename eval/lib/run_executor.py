@@ -592,7 +592,7 @@ def _submit_run_once(run_plan, scheduler, *, submit_attempt: int) -> tuple[str, 
             run_plan.scheduler.walltime,
         )
         if violation is not None:
-            return "invalid", violation
+            return "invalid", f"{violation}, or run this cell as an allocation-campaign child"
 
         try:
             write_run_state(run_plan, "submitting", submit_attempt=submit_attempt)

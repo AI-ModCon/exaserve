@@ -128,7 +128,7 @@ def _load_local_overrides() -> Dict[str, Any]:
 def site_config_environment_names() -> frozenset:
     """The environment variables that configure this tooling on the head."""
     return frozenset(
-        ["EXASERVE_SITE_CONFIG_LOCAL"]
+        ["EXASERVE_SITE_CONFIG_LOCAL", "EXASERVE_PAPER_SUITE_ROOT"]
         + ["EXASERVE_{0}".format(field_name.upper()) for field_name in _FIELD_NAMES]
     )
 
@@ -163,8 +163,9 @@ def _normalize_config(config: SiteConfig) -> SiteConfig:
         raise ValueError("project_root must be an absolute path")
     if not project_root and not (config.user_data_root and config.model_storage_path):
         raise ValueError(
-            "site config project_root is not set; set EXASERVE_PROJECT_ROOT or project_root "
-            "in site_config_local.py, or set both user_data_root and model_storage_path"
+            "site config project_root is not set; set EXASERVE_PROJECT_ROOT, or project_root "
+            "in the local overrides (eval/site_config_local.py or the file that "
+            "EXASERVE_SITE_CONFIG_LOCAL names), or set both user_data_root and model_storage_path"
         )
     user_data_root = config.user_data_root or os.path.join(project_root, current_user, "data")
     model_storage_path = config.model_storage_path or os.path.join(

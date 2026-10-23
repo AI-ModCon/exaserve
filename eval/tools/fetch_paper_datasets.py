@@ -118,8 +118,8 @@ def fetch_cnn_dailymail(out_dir: Path, sample: int | None) -> None:
     except ImportError:
         _log(
             "cnn_dailymail: ERROR — `datasets` not importable. "
-            "Run under `module load frameworks` / the site environment script, "
-            "or `pip install datasets`."
+            "Run under the site environment script ('Prepare the runtime' in "
+            "docs/getting_started.md), or `pip install datasets`."
         )
         raise
     n = sample or 5000

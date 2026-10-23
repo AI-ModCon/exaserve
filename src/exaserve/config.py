@@ -16,7 +16,6 @@ Names:
     EXASERVE_DEFAULT_WALLTIME      optional PBS walltime override (hh:mm:ss)
     EXASERVE_DEFAULT_FILESYSTEMS   PBS filesystem list   (default: "home:flare")
     EXASERVE_PBS_KEEP_FLAG         PBS -k value          (default: "doe")
-    EXASERVE_PROJECT_ROOT          Repo root for source-tree usage (default: cwd)
 """
 
 from __future__ import annotations
@@ -33,7 +32,6 @@ class SiteDefaults:
     walltime: Optional[str]
     filesystems: str
     keep_flag: str
-    project_root: str
 
 
 _DEFAULTS = SiteDefaults(
@@ -42,7 +40,6 @@ _DEFAULTS = SiteDefaults(
     walltime=None,
     filesystems="home:flare",
     keep_flag="doe",
-    project_root=".",
 )
 
 
@@ -58,5 +55,4 @@ def get_site_defaults() -> SiteDefaults:
         walltime=walltime,
         filesystems=os.environ.get("EXASERVE_DEFAULT_FILESYSTEMS", _DEFAULTS.filesystems),
         keep_flag=os.environ.get("EXASERVE_PBS_KEEP_FLAG", _DEFAULTS.keep_flag),
-        project_root=os.environ.get("EXASERVE_PROJECT_ROOT", _DEFAULTS.project_root),
     )

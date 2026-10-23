@@ -96,14 +96,17 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--suite-root",
         type=Path,
-        default=get_paper_suite_root(),
+        default=None,
         help="Paper suite run-group folder (default: <runs>/arxiv-submission, or "
         "EXASERVE_PAPER_SUITE_ROOT)",
     )
     parser.add_argument("--output", type=Path, help="Atomically write JSON to this path")
     args = parser.parse_args(argv)
+    # Resolved only when needed, so --help and an explicit --suite-root work
+    # without site configuration.
+    suite_root = args.suite_root or get_paper_suite_root()
 
-    output: dict[str, Any] = analyze(args.suite_root)
+    output: dict[str, Any] = analyze(suite_root)
     for nodes, runs in output.items():
         print(f"=== N={nodes} ===", file=sys.stderr)
         for run_index, values in runs.items():

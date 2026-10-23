@@ -132,3 +132,23 @@ def test_context_window_attributes_a_prompt_that_alone_exceeds_the_limit():
             prompt_param="messages",
         )
     assert excinfo.value.param == "messages"
+
+
+@pytest.mark.parametrize("field", ["temperature", "top_p"])
+@pytest.mark.parametrize(
+    ("literal", "value"),
+    [
+        ("NaN", float("nan")),
+        ("Infinity", float("inf")),
+        ("-Infinity", float("-inf")),
+        ("1" + "0" * 400, 10**400),  # float() of it raised OverflowError -> 500
+    ],
+)
+def test_non_finite_and_huge_sampling_values_are_400_class(field, literal, value):
+    import json
+
+    # The handlers parse bodies with json.loads, which yields these exact values;
+    # only RequestValidationError is mapped to HTTP 400.
+    for body in ({field: value}, json.loads(f'{{"{field}": {literal}}}')):
+        with pytest.raises(RequestValidationError, match=f"{field} must be in"):
+            parse_sampling(body)

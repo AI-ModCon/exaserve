@@ -46,7 +46,7 @@ from .models import (
 )
 from exaserve.schedulers import JobSpec, default_queue_and_walltime, get_scheduler
 from .catalog import spec_group_relpath
-from .plan_adapter import compile_shared_run_plan
+from .plan_adapter import compile_shared_run_plan, eval_site_profile
 from .spec_io import load_experiment_spec
 from .trace_store import materialize_trace_artifact
 from .utils import (
@@ -1361,9 +1361,8 @@ def _materialize_variant(
         write_run_plan as write_semantic_run_plan,
         write_site_profile,
     )
-    from exaserve.site import default_site_profile
 
-    site_profile = default_site_profile()
+    site_profile = eval_site_profile()
     resolved_spec = replace(
         spec,
         scheduler=scheduler,

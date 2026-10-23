@@ -402,6 +402,10 @@ def test_closed_environment_drops_exaserve_head_configuration(tmp_path):
         "EXASERVE_MODEL_STORAGE_PATH": "/home/user/project/models",
         "EXASERVE_LOCAL_STAGE_PATH": "/tmp/hf_home",
         "EXASERVE_ENV_SCRIPT_AURORA": "/home/user/site/env.sh",
+        # The evaluation tooling's site configuration, which users also export.
+        "EXASERVE_LITELLM_PYTHON_PATH": "/home/user/litellm/bin/python3",
+        "EXASERVE_SITE_CONFIG_LOCAL": "/home/user/exaserve-config/site_config_local.py",
+        "EXASERVE_PAPER_SUITE_ROOT": "/lus/flare/projects/example-project/suite",
     }
     env = closed_runtime_environment(
         plan,
@@ -417,6 +421,21 @@ def test_closed_environment_drops_exaserve_head_configuration(tmp_path):
         },
     )
     assert not head_configuration.keys() & env.keys()
+
+
+def test_every_eval_site_path_setting_is_discarded_head_configuration():
+    """The package cannot import eval, so its discard list is a literal; keep
+    it in step with the evaluation tooling's path-valued site settings."""
+    from eval import site_config
+    from exaserve.plan.runtime_environment import _AMBIENT_DISCARD_KEYS
+
+    head_paths = {f"EXASERVE_{field.upper()}" for field in site_config._PATH_FIELDS} | {
+        "EXASERVE_SITE_CONFIG_LOCAL",
+        "EXASERVE_PAPER_SUITE_ROOT",
+    }
+    assert head_paths <= _AMBIENT_DISCARD_KEYS
+    # Ranks read the GPU count; it is a setting, not a path to drop.
+    assert "EXASERVE_NUM_GPUS_PER_NODE" not in _AMBIENT_DISCARD_KEYS
 
 
 def test_closed_environment_drops_unrecognized_ambient_behavior(tmp_path):

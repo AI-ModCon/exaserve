@@ -29,6 +29,13 @@ Extraction streams each result file once with ijson (yajl2_c) and writes a
 compact per-cell cache (scalars json + float32 npz of the per-request arrays)
 so re-plotting is instant. Pass --refresh to rebuild the cache.
 
+The cache belongs to the user running the script: it lives in
+$XDG_CACHE_HOME (default ~/.cache)/exaserve/figures/arxiv_submission_preview/,
+a directory created with mode 0700. Each entry is named by a SHA-256 of its
+result file (resolved path, size, mtime), the SLO thresholds and a schema
+version, so another suite folder, changed data or a changed SLO is extracted
+afresh. An entry that another user could have written is ignored.
+
 Usage:
   python -m eval.plot.arxiv_submission_preview                 # extract (cached) + all plots
   python -m eval.plot.arxiv_submission_preview --refresh       # force re-extract
@@ -38,9 +45,13 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import hashlib
+import io
 import json
 import os
+import stat
 import sys
+import zipfile
 from collections import defaultdict
 from dataclasses import dataclass, asdict
 from pathlib import Path
@@ -53,10 +64,30 @@ import numpy as np
 import ijson
 
 from eval.site_config import get_paper_suite_root
+from exaserve.state.atomic import atomic_write_bytes, ensure_owned_directory, regular_file_reader
 
-RUNS_ROOT = get_paper_suite_root() / "validation"
+# Run groups are read from <paper suite>/SUITE_SUBDIR, resolved from the site
+# configuration on first use (runs_root), so importing this module or printing
+# --help needs no site configuration. Assign RUNS_ROOT to read another folder.
+SUITE_SUBDIR = "validation"
+RUNS_ROOT: Path | None = None
 OUT_DIR = Path(__file__).resolve().parent / "output" / "arxiv_submission_preview"
-CACHE_DIR = Path("/tmp/arxiv_submission_preview_cache")
+
+
+def figure_cache_dir(script: str) -> Path | None:
+    """Per-user cache folder of one figure script:
+    $XDG_CACHE_HOME (default ~/.cache)/exaserve/figures/<script>, or None (no
+    cache) without a home directory. Only computes the path; ensure_cache_dir
+    creates and checks it."""
+    xdg = os.environ.get("XDG_CACHE_HOME", "")
+    try:
+        base = Path(xdg) if os.path.isabs(xdg) else Path.home() / ".cache"
+    except RuntimeError:
+        return None
+    return base / "exaserve" / "figures" / script
+
+
+CACHE_DIR = figure_cache_dir("arxiv_submission_preview")
 
 # Paper SLO (Sarathi-Serve style): TTFT <= 2s AND P99 time-between-tokens <= 250ms.
 TTFT_SLO_S = 2.0
@@ -65,6 +96,10 @@ TBT_P99_SLO_S = 0.250
 # how a looser first-token budget exposes the node-count scaling trend.
 TTFT_SLO_MULTI = (1.0, 2.0, 3.0)
 _TTFT_SLO_INDEX = TTFT_SLO_MULTI.index(TTFT_SLO_S)
+# Bump when the extraction or the cached fields change. Cache keys carry it with
+# the thresholds above (cache_identity), so no entry outlives its rule. Version 2
+# stopped synthesizing TTFT/TBT from buffered timing; 3 keys entries by source.
+CACHE_SCHEMA = 3
 
 # --- Suite definitions (mirror README "Run checklist") ----------------------
 
@@ -117,13 +152,19 @@ COLORS = {
 # --- Cell resolution & streaming extraction ---------------------------------
 
 
+def runs_root() -> Path:
+    """RUNS_ROOT when assigned, else the paper suite's SUITE_SUBDIR folder."""
+    return RUNS_ROOT if RUNS_ROOT is not None else get_paper_suite_root() / SUITE_SUBDIR
+
+
 def resolve_cell(spec_stem: str, node: int) -> Path | None:
     """Resolve the campaign-pinned result0 identity for this cell."""
-    spec_dir = RUNS_ROOT / f"{spec_stem}_val"
+    root = runs_root()
+    spec_dir = root / f"{spec_stem}_val"
     if not spec_dir.is_dir():
         # Set 2 oat specs already carry the _val suffix in their stem? No: stems
         # here are bare; the dir is "<stem>_val". But guard for both.
-        spec_dir = RUNS_ROOT / spec_stem
+        spec_dir = root / spec_stem
         if not spec_dir.is_dir():
             return None
     run_index = RUN_PIN.get((spec_stem, node), 0)
@@ -165,23 +206,124 @@ class CellStats:
     runs_ttft_attain_3s: list = None
 
 
+# --- Per-user cell cache -----------------------------------------------------
+
+_WARNED: set[str] = set()
+
+
+def _warn(msg: str) -> None:
+    """Report a cache problem once. Caching is best-effort: a cell whose entry
+    cannot be used or written is computed from its result file."""
+    if msg not in _WARNED:
+        _WARNED.add(msg)
+        print(f"  (warn: {msg})", file=sys.stderr, flush=True)
+
+
+def cache_identity() -> dict:
+    """What every cached value depends on besides its source data."""
+    return {
+        "schema": CACHE_SCHEMA,
+        "ttft_slo_s": TTFT_SLO_S,
+        "ttft_slo_multi": list(TTFT_SLO_MULTI),
+        "tbt_p99_slo_s": TBT_P99_SLO_S,
+    }
+
+
+def ensure_cache_dir() -> Path | None:
+    """CACHE_DIR, created 0700 and checked to be a real directory of this uid
+    that no other uid or group can write; None (no caching) otherwise."""
+    if CACHE_DIR is None:
+        _warn("not caching: no home directory for the cache")
+        return None
+    try:
+        return Path(ensure_owned_directory(CACHE_DIR))
+    except (OSError, ValueError) as e:
+        _warn(f"not caching in {CACHE_DIR}: {e}")
+        return None
+
+
+def read_cache_file(path: Path) -> bytes | None:
+    """One cache file's bytes, or None (recompute) unless it is a regular,
+    non-symlink file owned by this uid that no other uid or group can write."""
+    try:
+        with regular_file_reader(path, binary=True) as fh:
+            meta = os.fstat(fh.fileno())
+            if meta.st_uid != os.getuid() or stat.S_IMODE(meta.st_mode) & 0o022:
+                raise PermissionError("not owned by this user, or writable by group or others")
+            return fh.read()
+    except FileNotFoundError:
+        return None
+    except (OSError, ValueError) as e:
+        _warn(f"ignoring cache file {path}: {e}")
+        return None
+
+
+def write_cache_file(path: Path, data: bytes) -> None:
+    """Atomic write through a 0600 temporary file. A failure costs only the
+    cache entry; the caller keeps the value it computed."""
+    try:
+        atomic_write_bytes(path, data, fsync=False)
+    except OSError as e:
+        _warn(f"could not write cache file {path}: {e}")
+
+
+def cell_cache_name(spec_stem: str, node: int, src: Path) -> str:
+    """'<stem>__n<node>__<sha256>', the name of a cell's .json/.npz entries. The
+    digest covers the result file (resolved path, size, mtime_ns) and
+    cache_identity(), so an entry is never read for other data or another SLO."""
+    real = src.resolve()
+    meta = real.stat()
+    ident = {
+        **cache_identity(),
+        "src": str(real),
+        "size": meta.st_size,
+        "mtime_ns": meta.st_mtime_ns,
+    }
+    digest = hashlib.sha256(json.dumps(ident, sort_keys=True).encode()).hexdigest()
+    return f"{spec_stem}__n{node}__{digest}"
+
+
 def extract_cell(
     spec_stem: str, node: int, *, keep_arrays: bool, refresh: bool
 ) -> CellStats | None:
     src = resolve_cell(spec_stem, node)
     if src is None:
         return None
-    CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    # v2 refuses to synthesize TTFT/TBT from full-response or buffered timing.
-    tag = f"timing-v2__{spec_stem}__n{node}"
-    sjson = CACHE_DIR / f"{tag}.json"
-    snpz = CACHE_DIR / f"{tag}.npz"
-    if not refresh and sjson.exists() and (not keep_arrays or snpz.exists()):
-        d = json.loads(sjson.read_text())
-        # Tolerate older caches written before new percentile fields existed:
-        # fill any missing field with NaN (figures that need it pass refresh=True).
-        return CellStats(**{k: d.get(k, float("nan")) for k in CellStats.__dataclass_fields__})
+    cache = ensure_cache_dir()
+    name = cell_cache_name(spec_stem, node, src)
+    if cache is not None and not refresh and (not keep_arrays or (cache / f"{name}.npz").exists()):
+        st = _cached_stats(cache / f"{name}.json")
+        if st is not None:
+            return st
+    return _extract_and_cache(spec_stem, node, src, cache, name)[0]
 
+
+def _cached_stats(path: Path) -> CellStats | None:
+    data = read_cache_file(path)
+    if data is None:
+        return None
+    try:
+        return CellStats(**json.loads(data))
+    except (ValueError, TypeError) as e:  # truncated or foreign content: recompute
+        _warn(f"ignoring cache file {path}: {e}")
+        return None
+
+
+def _extract_and_cache(
+    spec_stem: str, node: int, src: Path, cache: Path | None, name: str
+) -> tuple[CellStats, np.ndarray, np.ndarray]:
+    """Stream one cell and, when caching, store its stats (.json) and its
+    per-request arrays (.npz without pickled objects)."""
+    st, ttft_a, tbt_a = _stream_cell(spec_stem, node, src)
+    if cache is not None:
+        write_cache_file(cache / f"{name}.json", json.dumps(asdict(st)).encode())
+        buf = io.BytesIO()
+        np.savez_compressed(buf, ttft=ttft_a, tbt=tbt_a)
+        write_cache_file(cache / f"{name}.npz", buf.getvalue())
+    return st, ttft_a, tbt_a
+
+
+def _stream_cell(spec_stem: str, node: int, src: Path) -> tuple[CellStats, np.ndarray, np.ndarray]:
     # Stream: per_run summaries (run>=1) then the requests array.
     completed = 0.0
     duration = 0.0
@@ -310,15 +452,26 @@ def extract_cell(
         runs_ttft_attain_2s=runs_t2,
         runs_ttft_attain_3s=runs_t3,
     )
-    sjson.write_text(json.dumps(asdict(st)))
-    np.savez_compressed(snpz, ttft=ttft_a, tbt=tbt_a)
-    return st
+    return st, ttft_a, tbt_a
 
 
 def load_arrays(spec_stem: str, node: int) -> tuple[np.ndarray, np.ndarray]:
-    npz = CACHE_DIR / f"timing-v2__{spec_stem}__n{node}.npz"
-    d = np.load(npz)
-    return d["ttft"], d["tbt"]
+    """Per-request TTFT and P99-TBT arrays of one cell: from its cache entry when
+    a trusted one exists, else extracted again. FileNotFoundError: no result."""
+    src = resolve_cell(spec_stem, node)
+    if src is None:
+        raise FileNotFoundError(f"no result0.json for {spec_stem} n{node}")
+    cache = ensure_cache_dir()
+    name = cell_cache_name(spec_stem, node, src)
+    data = read_cache_file(cache / f"{name}.npz") if cache is not None else None
+    if data is not None:
+        try:
+            with np.load(io.BytesIO(data), allow_pickle=False) as d:
+                return d["ttft"], d["tbt"]
+        except (OSError, ValueError, KeyError, EOFError, zipfile.BadZipFile) as e:
+            _warn(f"ignoring cache file {cache / name}.npz: {e}")
+    _, ttft, tbt = _extract_and_cache(spec_stem, node, src, cache, name)
+    return ttft, tbt
 
 
 # --- Plotting ---------------------------------------------------------------

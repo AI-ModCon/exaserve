@@ -77,9 +77,9 @@ def _req_float(body: dict, key: str, *, lo: float, hi: float) -> float:
     value = body[key]
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise RequestValidationError(f"{key} must be a number, got {value!r}")
-    value = float(value)
     if not (lo <= value <= hi):
         raise RequestValidationError(f"{key} must be in [{lo}, {hi}], got {value}")
+    value = float(value)
     return value
 
 

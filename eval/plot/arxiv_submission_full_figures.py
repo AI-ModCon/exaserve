@@ -18,13 +18,22 @@ Figures:
   fig4_latency       — TTFT/TBT/E2E p99 per proxy @ n64
   fig5_latency_cdf   — TTFT & P99-TBT CDFs (failures included → curves cap at the
                        success rate), per node count (n4/n64/n128)
+
+Cells are cached per user in $XDG_CACHE_HOME (default ~/.cache)/exaserve/
+figures/arxiv_submission_full_figures/ (a 0700 directory; entries keyed as in
+arxiv_submission_preview). Each build also saves its cells there as built.json,
+which --reuse reads instead of building when the run-group folder, the SLO
+thresholds and the cache schema it was built with are unchanged.
 """
 
 from __future__ import annotations
 
+import argparse
+import json
 import math
 import os
 import sys
+from dataclasses import asdict
 from functools import lru_cache
 from pathlib import Path
 
@@ -41,11 +50,12 @@ from eval.lib.pp405b_evidence import (
     load_legacy_pp405b_ledger,
     load_pp405b_points,
 )
-from eval.site_config import get_paper_suite_root, get_runs_root
+from eval.site_config import get_runs_root
 
-# Retarget the extraction to the full sweep (separate cache from validation).
-P.RUNS_ROOT = get_paper_suite_root() / "full"
-P.CACHE_DIR = Path("/tmp/arxiv_submission_full_cache")
+# Retarget the extraction to the full sweep (separate cache from validation). The
+# suite folder is resolved from the site configuration on first use.
+P.SUITE_SUBDIR = "full"
+P.CACHE_DIR = P.figure_cache_dir("arxiv_submission_full_figures")
 
 # Every paper series below owns explicit run selections; a rerun must never
 # silently replace the data behind a published figure.
@@ -298,7 +308,8 @@ def extract_run(stem, n, good):
     tbt = []
     lat = []
     dec = []
-    nreq = nsucc = nmeet = nttft = ntbt = 0
+    nreq = nsucc = nmeet = ntbt = 0
+    nttft = [0] * len(P.TTFT_SLO_MULTI)  # per TTFT_SLO_MULTI threshold, as extract_cell
     timing_semantics_seen = set()
     with open(src, "rb") as fh:
         for r in ijson.items(fh, "requests.item"):
@@ -321,19 +332,25 @@ def extract_run(stem, n, good):
                     ttft.append(t)
                     tbt.append(b)
                     dec.append(l - t)
-            tok = ok and not np.isnan(t) and t <= P.TTFT_SLO_S
+            tmeets = [ok and not np.isnan(t) and t <= thr for thr in P.TTFT_SLO_MULTI]
             bok = ok and not np.isnan(b) and b <= P.TBT_P99_SLO_S
-            if tok:
-                nttft += 1
+            for j, m in enumerate(tmeets):
+                if m:
+                    nttft[j] += 1
             if bok:
                 ntbt += 1
-            if tok and bok:
+            if tmeets[P._TTFT_SLO_INDEX] and bok:  # paper SLO: TTFT <= TTFT_SLO_S
                 nmeet += 1
     arr = lambda x: np.asarray(x, dtype=np.float32)
     _p = lambda a, q: float(np.nanpercentile(a, q)) if a.size else float("nan")
     ta, ba, la, da = arr(ttft), arr(tbt), arr(lat), arr(dec)
     timing_valid = timing_semantics_seen == {"incremental_sse"}
-    att = nmeet / nreq if nreq and timing_valid else float("nan")
+
+    def _frac(k):
+        # Token-delivery fractions exist only for pure incremental SSE: NaN, not 0.
+        return k / nreq if nreq and timing_valid else float("nan")
+
+    att = _frac(nmeet)
     return CellStats(
         spec=stem,
         node=n,
@@ -343,8 +360,8 @@ def extract_run(stem, n, good):
         rps=rps,
         attainment=att,
         goodput=rps * att,
-        ttft_attainment=(nttft / nreq if nreq and timing_valid else float("nan")),
-        tbt_attainment=(ntbt / nreq if nreq and timing_valid else float("nan")),
+        ttft_attainment=_frac(nttft[P._TTFT_SLO_INDEX]),
+        tbt_attainment=_frac(ntbt),
         success_rate=(nsucc / nreq if nreq else float("nan")),
         ttft_p50=_p(ta, 50),
         ttft_p99=_p(ta, 99),
@@ -354,7 +371,9 @@ def extract_run(stem, n, good):
         e2e_p99=_p(la, 99),
         decode_p50=_p(da, 50),
         decode_p99=_p(da, 99),
-        ttft_attain_1s=(nttft / nreq if nreq else float("nan")),
+        ttft_attain_1s=_frac(nttft[0]),
+        ttft_attain_2s=_frac(nttft[1]),
+        ttft_attain_3s=_frac(nttft[2]),
     )
 
 
@@ -1068,7 +1087,8 @@ def fig5_latency_cdf(S):
         "TTFT & per-request P99-TBT distributions across proxies and scale",
         [
             "Streaming (SSE) · nodes $\\in$ {4, 64, 128} · failures included $\\rightarrow$ curve caps at success rate",
-            "dashed = SLO (TTFT 1s / TBT 250ms)  ·  " + CFG_8B[0],
+            f"dashed = SLO (TTFT {P.TTFT_SLO_S:g}s / TBT {P.TBT_P99_SLO_S * 1e3:g}ms)  ·  "
+            + CFG_8B[0],
             CFG_8B[1],
         ],
     )
@@ -1387,7 +1407,7 @@ def _cached_pp405b_points(series, runs_root):
 
 
 def _pp405b_points(series):
-    return _cached_pp405b_points(series, str(P.RUNS_ROOT))
+    return _cached_pp405b_points(series, str(P.runs_root()))
 
 
 def _draw_pp405b(a, *, label_fs=5, tick_nodes=None, ylabel=True):
@@ -1570,7 +1590,60 @@ def fig_pp_engines(S):
 _RENDER_JOBS = []
 
 
-BUILT_CACHE = Path("/tmp/arxiv_submission_full_built.pkl")  # pickled (S, NS, O, ONS)
+# --reuse: the cells of the last build, as JSON in the per-user cell cache folder,
+# stored with the run-group folder, SLO thresholds and cache schema of that build.
+BUILT_CACHE_NAME = "built.json"
+_BUILT_PARTS = ("S", "NS", "O", "ONS")
+
+
+def _built_identity():
+    return {**P.cache_identity(), "runs_root": str(P.runs_root())}
+
+
+def _save_built(built):
+    """Store (S, NS, O, ONS) for a later --reuse. Best-effort, like every cache."""
+    cache = P.ensure_cache_dir()
+    if cache is None:
+        return
+    doc = _built_identity()
+    doc["cells"] = {
+        part: [[k0, k1, None if st is None else asdict(st)] for (k0, k1), st in cells.items()]
+        for part, cells in zip(_BUILT_PARTS, built)
+    }
+    try:
+        payload = json.dumps(doc).encode()
+    except (TypeError, ValueError) as e:  # a value JSON cannot hold: keep the figures
+        print(f"  (warn: not saving {BUILT_CACHE_NAME}: {e})", flush=True)
+        return
+    P.write_cache_file(cache / BUILT_CACHE_NAME, payload)
+
+
+def _load_built():
+    """(S, NS, O, ONS) saved by the last build, or None (build again) when there
+    is no entry this user can trust or it was built from another run-group
+    folder, with other SLO thresholds or under another cache schema."""
+    want = _built_identity()
+    cache = P.ensure_cache_dir()
+    data = None if cache is None else P.read_cache_file(cache / BUILT_CACHE_NAME)
+    if data is None:
+        return None
+    path = cache / BUILT_CACHE_NAME
+    try:
+        doc = json.loads(data)
+        changed = sorted(k for k in want if doc.get(k) != want[k])
+        if changed:
+            print(f"  not reusing {path}: built with another {', '.join(changed)}", flush=True)
+            return None
+        return tuple(
+            {
+                (k0, k1): (None if v is None else P.CellStats(**v))
+                for k0, k1, v in doc["cells"][part]
+            }
+            for part in _BUILT_PARTS
+        )
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
+        print(f"  not reusing {path}: unreadable ({e})", flush=True)
+        return None
 
 
 def _install_pdf_only():
@@ -1603,28 +1676,39 @@ def _render_job(i):
     return fn(*args)
 
 
-def main():
+def main(argv=None):
     global _RENDER_JOBS
-    refresh = "--refresh" in sys.argv
-    serial = "--serial" in sys.argv  # force sequential (debugging)
-    reuse = "--reuse" in sys.argv  # skip the ~60s build; reuse last data
-    if "--png" not in sys.argv:
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    ap.add_argument("--refresh", action="store_true", help="re-extract every cell (no cache reads)")
+    ap.add_argument(
+        "--reuse",
+        action="store_true",
+        help="skip the ~60s build and reuse the cells the last build saved in "
+        f"{BUILT_CACHE_NAME}, if that build read the same run-group folder with the "
+        "same SLO thresholds; otherwise build as usual",
+    )
+    ap.add_argument("--serial", action="store_true", help="render sequentially (debugging)")
+    ap.add_argument("--png", action="store_true", help="write PNG instead of vector PDF")
+    ap.add_argument(
+        "--only", metavar="SUBSTR", help="render just the figures whose function name has SUBSTR"
+    )
+    args = ap.parse_args(argv)
+    serial = args.serial  # force sequential (debugging)
+    if not args.png:
         _install_pdf_only()  # vector PDF only (no PNG); --png to keep PNG
 
-    import pickle
-
-    if reuse and not refresh and BUILT_CACHE.exists():
-        print(f"reusing built data from {BUILT_CACHE} (skip build)...", flush=True)
-        with open(BUILT_CACHE, "rb") as fh:
-            S, NS, O, ONS = pickle.load(fh)
+    built = _load_built() if args.reuse and not args.refresh else None
+    if built is not None:
+        print(
+            f"reusing built data from {P.CACHE_DIR / BUILT_CACHE_NAME} (skip build)...", flush=True
+        )
+        S, NS, O, ONS = built
     else:
         print("building cells (full sweep)...", flush=True)
-        S, NS, O, ONS = build(refresh=refresh)  # data load happens ONCE, in the parent
-        try:
-            with open(BUILT_CACHE, "wb") as fh:
-                pickle.dump((S, NS, O, ONS), fh, protocol=pickle.HIGHEST_PROTOCOL)
-        except Exception as e:  # caching is best-effort
-            print(f"  (warn: could not write {BUILT_CACHE}: {e})", flush=True)
+        S, NS, O, ONS = build(refresh=args.refresh)  # data load happens ONCE, in the parent
+        _save_built((S, NS, O, ONS))
     got = sum(1 for v in {**S, **NS, **O, **ONS}.values() if v)
     print(f"  extracted {got} cells", flush=True)
 
@@ -1639,9 +1723,7 @@ def main():
         (fig_pp_engines, (S,)),
     ]  # merged 405B + engine pair (paper)
     # --only <substr>: render just the jobs whose function name contains substr.
-    only = None
-    if "--only" in sys.argv:
-        only = sys.argv[sys.argv.index("--only") + 1]
+    only = args.only
     idxs = [i for i, (fn, _) in enumerate(_RENDER_JOBS) if only is None or only in fn.__name__]
     if any(_RENDER_JOBS[i][0] in {fig_pp405b, fig_pp_engines} for i in idxs):
         # Both PP figures use the same evidence. Load it once in the parent so

@@ -312,7 +312,7 @@ def queue_walltime_violation(scheduler_type: str, queue: str, walltime: str) -> 
     return (
         f"walltime {walltime} exceeds the {queue} queue's maximum of "
         f"{limit // 3600:02d}:{limit % 3600 // 60:02d}:00, so the scheduler would refuse "
-        "it; run this cell as an allocation-campaign child or choose a longer queue"
+        "it; choose a longer queue or a shorter walltime"
     )
 
 
