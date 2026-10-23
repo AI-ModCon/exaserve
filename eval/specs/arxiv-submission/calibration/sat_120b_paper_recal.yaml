@@ -1,5 +1,6 @@
 name: sat_120b_paper_recal
-# Re-calibrate the 120B OAT rate against the PAPER SLO (TTFT<=1s, p99 TBT<=250ms).
+# Re-calibrate the 120B OAT rate against the SLO the scoring tools used at the
+# time (TTFT<=1s, p99 TBT<=250ms; the paper reports TTFT<=2s, so the rate is conservative).
 # The throughput-knee finder (sat_120b_64x64 -> 19, OAT 17.1) overshot: a
 # SUSTAINED 60s run at 17.1 gave p99 TBT 568ms and TTFT 3.9s (attainment 0.139).
 # 120B is TBT-bound well before throughput saturates. Sweep fixed sustained

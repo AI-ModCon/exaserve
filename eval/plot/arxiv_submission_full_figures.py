@@ -931,7 +931,7 @@ def fig3_workload(O, ONS):
         ps.legend(a)
     ax[0].set_ylim(0, 1.15)
     ax[0].set_ylabel("SLO attainment")
-    ax[0].set_title("SLO attainment  (TTFT ≤ 1s  ∧  P99 TBT ≤ 250ms)")
+    ax[0].set_title("SLO attainment  (TTFT ≤ 2s  ∧  P99 TBT ≤ 250ms)")
     ax[1].set_ylabel("E2E p99 (s)")
     ax[1].set_title("End-to-end latency (p99)")
     top = ps.titles(

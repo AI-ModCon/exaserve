@@ -57,6 +57,9 @@ maximum for ExaServe.
 
 ### Defect fixes
 
+- The `paper` SLO preset of `eval.plot.goodput` and the preview figures'
+  combined attainment use TTFT ≤ 2 s, the bound the paper and the full-sweep
+  figures use; they used 1 s.
 - HAProxy no longer runs on one thread when `gateway.worker_count` is 1 (the
   value in the examples); a count above 1 or `gateway.options.nbthread` still
   sets the thread count.

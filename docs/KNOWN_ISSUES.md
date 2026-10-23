@@ -78,11 +78,12 @@ The compiled plan now sets `EXASERVE_VLLM_PP_LAYER_FALLBACK`: production plans
 fallback and name the layer; validation plans (`record`) keep the substitution
 and print one warning per layer to the engine's stderr
 ([_sitecustomize.py](../src/exaserve/_sitecustomize.py)). The warnings are not
-yet part of the engine receipt, and the real PP=2 two-node canary has not been
-rerun under the new policy, so it is not known whether that canary relies on a
-fallback; if it does, production PP plans now fail at engine start. Rerun the
-canary and read its stderr before claiming PP topologies or models, and use
-canaries that check output correctness.
+yet part of the engine receipt. The real PP=2 two-node canary (Llama-3-8B,
+TP=8 x PP=2) was rerun under the new policy on 2026-10-22 in validation mode:
+it succeeded and its engine logs showed no layer-fallback warning, so it does
+not rely on a fallback. Rerun it, and read its stderr, after any change to the
+vLLM stack or the patched layers, and use canaries that check output
+correctness before claiming further PP topologies or models.
 
 ## Resolved mechanisms
 

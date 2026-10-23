@@ -65,7 +65,7 @@ the handbook's gateway section before re-running them.
 
 ## Metrics
 
-Results use data runs only (warm-up dropped). SLO attainment uses TTFT ≤ 1 s
+Results use data runs only (warm-up dropped). SLO attainment uses TTFT ≤ 2 s
 and per-request P99 TBT ≤ 250 ms and is only meaningful for streaming. The
 calibrated rates per workload are listed in the handbook.
 

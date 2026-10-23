@@ -97,11 +97,11 @@ SLO_PRESETS: dict[str, SLOPreset] = {
     ),
     "paper": SLOPreset(
         name="paper",
-        ttft_s=1.0,
+        ttft_s=2.0,
         tpot_s=None,
         e2e_s=None,
         tbt_p99_s=0.250,
-        description="Paper SLO: TTFT<=1s, P99 TBT<=250ms (Sarathi-Serve style; "
+        description="Paper SLO: TTFT<=2s, P99 TBT<=250ms (Sarathi-Serve style; "
         "needs client.stream=true + per-request tbt_p99_s)",
     ),
 }

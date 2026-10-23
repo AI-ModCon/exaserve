@@ -22,7 +22,7 @@ recorded explicitly:
 Metrics (kept consistent with eval/plot/goodput.py)
 --------------------------------------------------
   achieved throughput = sum(completed) / sum(duration)        over run>=1
-  paper SLO attainment = #{TTFT<=1s AND P99-TBT<=250ms AND ok} / #requests
+  paper SLO attainment = #{TTFT<=2s AND P99-TBT<=250ms AND ok} / #requests
   goodput              = throughput * attainment              (= SLO-met req/s)
 
 Extraction streams each result file once with ijson (yajl2_c) and writes a
@@ -64,6 +64,7 @@ TBT_P99_SLO_S = 0.250
 # Extra TTFT thresholds tracked per cell so the TTFT-attainment panel can show
 # how a looser first-token budget exposes the node-count scaling trend.
 TTFT_SLO_MULTI = (1.0, 2.0, 3.0)
+_TTFT_SLO_INDEX = TTFT_SLO_MULTI.index(TTFT_SLO_S)
 
 # --- Suite definitions (mirror README "Run checklist") ----------------------
 
@@ -138,8 +139,8 @@ class CellStats:
     n_req: int
     n_success: int
     rps: float  # achieved throughput (completed/duration), run>=1
-    attainment: float  # paper SLO (TTFT≤1s ∧ P99-TBT≤250ms), failures count as miss
-    ttft_attainment: float  # frac requests with TTFT ≤ 1s (separated)
+    attainment: float  # paper SLO (TTFT≤2s ∧ P99-TBT≤250ms), failures count as miss
+    ttft_attainment: float  # frac requests with TTFT ≤ 2s (separated)
     tbt_attainment: float  # frac requests with P99-TBT ≤ 250ms (separated)
     goodput: float
     success_rate: float
@@ -151,7 +152,7 @@ class CellStats:
     e2e_p99: float
     decode_p50: float  # E2E - TTFT (decode duration), successful reqs
     decode_p99: float
-    # TTFT attainment at 1/2/3s (aggregate over run>=1). ttft_attain_1s == ttft_attainment.
+    # TTFT attainment at 1/2/3s (aggregate over run>=1). ttft_attain_2s == ttft_attainment.
     ttft_attain_1s: float = float("nan")
     ttft_attain_2s: float = float("nan")
     ttft_attain_3s: float = float("nan")
@@ -248,7 +249,7 @@ def extract_cell(
                 if m:
                     n_ttft_meet[j] += 1
                     c[3 + j] += 1
-            if ttft_meets[0] and tbt_ok:  # paper SLO conjunction uses the 1s TTFT
+            if ttft_meets[_TTFT_SLO_INDEX] and tbt_ok:  # paper SLO: TTFT <= TTFT_SLO_S
                 n_meet += 1
 
     ttft_a = np.asarray(ttft_l, dtype=np.float32)
@@ -286,7 +287,9 @@ def extract_cell(
         rps=rps,
         attainment=attainment,
         goodput=rps * attainment,
-        ttft_attainment=(_frac(n_ttft_meet[0]) if token_timing_valid else float("nan")),
+        ttft_attainment=(
+            _frac(n_ttft_meet[_TTFT_SLO_INDEX]) if token_timing_valid else float("nan")
+        ),
         tbt_attainment=(_frac(n_tbt_meet) if token_timing_valid else float("nan")),
         success_rate=(n_success / n_req if n_req else float("nan")),
         ttft_p50=_p(ttft_a, 50),
@@ -393,7 +396,7 @@ def plot_set1(stats: dict[tuple[str, int], CellStats]) -> Path:
     axes[1].set(
         title="Paper-SLO attainment vs cluster size",
         xlabel="nodes",
-        ylabel="attainment (TTFT≤1s ∧ P99-TBT≤250ms)",
+        ylabel="attainment (TTFT≤2s ∧ P99-TBT≤250ms)",
     )
     axes[1].set_ylim(-0.02, 1.02)
     axes[2].set(
@@ -503,7 +506,7 @@ def plot_cdf(stats: dict[tuple[str, int], CellStats]) -> Path:
             lbl = f"{proxy} (ok={st.success_rate:.0%})"
             ax.plot(a, y, color=c, label=lbl)
     axt.axvline(TTFT_SLO_S, color="k", ls="--", alpha=0.6)
-    axt.text(TTFT_SLO_S, 0.05, " 1s SLO", fontsize=8)
+    axt.text(TTFT_SLO_S, 0.05, " 2s SLO", fontsize=8)
     axt.set(
         title="TTFT CDF @ N=64 (successful reqs)", xlabel="TTFT (s)", ylabel="CDF", xscale="log"
     )
@@ -563,7 +566,7 @@ def plot_disc(stats: dict[tuple[str, int], CellStats]) -> Path:
                     )
 
     axt.axhline(TTFT_SLO_S, color="r", ls="--", alpha=0.7)
-    axt.text(1.4, TTFT_SLO_S, "1s TTFT SLO", color="r", fontsize=8, va="bottom")
+    axt.text(1.4, TTFT_SLO_S, "2s TTFT SLO", color="r", fontsize=8, va="bottom")
     axt.set(
         title="median TTFT — HAProxy term\n(direct removes it: 1.22→0.64s at n64)",
         ylabel="TTFT p50 (s)",
