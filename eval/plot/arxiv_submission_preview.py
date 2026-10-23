@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SC26 workshop *validation/pilot* preview plots.
+"""Preview plots of the paper suite's *validation/pilot* runs.
 
 Purpose: before committing to the full sweep (~1k node·h), render the handful of
 figures that (a) confirm every validation cell produced sane, plottable data and
@@ -7,7 +7,7 @@ figures that (a) confirm every validation cell produced sane, plottable data and
 intended story.
 
 This is deliberately scoped to the `validation/` run groups under
-  <experiments_root>/runs/sc26workshop/validation/<spec>/runN/nM/results/result0.json
+  <experiments_root>/runs/arxiv-submission/validation/<spec>/runN/nM/results/result0.json
 
 Cell selection rule
 -------------------
@@ -30,9 +30,9 @@ compact per-cell cache (scalars json + float32 npz of the per-request arrays)
 so re-plotting is instant. Pass --refresh to rebuild the cache.
 
 Usage:
-  python -m eval.plot.sc26_preview                 # extract (cached) + all plots
-  python -m eval.plot.sc26_preview --refresh       # force re-extract
-  python -m eval.plot.sc26_preview --only set1     # set1|set2|cdf
+  python -m eval.plot.arxiv_submission_preview                 # extract (cached) + all plots
+  python -m eval.plot.arxiv_submission_preview --refresh       # force re-extract
+  python -m eval.plot.arxiv_submission_preview --only set1     # set1|set2|cdf
 """
 
 from __future__ import annotations
@@ -54,9 +54,9 @@ import ijson
 
 from eval.site_config import get_runs_root
 
-RUNS_ROOT = get_runs_root() / "sc26workshop/validation"
-OUT_DIR = Path(__file__).resolve().parent / "output" / "sc26_preview"
-CACHE_DIR = Path("/tmp/sc26_preview_cache")
+RUNS_ROOT = get_runs_root() / "arxiv-submission/validation"
+OUT_DIR = Path(__file__).resolve().parent / "output" / "arxiv_submission_preview"
+CACHE_DIR = Path("/tmp/arxiv_submission_preview_cache")
 
 # Paper SLO (Sarathi-Serve style): TTFT <= 2s AND P99 time-between-tokens <= 250ms.
 TTFT_SLO_S = 2.0

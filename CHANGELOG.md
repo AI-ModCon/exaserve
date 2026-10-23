@@ -36,8 +36,8 @@ maximum for ExaServe.
   checks on an Aurora compute node. Fixed-order, randomized-order and
   installed-wheel suites each reported **1,771 passed, 40 skipped**. These are
   code/package regression results, not a rerun of the scale study. The
-  documentation and lock updates that follow it are covered by the pull
-  request's CI run.
+  documentation, lock and naming updates that follow it are covered by the
+  pull request's CI run.
 - Focused one-/two-node hardware and regression checks cover particular
   staging, control-plane and pipeline-parallel paths. Their scope stays with
   those checks rather than becoming a system-wide scale restriction.
@@ -104,6 +104,11 @@ maximum for ExaServe.
   OpenTelemetry. The lock now resolves Python 3.11–3.13. Declared server-extra
   and site runtime pins are unchanged; remaining dependency advisories are
   dispositioned in the AI-ModCon checklist.
+- Name the paper's evaluation suite after its arXiv submission: specs live under
+  `eval/specs/arxiv-submission/`, the figure scripts are
+  `eval/plot/arxiv_submission_full_figures.py` and
+  `eval/plot/arxiv_submission_preview.py`, and run groups resolve under
+  `runs/arxiv-submission/`. Existing result trees need the same folder name.
 - Document deployment trust assumptions in `SECURITY.md` and the request fields
   that reach vLLM in the API reference.
 - Remove the built-in PBS account and project root: `EXASERVE_PROJECT_ACCOUNT`

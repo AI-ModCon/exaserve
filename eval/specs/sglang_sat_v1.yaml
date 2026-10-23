@@ -1,6 +1,6 @@
 name: sglang_sat_v1
 # Single-node saturation finder for the SGLang backend (post JIT-storm fixes),
-# aligned with the sc26workshop paper baseline (proxycmp_haproxy / oat_8b_*):
+# aligned with the paper's baseline (proxycmp_haproxy / oat_8b_*):
 # Meta-Llama-3-8B-Instruct, gpu_mem 0.90, replica_max_ongoing 256. Feeds the
 # OAT protocol: measured saturation S -> weak-scaling runs at 0.9*S
 # (vLLM: 109 -> 98 rps/node in oat_8b_baseline).

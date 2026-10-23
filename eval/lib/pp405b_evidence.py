@@ -1,4 +1,4 @@
-"""Fail-closed evidence readers for the SC26 405B PP=2 figure.
+"""Fail-closed evidence readers for the paper's 405B PP=2 figure.
 
 The original streaming campaign predates the canonical ResultManifest.  Its
 selected artifacts are therefore authenticated by a checked-in ledger, exact

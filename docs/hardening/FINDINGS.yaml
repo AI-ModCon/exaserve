@@ -1216,8 +1216,8 @@ findings:
   - doc/KNOWN_ISSUES.md
   - src/exaserve/capabilities.py
   - eval/lib/replay_engine.py
-  - eval/plot/sc26_preview.py
-  - eval/plot/sc26_full_figures.py
+  - eval/plot/arxiv_submission_preview.py
+  - eval/plot/arxiv_submission_full_figures.py
   acceptance_tests:
   - AC-OBS-01
   status: FIXED
@@ -1228,8 +1228,8 @@ findings:
   - eval/tests/test_timing_semantics.py
   - src/exaserve/capabilities.py
   - eval/lib/replay_engine.py
-  - eval/plot/sc26_preview.py
-  - eval/plot/sc26_full_figures.py
+  - eval/plot/arxiv_submission_preview.py
+  - eval/plot/arxiv_submission_full_figures.py
   fallback: Fail closed; there is no legacy lifecycle or evidence fallback.
   residual_risk: Historical result files without a timing classification are retained as evidence but fail closed for TTFT/TBT and must be rematerialized for current timing comparisons.
   support_impact: LiteLLM remains a validation throughput/error benchmark and is not represented as a real streaming transport.

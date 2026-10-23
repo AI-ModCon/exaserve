@@ -785,7 +785,7 @@ an invariant it breaks.
 **Canaries before campaigns.** Expensive runs failed on defects that a
 one- or two-node canary exposes (pipeline-parallel actor start, cache seeding,
 socket paths, MPI aggregation) and on instrumentation itself. Run the matching
-canary under `eval/specs/sc26workshop/smokes/` after any stack change and before
+canary under `eval/specs/arxiv-submission/smokes/` after any stack change and before
 any run of 64 nodes or more, for example `pp_compatibility_canary_2node`
 (PP start-up without model bytes), `pp8b_real_engine_canary_2node` (the real PP
 engine path with about 21 GB instead of 816 GB),

@@ -7,7 +7,7 @@
 # (small fonts, thin lines, dotted grid, tight PDF output) so figures are
 # authored at their FINAL physical size and rendered 1:1 in the paper (no
 # down-scaling). Figures are sized to the IEEE column (~3.4in) or text width
-# (~7in) in sc26_full_figures.py to match.
+# (~7in) in arxiv_submission_full_figures.py to match.
 #
 # PROJECT DEVIATIONS from base_matplotlibrc (adjust freely):
 #   * fonts: the base style uses a uniform 6pt; titles/labels bumped to 7pt

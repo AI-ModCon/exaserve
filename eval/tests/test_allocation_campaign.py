@@ -63,7 +63,7 @@ def test_qualification_config_has_a_real_cancellation_window():
     root = Path(__file__).resolve().parents[2]
     config = yaml.safe_load(
         (
-            root / "eval/specs/sc26workshop/smokes/nullcompute_haproxy_subset_cancel_2node.yaml"
+            root / "eval/specs/arxiv-submission/smokes/nullcompute_haproxy_subset_cancel_2node.yaml"
         ).read_text(encoding="utf-8")
     )
     assert config["deployment"]["num_nodes"] == 2

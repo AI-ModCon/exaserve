@@ -2,7 +2,10 @@
 
 Experiment specifications for ExaServe's gateway comparison, workload
 robustness, control-plane and pipeline-parallel characterization on Aurora.
-Each experiment has exactly one spec. Measured results, limits and lessons from
+These are the experiments reported in
+[ExaServe: Large-Scale LLM Serving on Exascale HPC Systems](https://arxiv.org/abs/2609.10812)
+(arXiv:2609.10812), after which the folder is named. Each experiment has
+exactly one spec. Measured results, limits and lessons from
 these experiments are in the
 [operations handbook](../../../docs/operations_handbook.md).
 
@@ -20,9 +23,9 @@ resolves by filename stem), hence the `_val` suffix convention.
 
 **Results mirror this layout**: run groups land under
 `<experiments_root>/runs/<spec-folder>/<spec-name>/runN/` (for example
-`runs/sc26workshop/full/oat_8b_baseline/run0/`), derived automatically from the
+`runs/arxiv-submission/full/oat_8b_baseline/run0/`), derived automatically from the
 spec's location (`spec_runs_dir` in `eval/lib/run_planner.py`). Specs stored
-directly under `eval/specs/` resolve to `runs/<name>/`. `runs/sc26workshop/`
+directly under `eval/specs/` resolve to `runs/<name>/`. `runs/arxiv-submission/`
 contains only folders that mirror this spec tree, and a folder there means real
 data from that suite stage.
 
@@ -107,6 +110,6 @@ python -m eval.plot.goodput -e <spec> --preset paper   # score
 
 Order: `calibration/` first, then the `validation/` pilot, then `full/`.
 
-Figures: `eval/plot/sc26_full_figures.py` writes to `eval/plot/output/sc26_full/`
+Figures: `eval/plot/arxiv_submission_full_figures.py` writes to `eval/plot/output/arxiv_submission_full/`
 (gateway scaling from 1 to 256 nodes, SSE against end-to-end, workload sweep,
 64-node latency).

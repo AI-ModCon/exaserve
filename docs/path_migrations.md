@@ -8,7 +8,7 @@ Documentation is consolidated under `docs/`. Existing filenames and the
 | `doc/<path>` | `docs/<path>` |
 | `findings/<report>.md`, later `docs/findings/<report>.md` | Removed from the current tree; summarized in the [operations handbook](operations_handbook.md) |
 | `findings/direct_stream_window_analysis.py` | `eval/scripts/direct_stream_window_analysis.py` |
-| Run logs, audits and campaign records under `docs/`, `docs/hardening/` and `eval/specs/sc26workshop/` | Removed from the current tree; summarized in the [operations handbook](operations_handbook.md) |
+| Run logs, audits and campaign records under `docs/`, `docs/hardening/` and the paper suite's spec folder | Removed from the current tree; summarized in the [operations handbook](operations_handbook.md) |
 | `note.txt` | Removed from the published tree (personal development scratchpad) |
 
 Runtime behavior, legacy tools, dependency locks, generated reference-card bytes

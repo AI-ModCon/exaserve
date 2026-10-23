@@ -1,9 +1,9 @@
-"""SC26 workshop FULL-SWEEP figures.
+"""Full-sweep figures for the paper (arXiv:2609.10812).
 
 Reads the completed full sweep under
-  <experiments_root>/runs/sc26workshop/full/<spec>[_nostream]/runN/nM/results/result0.json
+  <experiments_root>/runs/arxiv-submission/full/<spec>[_nostream]/runN/nM/results/result0.json
 and renders the paper's headline figures, reusing the cached cell-extraction
-machinery from sc26_preview (retargeted RUNS_ROOT/CACHE_DIR).
+machinery from arxiv_submission_preview (retargeted RUNS_ROOT/CACHE_DIR).
 
 Consistent styling lives in eval/plot/plotstyle.py + eval/plot/matplotlibrc:
 colour+marker = proxy, line style = mode (solid stream / dashed non-stream),
@@ -33,7 +33,7 @@ os.environ.setdefault("OMP_NUM_THREADS", "1")
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import numpy as np
-import sc26_preview as P
+import arxiv_submission_preview as P
 import plotstyle as ps
 from eval.lib.pp405b_evidence import (
     CurrentPP405BRef,
@@ -44,8 +44,8 @@ from eval.lib.pp405b_evidence import (
 from eval.site_config import get_runs_root
 
 # Retarget the extraction to the full sweep (separate cache from validation).
-P.RUNS_ROOT = get_runs_root() / "sc26workshop/full"
-P.CACHE_DIR = Path("/tmp/sc26_full_cache")
+P.RUNS_ROOT = get_runs_root() / "arxiv-submission/full"
+P.CACHE_DIR = Path("/tmp/arxiv_submission_full_cache")
 
 # Every paper series below owns explicit run selections; a rerun must never
 # silently replace the data behind a published figure.
@@ -95,7 +95,7 @@ PP405B_CURRENT_REFS = tuple(
 # evidence ledger.
 PP405B_LEGACY_LEDGER_PATH = Path(__file__).with_name("pp405b_legacy_evidence.yaml")
 
-OUT = Path(__file__).resolve().parent / "output" / "sc26_full" / "iter13"
+OUT = Path(__file__).resolve().parent / "output" / "arxiv_submission_full" / "iter13"
 
 # Exact IEEEtran widths (measured: \columnwidth=252pt, \textwidth=516pt) so
 # \includegraphics[width=\columnwidth]{...} does NO scaling and matplotlib point
@@ -282,7 +282,7 @@ def extract_run(stem, n, good):
     runs so a point reflects its healthy run(s). (Aggregate only; per-run error
     bars fall back to std 0 for these.)"""
     import ijson
-    from sc26_preview import CellStats
+    from arxiv_submission_preview import CellStats
 
     src = P.resolve_cell(stem, n)
     if src is None:
@@ -1570,7 +1570,7 @@ def fig_pp_engines(S):
 _RENDER_JOBS = []
 
 
-BUILT_CACHE = Path("/tmp/sc26_full_built.pkl")  # pickled (S, NS, O, ONS)
+BUILT_CACHE = Path("/tmp/arxiv_submission_full_built.pkl")  # pickled (S, NS, O, ONS)
 
 
 def _install_pdf_only():

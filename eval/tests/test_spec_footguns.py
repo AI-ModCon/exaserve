@@ -120,7 +120,7 @@ def test_every_in_envelope_catalog_cell_compiles_to_the_canonical_run_plan() -> 
 
 
 def test_missing_paper_scale_specs_preserve_the_declared_current_infra_matrix() -> None:
-    spec_root = Path(__file__).parents[1] / "specs" / "sc26workshop" / "full"
+    spec_root = Path(__file__).parents[1] / "specs" / "arxiv-submission" / "full"
 
     null_variants = expand_matrix(
         load_experiment_spec(str(spec_root / "nullcompute_haproxy_scale_to256_v040.yaml"))
@@ -180,7 +180,7 @@ def test_pp_compatibility_canary_retains_pp_lifecycle_without_model_staging() ->
     spec_path = (
         Path(__file__).parents[1]
         / "specs"
-        / "sc26workshop"
+        / "arxiv-submission"
         / "smokes"
         / "pp_compatibility_canary_2node.yaml"
     )
@@ -219,7 +219,7 @@ def test_pp8b_real_engine_canary_covers_complete_pp_startup_without_replay() -> 
     spec_path = (
         Path(__file__).parents[1]
         / "specs"
-        / "sc26workshop"
+        / "arxiv-submission"
         / "smokes"
         / "pp8b_real_engine_canary_2node.yaml"
     )
@@ -271,7 +271,7 @@ def test_pp8b_real_engine_canary_covers_complete_pp_startup_without_replay() -> 
 
 def test_pp_curves_use_explicit_complete_evidence_contracts() -> None:
     from eval.lib import pp405b_evidence as evidence
-    from eval.plot import sc26_full_figures as figures
+    from eval.plot import arxiv_submission_full_figures as figures
 
     expected_groups = {
         4: "run3",
@@ -321,7 +321,7 @@ def test_pp_curves_use_explicit_complete_evidence_contracts() -> None:
 def test_pp_legacy_ledger_and_output_directory_are_lazy() -> None:
     import ast
 
-    source = Path(__file__).parents[1] / "plot" / "sc26_full_figures.py"
+    source = Path(__file__).parents[1] / "plot" / "arxiv_submission_full_figures.py"
     tree = ast.parse(source.read_text(encoding="utf-8"))
     top_level_calls = [
         node
@@ -344,7 +344,7 @@ def test_pp_legacy_ledger_and_output_directory_are_lazy() -> None:
 
 
 def test_pp_point_cache_reuses_parent_process_extraction(monkeypatch) -> None:
-    from eval.plot import sc26_full_figures as figures
+    from eval.plot import arxiv_submission_full_figures as figures
 
     series = figures._pp405b_variants()[0]
     calls = []
@@ -369,7 +369,7 @@ def test_legacy_pp_evidence_map_hash_and_corrected_arrays_are_frozen() -> None:
     from dataclasses import asdict
 
     from eval.lib import pp405b_evidence as evidence
-    from eval.plot import sc26_full_figures as figures
+    from eval.plot import arxiv_submission_full_figures as figures
 
     variants = {series.key: series for series in figures._pp405b_variants()}
     legacy_selections = {

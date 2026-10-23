@@ -433,7 +433,7 @@ def test_legacy_pp_reader_uses_exact_refs_and_keeps_declared_errors(tmp_path):
 @pytest.mark.parametrize("mutation", ["missing", "duplicate"])
 def test_legacy_pp_reader_requires_the_exact_seven_node_ladder(mutation):
     from eval.lib import pp405b_evidence as evidence
-    from eval.plot import sc26_full_figures as figures
+    from eval.plot import arxiv_submission_full_figures as figures
 
     refs = figures._pp405b_variants()[0].legacy_refs
     if mutation == "missing":
@@ -487,7 +487,7 @@ def test_legacy_pp_stdout_is_selected_by_its_pinned_hash(tmp_path):
 
 def test_legacy_pp_yaml_errors_are_normalized(tmp_path):
     from eval.lib import pp405b_evidence as evidence
-    from eval.plot import sc26_full_figures as figures
+    from eval.plot import arxiv_submission_full_figures as figures
 
     duplicate = tmp_path / "duplicate.yaml"
     duplicate.write_text("schema_version: 1\nschema_version: 2\n", encoding="utf-8")
@@ -507,7 +507,7 @@ def test_legacy_pp_yaml_errors_are_normalized(tmp_path):
 
 def test_legacy_pp_plan_binds_source_run_and_serving_semantics():
     from eval.lib import pp405b_evidence as evidence
-    from eval.plot import sc26_full_figures as figures
+    from eval.plot import arxiv_submission_full_figures as figures
 
     series = figures._pp405b_variants()[0]
     ref = series.legacy_refs[0]
@@ -558,7 +558,7 @@ def test_legacy_pp_plan_binds_source_run_and_serving_semantics():
 
 def test_legacy_haproxy_plan_binds_worker_and_balance_contract():
     from eval.lib import pp405b_evidence as evidence
-    from eval.plot import sc26_full_figures as figures
+    from eval.plot import arxiv_submission_full_figures as figures
 
     series = figures._pp405b_variants()[1]
     ref = series.legacy_refs[0]
@@ -745,7 +745,7 @@ def test_legacy_pp_loader_rejects_stdout_byte_tamper(tmp_path):
 
 def test_legacy_pp_accounting_accepts_only_the_declared_nonzero_errors():
     from eval.lib import pp405b_evidence as evidence
-    from eval.plot import sc26_full_figures as figures
+    from eval.plot import arxiv_submission_full_figures as figures
 
     base = figures._pp405b_variants()[1].legacy_refs[4]
     ref = replace(
@@ -789,7 +789,7 @@ def test_legacy_pp_accounting_accepts_only_the_declared_nonzero_errors():
 
 def test_pp_loader_dispatch_rejects_unknown_kinds(tmp_path):
     from eval.lib import pp405b_evidence as evidence
-    from eval.plot import sc26_full_figures as figures
+    from eval.plot import arxiv_submission_full_figures as figures
 
     legacy = figures._pp405b_variants()[0]
     with pytest.raises(ValueError, match="unsupported PP=2 loader kind"):
@@ -798,7 +798,7 @@ def test_pp_loader_dispatch_rejects_unknown_kinds(tmp_path):
 
 def test_current_pp_reader_rejects_a_truncated_node_ladder(tmp_path):
     from eval.lib import pp405b_evidence as evidence
-    from eval.plot import sc26_full_figures as figures
+    from eval.plot import arxiv_submission_full_figures as figures
 
     series = evidence.PP405BSeries.current(
         stem="pp405b_pp2_haproxy_nostream_v040",
@@ -814,7 +814,7 @@ def test_current_pp_reader_rejects_a_truncated_node_ladder(tmp_path):
 def test_current_pp_loader_succeeds_through_the_manifest_path(tmp_path, monkeypatch):
     from eval.lib import pp405b_evidence as evidence
     from eval.lib import paper_acceptance
-    from eval.plot import sc26_full_figures as figures
+    from eval.plot import arxiv_submission_full_figures as figures
     from exaserve.state.results import ResultEntry
 
     series = figures._pp405b_variants()[2]
@@ -861,7 +861,7 @@ def test_current_pp_loader_succeeds_through_the_manifest_path(tmp_path, monkeypa
 
 def test_current_pp_plan_accepts_only_the_reviewed_node_to_source_mapping():
     from eval.lib import pp405b_evidence as evidence
-    from eval.plot import sc26_full_figures as figures
+    from eval.plot import arxiv_submission_full_figures as figures
 
     series = figures._pp405b_variants()[2]
     for ref in series.current_refs:
@@ -932,7 +932,7 @@ def test_current_pp_plan_accepts_only_the_reviewed_node_to_source_mapping():
 )
 def test_current_pp_plan_rejects_semantic_drift(path, value, field):
     from eval.lib import pp405b_evidence as evidence
-    from eval.plot import sc26_full_figures as figures
+    from eval.plot import arxiv_submission_full_figures as figures
 
     series = figures._pp405b_variants()[2]
     ref = series.current_refs[0]
@@ -951,7 +951,7 @@ def test_current_pp_plan_rejects_semantic_drift(path, value, field):
 )
 def test_current_pp_plan_rejects_any_unreviewed_source(nodes, replacement, field):
     from eval.lib import pp405b_evidence as evidence
-    from eval.plot import sc26_full_figures as figures
+    from eval.plot import arxiv_submission_full_figures as figures
 
     series = figures._pp405b_variants()[2]
     ref = next(item for item in series.current_refs if item.nodes == nodes)
@@ -967,7 +967,7 @@ def test_current_pp_plan_rejects_any_unreviewed_source(nodes, replacement, field
 )
 def test_current_pp_plan_rejects_wrong_materialization_identity_scheme(nodes, replacement):
     from eval.lib import pp405b_evidence as evidence
-    from eval.plot import sc26_full_figures as figures
+    from eval.plot import arxiv_submission_full_figures as figures
 
     series = figures._pp405b_variants()[2]
     ref = next(item for item in series.current_refs if item.nodes == nodes)
@@ -980,7 +980,7 @@ def test_current_pp_plan_rejects_wrong_materialization_identity_scheme(nodes, re
 @pytest.mark.parametrize("nodes", [4, 32])
 def test_current_pp_plan_rejects_unreviewed_semantic_hash(nodes):
     from eval.lib import pp405b_evidence as evidence
-    from eval.plot import sc26_full_figures as figures
+    from eval.plot import arxiv_submission_full_figures as figures
 
     series = figures._pp405b_variants()[2]
     ref = next(item for item in series.current_refs if item.nodes == nodes)

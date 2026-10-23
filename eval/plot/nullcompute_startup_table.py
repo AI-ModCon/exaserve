@@ -128,7 +128,7 @@ def _load_trial(root: Path, run_group: str, nodes: int) -> dict:
 
 
 def load_curve(runs_root: Path | None = None) -> list[dict]:
-    root = (runs_root or get_runs_root()) / "sc26workshop" / "full"
+    root = (runs_root or get_runs_root()) / "arxiv-submission" / "full"
     trials = {
         nodes: [_load_trial(root, run_group, nodes) for run_group in RUN_GROUPS]
         for nodes in NODE_COUNTS

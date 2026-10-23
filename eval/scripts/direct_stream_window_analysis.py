@@ -26,7 +26,7 @@ def percentile(values: list[float], quantile: float) -> float:
 
 
 def result_files(runs_root: Path) -> dict[int, Path]:
-    paper_root = runs_root / "sc26workshop" / "full"
+    paper_root = runs_root / "arxiv-submission" / "full"
     return {
         1: paper_root / "proxycmp_direct" / "run0" / "n1" / "results" / "result0.json",
         64: paper_root / "proxycmp_direct" / "run0" / "n64" / "results" / "result0.json",

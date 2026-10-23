@@ -33,8 +33,8 @@ def spec_group_relpath(name_or_path: str) -> str:
     """Directory of a spec relative to eval/specs ('' for flat or unknown specs).
 
     Lets the results tree mirror the spec tree: a spec living at
-    eval/specs/sc26workshop/full/foo.yaml gets its run groups under
-    runs/sc26workshop/full/foo/ instead of the flat runs/foo/.
+    eval/specs/arxiv-submission/full/foo.yaml gets its run groups under
+    runs/arxiv-submission/full/foo/ instead of the flat runs/foo/.
     """
     try:
         spec_path = find_spec_path(name_or_path)

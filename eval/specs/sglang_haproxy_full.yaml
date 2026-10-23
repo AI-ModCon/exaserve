@@ -2,7 +2,7 @@ name: sglang_haproxy_full
 # SGLang backend, HAProxy weak-scaling 1..256 — mirrors proxycmp_haproxy (the vLLM
 # baseline) but with deployment.engine: sglang (drop-in). Identical Ray Serve +
 # HAProxy + Go replay client; only the per-replica engine differs.
-# Paper protocol (aligned with sc26workshop/full + oat_8b_baseline OAT convention):
+# Paper protocol (aligned with arxiv-submission/full + oat_8b_baseline OAT convention):
 # same model / gpu_mem / max_num_seqs / max_ongoing as the vLLM baseline, and
 # rate_per_node = 0.9 x measured single-node saturation. sglang_sat_v1 run2
 # measured S ~= 17 rps/node (Meta-Llama-3-8B-Instruct, torch_native, seqs 32 vs
