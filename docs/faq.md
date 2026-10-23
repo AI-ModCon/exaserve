@@ -101,7 +101,7 @@ shared readiness API. See [ClientLab](../clientlab/README.md).
 
 Read [CONTRIBUTING.md](../CONTRIBUTING.md), including its policy on AI-assisted
 contributions, and search the
-[issue tracker](https://github.com/globus-labs/exaserve/issues). Include
+[issue tracker](https://github.com/AI-ModCon/exaserve/issues). Include
 reproduction steps, package/commit identity, Python and runtime versions, and
 redacted errors. Follow [SECURITY.md](../SECURITY.md) for security reports;
 do not publish credentials or sensitive deployment data.

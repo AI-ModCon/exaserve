@@ -51,8 +51,8 @@ evidence. Historical runs do not qualify a changed artifact.
 - [Security reporting](../SECURITY.md)
 - [Changelog](../CHANGELOG.md)
 - [Apache License 2.0](../LICENSE) and [notice](../NOTICE)
-- [Source repository](https://github.com/globus-labs/exaserve)
-- [Issue tracker](https://github.com/globus-labs/exaserve/issues)
+- [Source repository](https://github.com/AI-ModCon/exaserve)
+- [Issue tracker](https://github.com/AI-ModCon/exaserve/issues)
 
 For a bug report, include the command, package or commit identity, environment,
 and relevant redacted errors. Do not include credentials, private model data,

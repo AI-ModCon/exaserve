@@ -10,15 +10,15 @@ completion of an organization transfer, or new hardware qualification.
 ## Transfer destination and current preparation
 
 The intended destination is **`AI-ModCon/exaserve`**. Prepare a transfer of the
-existing `globus-labs/exaserve` repository so its history, issues, branches,
+current `AI-ModCon/exaserve` repository so its history, issues, branches,
 tags, and releases remain together. Do not create an empty destination from
 BaseTemplate or overwrite a different repository to simulate a transfer.
 The destination URL returned HTTP 404 to the preparation credentials on
 2026-10-20; that does not establish organization transfer authority or rule out
 an inaccessible private repository with the same name. An organization owner
 must confirm name availability, recipient permissions and transfer acceptance.
-Live clone, issue, documentation and package links continue to name the source
-repository until the transfer actually occurs.
+Live clone, issue, documentation and package links now name the current
+repository.
 
 The current integration adds the plan-derived dense real-engine
 single-application layout from `afb0349` and repairs portable CI's site
@@ -30,7 +30,7 @@ changes do not create new hardware or scale qualification.
 ### Validation evidence (2026-10-20)
 
 The runtime/CI repair candidate is `67253ade6c3b9689f335bf51bf1473696467a9a8`.
-Its [GitHub CI run](https://github.com/globus-labs/exaserve/actions/runs/39469369504)
+Its [GitHub CI run](https://github.com/AI-ModCon/exaserve/actions/runs/39469369504)
 records the exact source identity and individual check results:
 
 - Python 3.12 fixed-order coverage suite: **1,720 passed, 42 skipped**;
@@ -73,7 +73,7 @@ neither this record nor a checked-in JSON file substitutes for those checks.
 
 | BaseTemplate requirement | ExaServe implementation | Remaining gate |
 |---|---|---|
-| Open-source license and package declaration | [LICENSE](../LICENSE), [NOTICE](../NOTICE), Apache-2.0 metadata in [pyproject.toml](../pyproject.toml) | Maintainers retain responsibility for contribution and third-party rights |
+| Open-source license, standard form, and package declaration | [LICENSE](../LICENSE), [NOTICE](../NOTICE), Apache-2.0 metadata in [pyproject.toml](../pyproject.toml). The repository uses the standard Apache-2.0 license text as a faithful version of the standard license. | Maintainers retain responsibility for contribution and third-party rights |
 | `docs/`, README, onboarding and examples | [Documentation index](index.md), [getting started](getting_started.md), [usage](usage.md), [API](api.md), [FAQ](faq.md), [README](../README.md) | Maintain links and examples as the project evolves |
 | pytest suite and coverage | Existing three test trees; explicit coverage configuration and CI reports | Run and review the updated CI; coverage is not hardware evidence |
 | CI/CD test integration | Existing hermetic, randomized-order, installed-wheel, Go, ledger and static jobs retained; portable lock lane added | Require these checks in the destination repository rules |
@@ -140,9 +140,9 @@ After checking successful CI and the authenticated administrator's authority,
 apply it with GitHub CLI (or the equivalent authenticated REST request):
 
 ```bash
-gh api --method PUT repos/globus-labs/exaserve/branches/main/protection \
+gh api --method PUT repos/AI-ModCon/exaserve/branches/main/protection \
   --input .github/main-branch-protection.json
-gh api repos/globus-labs/exaserve/branches/main/protection
+gh api repos/AI-ModCon/exaserve/branches/main/protection
 ```
 
 The JSON file is a configuration input, not proof that protection is active.
@@ -172,7 +172,7 @@ reapply/reconcile the payload there if necessary, using the destination path.
    a responsible maintainer monitors it. Do not publish reports as issues.
 6. Update the live repository/documentation/issue URLs in `pyproject.toml`,
    README, docs and community guidance to the confirmed destination. Current
-   links intentionally point to `globus-labs/exaserve`, not a presumed future
+   links intentionally point to `AI-ModCon/exaserve`, not a presumed future
    repository. Update maintainer contact details whenever ownership changes.
 7. Review any future package publishing separately: registry ownership, release
    evidence, protected environments and trusted publishing are distinct actions.

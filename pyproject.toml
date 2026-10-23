@@ -30,10 +30,10 @@ dependencies = [
 ]
 
 [project.urls]
-Repository = "https://github.com/globus-labs/exaserve"
-Documentation = "https://github.com/globus-labs/exaserve/tree/main/docs"
-"Issue Tracker" = "https://github.com/globus-labs/exaserve/issues"
-Changelog = "https://github.com/globus-labs/exaserve/blob/main/CHANGELOG.md"
+Repository = "https://github.com/AI-ModCon/exaserve"
+Documentation = "https://github.com/AI-ModCon/exaserve/tree/main/docs"
+"Issue Tracker" = "https://github.com/AI-ModCon/exaserve/issues"
+Changelog = "https://github.com/AI-ModCon/exaserve/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 server = [

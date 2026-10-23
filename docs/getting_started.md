@@ -18,7 +18,7 @@ development rather than assuming every version allowed by package metadata is
 covered by the lock or tested by CI.
 
 ```bash
-git clone https://github.com/globus-labs/exaserve.git
+git clone https://github.com/AI-ModCon/exaserve.git
 cd exaserve
 make install-dev
 ```

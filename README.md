@@ -29,11 +29,11 @@ authoritative architecture plan, design notes, hardening records, and
 [path migration guide](docs/path_migrations.md) explains relocated historical
 references and the [archived scratchpad](docs/archive/README.md).
 
-This repository is being prepared for transfer to AI-ModCon. The
+This repository is prepared under the `AI-ModCon/exaserve` name. The
 [compliance and transfer checklist](docs/modcon_compliance.md) records the
 BaseTemplate revision, implemented requirements, validation limits, and GitHub
-administrator steps. Repository links continue to identify the current
-`globus-labs/exaserve` location until the transfer is actually completed.
+administrator steps. Live repository links now point at the current
+`AI-ModCon/exaserve` location.
 
 ## Architecture
 
