@@ -5,7 +5,9 @@
 Do not disclose suspected vulnerabilities, exploit instructions, credentials, or
 private operational details in public GitHub issues or pull requests.
 
-Send vulnerability reports privately to the current maintainer, Wenyi Wang, at
+Report vulnerabilities privately: use **Report a vulnerability** on this
+repository's Security tab where GitHub offers it, or send the report to the
+current maintainer, Wenyi Wang, at
 [wenyiw@uchicago.edu](mailto:wenyiw@uchicago.edu). Do not use a public issue as a
 substitute for a private vulnerability report.
 

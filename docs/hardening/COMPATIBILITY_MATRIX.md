@@ -17,8 +17,8 @@ production-qualified ([release status](STATUS.md)).
 
 | Component | Selected identity | Qualification note |
 |---|---|---|
-| ExaServe | 0.4.0 wheel SHA `1041be53eb5b5875d198d5ee6c6664718b4085775dcba99107873dd3d1fcdff2` | recorded final43 artifact; verification scope in the changelog |
-| ExaServe successor | 0.4.0 wheel SHA `75bab1c97948d29237000d5fa087f3ed1f1d18e5ef3233fe2c759b4faf0e32f8` | release-v0.4.0 package gate passes; production scale unqualified |
+| ExaServe, recorded `final43` package (not the current tree) | 0.4.0 wheel SHA `1041be53eb5b5875d198d5ee6c6664718b4085775dcba99107873dd3d1fcdff2` | verification scope in the changelog |
+| ExaServe, recorded `release-v0.4.0-rc2` package (not the current tree) | 0.4.0 wheel SHA `75bab1c97948d29237000d5fa087f3ed1f1d18e5ef3233fe2c759b4faf0e32f8` | clean package gate passed; production scale unqualified |
 | Aurora frameworks | 2025.3.1 | recorded reference environment |
 | Python | 3.12.12 | packaged and hardware gates |
 | Ray | 2.53.0, commit `0de2118` | exact base hashes; generated overlay; installed files untouched |

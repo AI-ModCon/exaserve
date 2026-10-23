@@ -3,7 +3,7 @@
 ExaServe is an allocation-scoped control plane for Ray Serve-based,
 OpenAI-compatible LLM inference. Its Aurora runtime combines immutable plans,
 supervised processes, and generation-bound readiness. Portable Python tooling
-and hardware-qualified serving are separate support boundaries.
+and hardware serving are separate boundaries.
 
 ## Start here
 

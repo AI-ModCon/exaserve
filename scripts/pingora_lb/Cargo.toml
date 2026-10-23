@@ -5,6 +5,8 @@ edition = "2021"
 description = "Minimal Pingora-based HTTP load balancer for ExaServe benchmarks"
 
 [dependencies]
+# Benchmark-only. 0.5 has published HTTP/2 and request-smuggling advisories
+# (fixed in 0.6 and 0.8); raise, build and lock before any untrusted use.
 pingora = { version = "0.5", features = ["lb"] }
 pingora-load-balancing = "0.5"
 async-trait = "0.1"

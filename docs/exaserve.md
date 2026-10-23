@@ -164,9 +164,10 @@ changelog, and release admission binds a particular artifact and profile.
 
 ## Regenerating the Word reference card
 
-`docs/ExaServe_Reference_Card.docx` is generated output. The repository does not
-redistribute the Academy template or the two measurement figures, so a clean
-clone needs these ignored inputs restored first:
+`docs/ExaServe_Reference_Card.docx` is generated output. It embeds the two
+measurement figures and the Academy template's styles, but the repository does
+not track the template or the figure files, so a clean clone needs these ignored
+inputs restored first:
 
 ```text
 tmp/ref_card/Academy_Framework_Reference_Card.docx

@@ -290,9 +290,9 @@ not remove it), so Serve start-up takes 35-47 s at any size. Engine creation
 for an 8B model took about 33 s (weights about 18 s). Never set a Ray-side
 ready or health timeout below about 60 s.
 
-**Ray Serve start-up grows super-linearly with node count.** With one
-deployment of N replicas, the wait for every node's proxy grew about 4.5x per
-doubling (22, 94, 394 and 1,752 s at 32, 64, 128 and 256 nodes). On every
+**Ray Serve start-up grows super-linearly with node count.** In instrumented
+runs on an early (April 2026) snapshot, with one deployment of N replicas, the
+wait for every node's proxy grew about 4.5x per doubling (22, 94, 394 and 1,752 s at 32, 64, 128 and 256 nodes). On every
 replica-set broadcast, each proxy re-resolves every replica's actor handle, so
 cluster-wide lookups grow with nodes squared (786,000 lookups per broadcast at
 256 nodes); at 128 nodes the slowest proxy's lookup time matched the wait to
@@ -408,7 +408,7 @@ installed site packages in place.
 
 ## 5. Gateways, clients and serving settings
 
-**HAProxy is the production gateway.** Health checks target each node proxy's
+**HAProxy is the reference gateway.** Health checks target each node proxy's
 `/-/healthz`, never a model route: per-replica checks on a model route at 256
 nodes produced about 500 layer-7 timeouts, 800 DOWN events and 20-37% client
 errors, while `/-/healthz` produced none. Native configuration validation

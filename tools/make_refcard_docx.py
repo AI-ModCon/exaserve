@@ -448,9 +448,9 @@ blocks.append(
 blocks.append(
     callout(
         "Learn more:",
-        "the README covers interactive launches inside qsub -I, custom PBS integration via "
-        "--dry-run, and every configuration field (examples/config.reference.yaml is fully "
-        "annotated).",
+        "the README and docs/usage.md cover submission and --dry-run previews, "
+        "docs/getting_started.md covers interactive allocations (exaserve-launch-cluster), "
+        "and examples/config.reference.yaml annotates every configuration field.",
         LEARN_BG,
     )
 )
@@ -605,7 +605,7 @@ blocks.append(
 blocks.append(
     data_table(
         [
-            ["Environment knob", "Effect"],
+            ["Plan field", "Effect"],
             [
                 "engine: vllm",
                 "The Aurora production SiteProfile rejects unqualified engines such as SGLang",
@@ -737,6 +737,21 @@ sectpr = re.search(r"<w:sectPr.*?</w:sectPr>", old_doc, re.S).group(0)
 header = old_doc[: old_doc.index("<w:body>") + len("<w:body>")]
 new_doc = header + "".join(blocks) + sectpr + "</w:body></w:document>"
 
+
+def _drop_unused_hyperlinks(rels: str, document: str) -> str:
+    """Drop the template's hyperlink relationships that the card never references."""
+
+    def keep(match: re.Match) -> str:
+        element = match.group(0)
+        rid = re.search(r'Id="([^"]+)"', element)
+        hyperlink = re.search(r'Type="[^"]*/hyperlink"', element)
+        if hyperlink and rid and f'r:id="{rid.group(1)}"' not in document:
+            return ""
+        return element
+
+    return re.sub(r"<Relationship\b[^>]*/>", keep, rels)
+
+
 rel_entries = "".join(
     f'<Relationship Id="{rid}" '
     'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" '
@@ -759,16 +774,19 @@ try:
             if item.filename == "word/document.xml":
                 data = new_doc.encode("utf-8")
             elif item.filename == "word/_rels/document.xml.rels":
-                data = (
-                    data.decode("utf-8")
-                    .replace("</Relationships>", rel_entries + "</Relationships>")
-                    .encode("utf-8")
+                rels = _drop_unused_hyperlinks(data.decode("utf-8"), new_doc)
+                data = rels.replace("</Relationships>", rel_entries + "</Relationships>").encode(
+                    "utf-8"
                 )
             elif item.filename.startswith("word/footer"):
                 data = data.replace(b"Academy", b"ExaServe")
             zout.writestr(item, data)
         for target, src, _ in _images:
-            zout.writestr(f"word/{target}", src.read_bytes())
+            # A fixed timestamp keeps regeneration byte-for-byte reproducible.
+            info = zipfile.ZipInfo(f"word/{target}", date_time=(1980, 1, 1, 0, 0, 0))
+            info.compress_type = zipfile.ZIP_DEFLATED
+            info.external_attr = 0o644 << 16
+            zout.writestr(info, src.read_bytes())
     os.replace(temporary_path, OUT)
 finally:
     temporary_path.unlink(missing_ok=True)

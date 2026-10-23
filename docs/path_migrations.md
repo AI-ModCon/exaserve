@@ -45,8 +45,8 @@ The current tree carries no maintainer account paths, compute-node names,
 allocation-internal addresses, reservation or job identifiers, or run
 narratives. A maintainer's home or project directory appears as
 `/home/YOUR_USER/...` or `/lus/flare/projects/YOUR_PROJECT/YOUR_USER/...`; test
-fixtures use synthetic node labels such as `node-10-4-1` and documentation
-addresses from `192.0.2.0/24`. Run logs, audits and campaign records that
+fixtures use synthetic node labels such as `node-10-4-1` and generic private or
+documentation addresses. Run logs, audits and campaign records that
 carried such details were removed (see the table above); their lessons are in
 the [operations handbook](operations_handbook.md). Maintainer helpers appear
 generically: the site environment script

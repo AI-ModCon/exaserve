@@ -5,7 +5,10 @@
 # mode need to build it once. The validated runtime PATH must include $HOME/bin.
 #
 # Usage: HAPROXY_SOURCE_SHA256=<sha256> bash scripts/build_haproxy.sh [version]
-#   version defaults to 3.1.6 (what this project was tested against).
+#   version defaults to 3.1.6 (what this project was tested against). The 3.1
+#   branch no longer receives fixes and 3.1.6 is affected by CVE-2025-32464; build
+#   a supported release (3.2 LTS or later) for new deployments and re-run the
+#   HAProxy validation cells.
 
 set -euo pipefail
 

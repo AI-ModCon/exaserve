@@ -92,7 +92,7 @@ CI policy, plus outdated repository links and disabled security features.
 
 | Review item | Repository change | Still required |
 |---|---|---|
-| Operational details | Current-tree account paths, compute-node names, allocation-internal addresses, a reservation identifier and PBS job identifiers redacted ([publication redaction](path_migrations.md#publication-redaction)); the allocation name removed from the current tree, with no default PBS account or project root left in code; personal development scratchpad removed; reference card regenerated | Remove the three pre-publication tags and the 15 non-main branches before the visibility change ([decision](#operational-details-kept-for-the-disclosure-decision)) |
+| Operational details | Current-tree account paths, compute-node names, allocation-internal addresses, a reservation identifier and PBS job identifiers redacted ([publication redaction](path_migrations.md#publication-redaction)); the allocation name removed from the current tree, with no default PBS account or project root left in code; personal development scratchpad removed; reference card regenerated | Remove the three pre-publication tags and every non-main branch before the visibility change ([decision](#operational-details-kept-for-the-disclosure-decision)) |
 | Dependency alerts | Development lock refreshed; upgrades are expected to close 75 of the 126 alerts open on 2026-10-23 once integrated; request chat templates rejected and model types pinned | Verify the upgrade results and review and record the remaining 51 proposed dispositions below |
 | Review and CI enforcement | The [protection payload](../.github/main-branch-protection.json) already names the seven current CI checks and the required review settings | Apply it (step 3 below) and read it back |
 | Repository links | Package metadata, README, documentation and this checklist name `AI-ModCon/exaserve` | — |
@@ -113,8 +113,9 @@ removed before the visibility change. The current tree retains:
   also print: the `/home` and `/lus/flare` shared-filesystem roots, the
   `.hsn.cm.aurora.alcf.anl.gov` high-speed-network domain, the
   `aurora-pbs-0001.hostmgmt.cm.aurora.alcf.anl.gov` PBS server name, the
-  `aurora-uan-*` login-node pattern and the shared model-weights path
-  `/lus/flare/projects/datasets/model-weights`.
+  `aurora-uan-*` login-node pattern and the shared model-weights directory
+  `/lus/flare/projects/datasets/model-weights` (ALCF's guides print it as
+  `/flare/datasets/model-weights`, the same directory).
 - Aurora's platform name, platform-specific tuning, and standard queue names
   remain part of the reference deployment. The queue names are documented in
   [ALCF's public running-jobs guide](https://docs.alcf.anl.gov/aurora/running-jobs-aurora/).
@@ -123,7 +124,7 @@ removed before the visibility change. The current tree retains:
 - Run logs, audits, campaign records and research notes were removed from the
   current tree. Their lessons are in the
   [operations handbook](operations_handbook.md), which keeps measurements and
-  failure analyses without identifiers or dates.
+  failure analyses without job, host or run identifiers.
 
 Earlier commits keep their original content; removing the branches and tags does
 not change what `main`'s history holds.
@@ -143,7 +144,11 @@ pins Pillow 13.0.0, pytest 9.0.3, Pygments 2.20.0 and fontTools 4.60.2, also in
 `requirements/ci.lock`, and the transitive certifi (2026.10.19), aiohttp
 (3.14.5), virtualenv (21.14.5) and OpenTelemetry (1.45.1) resolutions were
 refreshed. These upgrades are expected to close 75 of the open alerts; verify
-the result after integration.
+the result after integration. The refresh does not change the ALCF-supplied
+frameworks module, which keeps certifi 2026.1.4, aiohttp 3.13.3 (3.13.2 vendored
+in Ray's runtime-environment agent), Pillow 12.1.0 and virtualenv 20.36.1; their
+exposure falls under SECURITY.md's trusted-network assumption, with text-only
+requests and no virtualenv creation.
 
 The other 51 cannot be closed by upgrading without changing the qualified
 serving stack, the audited build tools, or the pins and extras named below. Each was checked against the code
@@ -237,16 +242,17 @@ so the payload still has to be applied there.
 1. Done: the repository was transferred with its commit history, branches,
    tags, issues and evidence links. Do not create a replacement history by
    copying files into an empty template repository.
-2. Confirm the destination's Actions policy permits the pinned third-party
-   actions in [CI](../.github/workflows/ci.yml). Use read-only workflow token
-   permissions and do not expose privileged credentials to untrusted PR code.
+2. Done (read on 2026-10-23): the repository's Actions policy permits the pinned
+   actions in [CI](../.github/workflows/ci.yml), the workflow token is
+   read-only and Actions cannot approve pull requests. Keep it that way, and do
+   not expose privileged credentials to untrusted PR code.
 3. Protect `main` with a ruleset/branch protection requiring pull requests,
    at least one approval from a human reviewer other than the author, dismissal
    of stale approvals, resolved review conversations, and required CI checks.
    Restrict bypass permissions; disable force pushes and branch deletion.
    Configure actual human/team ownership after the team names and access are
    confirmed; do not use a guessed CODEOWNERS entry.
-4. After the first destination CI run, require the exact emitted checks:
+4. Require the exact checks that CI emits:
    `portable uv lock (py3.12)`, `Go replay client tests`,
    `hermetic tests (py3.12, fixed)`, `hermetic tests (py3.12, random)`,
    `packaged wheel test (not an editable checkout)`,
@@ -269,10 +275,10 @@ so the payload still has to be applied there.
    changes.
 7. Review any future package publishing separately: registry ownership, release
    evidence, protected environments and trusted publishing are distinct actions.
-   Do not introduce a publish token or deploy-on-push workflow as part of transfer.
+   Do not introduce a publish token or deploy-on-push workflow.
 8. Before changing visibility, remove the tags `v0.1.0`, `v0.2.0` and
-   `v0.4.0-rc2` and the 15 non-main branches, then the cleanup pull request's
-   branch once it is merged. The
+   `v0.4.0-rc2` and every non-main branch: the 15 audited ones, #3's branch and,
+   once it is merged, the cleanup pull request's branch. The
    [audited branches](path_migrations.md#retired-branches) and their recurring
    lessons ([known issues](KNOWN_ISSUES.md#lessons-kept-from-retired-branches))
    are recorded.

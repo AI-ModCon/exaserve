@@ -35,9 +35,8 @@ maximum for ExaServe.
   gather the plotting scripts" passed the seven portable CI-equivalent
   checks on an Aurora compute node. Fixed-order, randomized-order and
   installed-wheel suites each reported **1,771 passed, 40 skipped**. These are
-  code/package regression results, not a rerun of the scale study. The
-  documentation, lock, naming and review updates that follow it are covered by
-  the pull request's CI run.
+  code/package regression results, not a rerun of the scale study. The later
+  commits on this branch are covered by the pull request's CI run.
 - Focused one-/two-node hardware and regression checks cover particular
   staging, control-plane and pipeline-parallel paths. Their scope stays with
   those checks rather than becoming a system-wide scale restriction.
@@ -114,6 +113,13 @@ maximum for ExaServe.
   `runs/arxiv-submission/`. A run group's `run.yaml` binds the absolute path it
   was written to, so groups recorded under another folder cannot be moved or
   renamed; set `EXASERVE_PAPER_SUITE_ROOT` to that folder to read them in place.
+- Name GitHub's private vulnerability reporting in `SECURITY.md` beside the
+  e-mail route. Document that the HAProxy build helper's 3.1.6 default is end of
+  life and affected by CVE-2025-32464, and that the Pingora benchmark's declared
+  0.5 range has published advisories.
+- The reference card regenerates byte for byte (fixed timestamps for the
+  embedded figures), drops an unused template hyperlink, and names the documents
+  that cover interactive allocations; `NOTICE` credits the card's template.
 - Document deployment trust assumptions in `SECURITY.md` and the request fields
   that reach vLLM in the API reference.
 - Remove the built-in PBS account and project root: `EXASERVE_PROJECT_ACCOUNT`
