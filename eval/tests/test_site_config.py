@@ -79,6 +79,32 @@ class SiteConfigTests(unittest.TestCase):
             site_config.Path("/lus/flare/projects/example-project/alice/data/experiments/runs"),
         )
 
+    def test_paper_suite_root_follows_runs_root_unless_overridden(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_home:
+            with (
+                patched_site_env(
+                    USER="alice",
+                    HOME=temp_home,
+                    EXASERVE_PROJECT_ROOT="/lus/flare/projects/example-project",
+                ),
+                mock.patch.object(site_config, "local_account_name", return_value="alice"),
+                mock.patch.dict(os.environ, {"EXASERVE_PAPER_SUITE_ROOT": ""}),
+            ):
+                self.assertEqual(
+                    site_config.get_paper_suite_root(),
+                    site_config.get_runs_root() / "arxiv-submission",
+                )
+                os.environ["EXASERVE_PAPER_SUITE_ROOT"] = (
+                    "/lus/flare/projects/example-project/suite"
+                )
+                self.assertEqual(
+                    site_config.get_paper_suite_root(),
+                    site_config.Path("/lus/flare/projects/example-project/suite"),
+                )
+                os.environ["EXASERVE_PAPER_SUITE_ROOT"] = "relative/suite"
+                with self.assertRaisesRegex(ValueError, "must be an absolute path"):
+                    site_config.get_paper_suite_root()
+
     def test_missing_project_root_fails_loudly(self) -> None:
         with tempfile.TemporaryDirectory() as temp_home:
             with patched_site_env(USER="alice", HOME=temp_home):

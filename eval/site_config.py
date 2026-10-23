@@ -230,6 +230,24 @@ def get_runs_root() -> Path:
     return Path(get_site_config().experiments_root) / "runs"
 
 
+def get_paper_suite_root() -> Path:
+    """Return the run-group folder of the paper's evaluation suite.
+
+    Run groups of specs under eval/specs/arxiv-submission/ resolve under
+    ``<runs>/arxiv-submission``. A run group's run.yaml binds the absolute path it
+    was written to, so groups recorded under another folder are rejected once
+    moved or renamed; ``EXASERVE_PAPER_SUITE_ROOT`` names such a folder so the
+    paper's figure scripts read them where they are.
+    """
+
+    override = os.environ.get("EXASERVE_PAPER_SUITE_ROOT", "")
+    if not override:
+        return get_runs_root() / "arxiv-submission"
+    if not os.path.isabs(override):
+        raise ValueError("EXASERVE_PAPER_SUITE_ROOT must be an absolute path")
+    return Path(override)
+
+
 def _build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Inspect shared Aurora site config defaults.")
     subparsers = parser.add_subparsers(dest="command")

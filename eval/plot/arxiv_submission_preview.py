@@ -52,9 +52,9 @@ os.environ.setdefault("OMP_NUM_THREADS", "1")
 import numpy as np
 import ijson
 
-from eval.site_config import get_runs_root
+from eval.site_config import get_paper_suite_root
 
-RUNS_ROOT = get_runs_root() / "arxiv-submission/validation"
+RUNS_ROOT = get_paper_suite_root() / "validation"
 OUT_DIR = Path(__file__).resolve().parent / "output" / "arxiv_submission_preview"
 CACHE_DIR = Path("/tmp/arxiv_submission_preview_cache")
 

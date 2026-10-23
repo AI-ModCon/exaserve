@@ -41,10 +41,10 @@ from eval.lib.pp405b_evidence import (
     load_legacy_pp405b_ledger,
     load_pp405b_points,
 )
-from eval.site_config import get_runs_root
+from eval.site_config import get_paper_suite_root, get_runs_root
 
 # Retarget the extraction to the full sweep (separate cache from validation).
-P.RUNS_ROOT = get_runs_root() / "arxiv-submission/full"
+P.RUNS_ROOT = get_paper_suite_root() / "full"
 P.CACHE_DIR = Path("/tmp/arxiv_submission_full_cache")
 
 # Every paper series below owns explicit run selections; a rerun must never

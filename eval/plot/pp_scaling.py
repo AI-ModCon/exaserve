@@ -20,9 +20,9 @@ from pathlib import Path
 import numpy as np
 
 import plotstyle as ps
-from eval.site_config import get_runs_root
+from eval.site_config import get_paper_suite_root
 
-RUNS_ROOT = get_runs_root() / "arxiv-submission/full/pp405b_pp2_scale"
+RUNS_ROOT = get_paper_suite_root() / "full/pp405b_pp2_scale"
 OUT = Path(__file__).resolve().parent / "output" / "pp_scaling"
 PP = 2  # nodes per replica
 

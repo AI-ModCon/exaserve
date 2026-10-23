@@ -27,7 +27,9 @@ resolves by filename stem), hence the `_val` suffix convention.
 spec's location (`spec_runs_dir` in `eval/lib/run_planner.py`). Specs stored
 directly under `eval/specs/` resolve to `runs/<name>/`. `runs/arxiv-submission/`
 contains only folders that mirror this spec tree, and a folder there means real
-data from that suite stage.
+data from that suite stage. A run group's `run.yaml` binds the absolute path it
+was written to; to read groups recorded under another folder, set
+`EXASERVE_PAPER_SUITE_ROOT` to that folder instead of moving them.
 
 All `validation/` and `full/` specs set `launch.clean_stage: true`. Under the
 current immutable-cache contract this is a non-destructive, all-rank
