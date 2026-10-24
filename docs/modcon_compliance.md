@@ -94,7 +94,7 @@ CI policy, plus outdated repository links and disabled security features.
 | Review item | Repository change | Still required |
 |---|---|---|
 | Operational details | Current-tree account paths, compute-node names, allocation-internal addresses, a reservation identifier and PBS job identifiers redacted ([publication redaction](path_migrations.md#publication-redaction)); the allocation name removed from the current tree, with no default PBS account or project root left in code; personal development scratchpad removed; reference card regenerated | Remove the three pre-publication tags and every non-main branch before the visibility change ([decision](#operational-details-kept-for-the-disclosure-decision)) |
-| Dependency alerts | Development lock refreshed; upgrades are expected to close 75 of the 126 alerts open on 2026-10-23 once integrated; request chat templates rejected and model types pinned | Verify the upgrade results and review and record the remaining 51 proposed dispositions below |
+| Dependency alerts | Development lock refreshed; upgrades are expected to close 80 of the 141 alerts open on 2026-10-24 once integrated; request chat templates rejected and model types pinned | Verify the upgrade results and review and record the remaining 61 proposed dispositions below |
 | Review and CI enforcement | The [protection payload](../.github/main-branch-protection.json) already names the seven current CI checks and the required review settings | Before integration, apply it and post the read-back in #2 |
 | Repository links | Package metadata, README, documentation and this checklist name `AI-ModCon/exaserve` | — |
 | Security features | Trust assumptions documented in [SECURITY.md](../SECURITY.md#deployment-trust-assumptions) | Enable them (step 5 below) |
@@ -138,17 +138,18 @@ its architecture; and the evaluation tools load tokenizers without remote code.
 
 ### Dependency alerts
 
-On 2026-10-23 GitHub listed 126 open alerts on `main`, all from `uv.lock`: the
-92 recorded in the 2026-10-21 review and 34 filed since. The development lock
+On 2026-10-24 GitHub listed 141 open alerts on `main`, all from `uv.lock`: the
+92 recorded in the 2026-10-21 review, 34 more by 2026-10-23 and 15 since then.
+The development lock
 is now generated with uv 0.13.4, which the dev group and `requirements/ci.lock`
 also pin, and resolves Python 3.11–3.13. The test group pins Pillow 13.0.0,
 pytest 9.0.3, Pygments 2.20.0 and fontTools 4.60.2, also in
 `requirements/ci.lock`, and the transitive certifi (2026.10.19), aiohttp
-(3.14.5), virtualenv (21.14.5) and OpenTelemetry (1.45.1) resolutions were
-refreshed. These upgrades are expected to close 75 of the open alerts; verify
+(3.14.5), virtualenv (21.14.5), OpenTelemetry (1.45.1) and filelock (4.2.4)
+resolutions were refreshed. These upgrades are expected to close 80 of the open alerts; verify
 the result after integration. The refresh does not change the ALCF-supplied
 frameworks module, which keeps aiohttp 3.13.3 (3.13.2 vendored in Ray's
-runtime-environment agent), Pillow 12.1.0, virtualenv 20.36.1, certifi
+runtime-environment agent), Pillow 12.1.0, filelock 3.20.3, virtualenv 20.36.1, certifi
 2026.1.4, uv 0.10.1, pytest 8.3.5 and Pygments 2.19.2. aiohttp's server
 advisories fall under SECURITY.md's trusted-network assumption, and its three
 client cookie and connection-pool advisories need a malicious server. Pillow's
@@ -177,14 +178,25 @@ Node 20. GitHub has run them on Node 24 since it removed Node 20 from hosted
 runners on 2026-09-23, and CI passes that way; moving to their Node 24 releases
 is left to a later change with its own CI run.
 
-The other 51 cannot be closed by upgrading without changing the qualified
+The 15 newest alerts include two Pillow findings already fixed by the locked
+13.0.0, including the critical FlashPix JPEG-decoder overflow. Updating
+filelock from 4.0.1 to 4.2.4 fixes three more: the SQLite ReadWriteLock
+side-file/path attacks and two Windows lock defects. The site's filelock
+3.20.3 predates their affected ranges. The remaining ten new alerts concern
+two vLLM multimodal request paths, setuptools' legacy wheel-to-egg
+installation and seven unused virtualenv creator/seeder/activation paths.
+The lock therefore remediates seven of the eight critical alerts; the remaining
+critical vLLM authentication advisory concerns its OpenAI server, which
+ExaServe does not run. Maintainers must still record that disposition.
+
+The other 61 cannot be closed by upgrading without changing the qualified
 serving stack, the audited build tools, or the pins and extras named below. Each was checked against the code
 paths that ExaServe uses and against the request surface in the
 [API reference](api.md#inference-http-surface):
 
 | Package | Alerts | Locked | Why it stays | Disposition |
 |---|---:|---|---|---|
-| vllm | 31, one critical | 0.15.0 | Exact pin of the qualified `frameworks/2025.3.1` stack | 30 unreachable: ExaServe does not run vLLM's OpenAI server, passes only a text prompt and six validated sampling fields, and serves text-only Llama and GPT-OSS checkpoints; five of the 30 concern code that vLLM 0.15.0 does not contain. 1 accepted: a low-severity KV-block reuse defect |
+| vllm | 33, one critical | 0.15.0 | Exact pin of the qualified `frameworks/2025.3.1` stack | 32 unreachable: ExaServe does not run vLLM's OpenAI server, passes only a text prompt and six validated sampling fields, and serves text-only Llama and GPT-OSS checkpoints; five of the 32 concern code that vLLM 0.15.0 does not contain. 1 accepted: a low-severity KV-block reuse defect |
 | transformers | 5 | 4.57.6 | Exact pin of the qualified stack and the `paper` extra | Unreachable: no Trainer, `save_pretrained`, custom generation or Hub kernels, and staging rejects a configuration whose `model_type` would select another model class |
 | ray | 3 | 2.53.0 | Exact pin of the qualified stack | Unreachable: no Ray Data, no Ray Jobs, dashboard disabled |
 | torch | 2 | 2.9.1 | Pinned by vLLM 0.15.0 | Unreachable: neither affected API is called |
@@ -192,10 +204,10 @@ paths that ExaServe uses and against the request surface in the
 | diskcache | 1 | 5.6.3 | Pinned by vLLM 0.15.0; no fixed release | Unreachable: vLLM's outlines cache is never used |
 | datasets | 1 | 4.8.5 | The `paper` extra requires `<5` | Unreachable: no folder-based builder is used |
 | fsspec | 1 | 2026.2.0 | Capped by datasets 4.x | Unreachable: no reference filesystem is opened |
-| virtualenv | 5 | 21.14.5 | 21.14.7 and later need packaging 26.3; the test group and `requirements/ci.lock` pin packaging 25.0, and psij-python 0.9.4 and later (the `scheduler` extra; 0.9.11 is locked) cap it at 25.0 or lower, so lifting the pin would pull psij-python back to 0.9.3 | Unreachable: no virtualenv is created or activated |
-| setuptools | 1 | 78.1.1 | Audited build backend; vLLM 0.15.0 requires `<81` | Accepted: needs non-ASCII exclusions built on macOS APFS/HFS+; releases are built on Linux by the audited builder, which rejects unexpected sdist members |
+| virtualenv | 12 | 21.14.5 | 21.14.7 and later need packaging 26.3; the test group and `requirements/ci.lock` pin packaging 25.0, and psij-python 0.9.4 and later (the `scheduler` extra; 0.9.11 is locked) cap it at 25.0 or lower, so lifting the pin would pull psij-python back to 0.9.3 | Unreachable: serving supplies only Ray `env_vars`, without a pip/conda/uv environment; the portable development/build profile does not install Python virtualenv |
+| setuptools | 2 | 78.1.1 | Audited build backend; vLLM 0.15.0 requires `<81` | 1 accepted: needs non-ASCII exclusions built on macOS APFS/HFS+; releases are built on Linux by the audited builder, which rejects unexpected sdist members. 1 unreachable: no build or install path calls its legacy wheel-to-egg installation (`Wheel.install_as_egg`) |
 
-Have the responsible maintainer review each of the 51 proposed dispositions.
+Have the responsible maintainer review each of the 61 proposed dispositions.
 Record the resolution or justified dismissal with its reason and a comment
 that states the evidence, citing the supporting code or document where there
 is one. Every critical and serving-stack finding needs an explicit
@@ -205,9 +217,9 @@ and triage new advisories against the pinned stack the same way as they
 arrive. Requalifying on a newer site stack would close most of the vLLM alerts
 by upgrade.
 
-OSV also lists 20 advisories against locked versions that GitHub has not
-raised as alerts (17 for vLLM, 2 for PyTorch, 1 for Transformers; checked
-2026-10-23). They concern vLLM's Dockerfile, prefill/decode KV connectors,
+The 2026-10-23 OSV check also listed 20 advisories against locked versions that
+GitHub had not raised as alerts (17 for vLLM, 2 for PyTorch, 1 for Transformers).
+They concern vLLM's Dockerfile, prefill/decode KV connectors,
 embedding and pooling routes, penalties, token lists, media inputs and code
 absent from vLLM 0.15.0, PyTorch's `.pt2` loader and Transformers' X-CLIP
 conversion script, none of which ExaServe uses, and PyTorch's weights-only

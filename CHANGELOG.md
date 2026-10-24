@@ -111,6 +111,10 @@ maximum for ExaServe.
   digits, has trailing characters, is repeated or exceeds 1 GiB, or that
   carries any `Transfer-Encoding` header (it reads only fixed-length bodies),
   instead of overflowing an `int` or parsing body bytes as the next request.
+- The dependency review covers the 141 alerts open on 2026-10-24. The lock
+  refreshes filelock to 4.2.4, fixing three additional alerts; 80 are now
+  remediated by the lock and 61 have proposed dispositions for maintainer
+  review. The Aurora module and its serving pins are unchanged.
 - Spec comments state what each spec varies and why; run histories, dated
   results and run-group names were removed, and the `_nostream` headers match
   their YAML.
