@@ -7,12 +7,12 @@ struct ParsedRequest {
     std::string path;
     int content_length = 0;
     bool keep_alive = true;
-    bool malformed = false;  // Content-Length absent digits, overflowing or above the cap
+    bool malformed = false;  // Invalid/ambiguous Content-Length or unsupported Transfer-Encoding
 };
 
 // Parse HTTP headers from a buffer. Returns true if headers are complete
 // (\r\n\r\n found). Fills req with method, path, content_length, keep_alive
-// and sets req.malformed when Content-Length cannot be accepted.
+// and sets req.malformed when the body framing cannot be accepted.
 // header_end_offset is set to the byte offset past the \r\n\r\n.
 bool parse_headers(const char* buf, size_t len, ParsedRequest& req, size_t& header_end_offset);
 

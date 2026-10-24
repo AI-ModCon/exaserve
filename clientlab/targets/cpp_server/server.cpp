@@ -410,7 +410,7 @@ void WorkerReactor::handle_readable(ConnectionState& conn) {
         size_t header_end_offset = 0;
         if (parse_headers(conn.read_buf, conn.read_len, conn.req, header_end_offset)) {
             if (conn.req.malformed) {
-                // Unusable Content-Length: the body boundary is unknown.
+                // Unusable Content-Length or Transfer-Encoding: the body boundary is unknown.
                 close_connection(conn);
                 return;
             }

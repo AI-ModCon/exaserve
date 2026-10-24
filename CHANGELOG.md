@@ -108,8 +108,9 @@ maximum for ExaServe.
   work without site configuration; the unused `RuntimeEnvSpec.exports` field
   and `SiteDefaults.project_root` are removed.
 - The synthetic C++ target closes a connection whose `Content-Length` has no
-  digits or exceeds 1 GiB, instead of overflowing an `int` and parsing the
-  body as the next request.
+  digits, has trailing characters, is repeated or exceeds 1 GiB, or that
+  carries any `Transfer-Encoding` header (it reads only fixed-length bodies),
+  instead of overflowing an `int` or parsing body bytes as the next request.
 - Spec comments state what each spec varies and why; run histories, dated
   results and run-group names were removed, and the `_nostream` headers match
   their YAML.

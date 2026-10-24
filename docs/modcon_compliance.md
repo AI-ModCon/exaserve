@@ -72,10 +72,10 @@ neither this record nor a checked-in JSON file substitutes for those checks.
 | Open-source license and package declaration | [LICENSE](../LICENSE), [NOTICE](../NOTICE), Apache-2.0 metadata in [pyproject.toml](../pyproject.toml) | Maintainers retain responsibility for contribution and third-party rights |
 | `docs/`, README, onboarding and examples | [Documentation index](index.md), [getting started](getting_started.md), [usage](usage.md), [API](api.md), [FAQ](faq.md), [README](../README.md) | Maintain links and examples as the project evolves |
 | pytest suite and coverage | Existing three test trees; explicit coverage configuration and CI reports | Run and review the updated CI; coverage is not hardware evidence |
-| CI/CD test integration | Existing hermetic, randomized-order, installed-wheel, Go, ledger and static jobs retained; portable lock lane added | Required by branch protection, applied before this pull request merged (read-back in #2) |
+| CI/CD test integration | Existing hermetic, randomized-order, installed-wheel, Go, ledger and static jobs retained; portable lock lane added | Before integration, require the checks through branch protection and post its read-back in #2 |
 | Contribution and AI-assistance policy | [CONTRIBUTING](../CONTRIBUTING.md), [PR template](../.github/pull_request_template.md) | A human must review and approve changes |
 | Conduct policy and issue procedures | [CODE_OF_CONDUCT](../CODE_OF_CONDUCT.md), [issue templates](../.github/ISSUE_TEMPLATE), [SECURITY](../SECURITY.md) | Maintain the private contact and triage reports |
-| Main-branch protection | Administrator instructions below | Applied before this pull request merged (read-back in #2); on 2026-10-21 there was none |
+| Main-branch protection | Administrator instructions below | Before integration, apply it and post the read-back in #2; absent when checked on 2026-10-23 |
 | Project, author/contact, dependency and Python metadata | [pyproject.toml](../pyproject.toml); Wenyi Wang, `wenyiw@uchicago.edu` | Update contacts whenever ownership changes |
 | Development automation and lock | [Makefile](../Makefile), [uv.lock](../uv.lock), [dependency profiles](../requirements/README.md) | Run the locked portable CI on the current Aurora Python minor version (3.12) |
 | Genesis Mission acknowledgment | [README acknowledgment](../README.md#acknowledgments) credits support for the ModCon Base collaboration | Confirm project-specific wording if an institution requires it |
@@ -95,7 +95,7 @@ CI policy, plus outdated repository links and disabled security features.
 |---|---|---|
 | Operational details | Current-tree account paths, compute-node names, allocation-internal addresses, a reservation identifier and PBS job identifiers redacted ([publication redaction](path_migrations.md#publication-redaction)); the allocation name removed from the current tree, with no default PBS account or project root left in code; personal development scratchpad removed; reference card regenerated | Remove the three pre-publication tags and every non-main branch before the visibility change ([decision](#operational-details-kept-for-the-disclosure-decision)) |
 | Dependency alerts | Development lock refreshed; upgrades are expected to close 75 of the 126 alerts open on 2026-10-23 once integrated; request chat templates rejected and model types pinned | Verify the upgrade results and review and record the remaining 51 proposed dispositions below |
-| Review and CI enforcement | The [protection payload](../.github/main-branch-protection.json) already names the seven current CI checks and the required review settings | Applied before this pull request merged (read-back in #2) |
+| Review and CI enforcement | The [protection payload](../.github/main-branch-protection.json) already names the seven current CI checks and the required review settings | Before integration, apply it and post the read-back in #2 |
 | Repository links | Package metadata, README, documentation and this checklist name `AI-ModCon/exaserve` | — |
 | Security features | Trust assumptions documented in [SECURITY.md](../SECURITY.md#deployment-trust-assumptions) | Enable them (step 5 below) |
 | Release description | README describes the repository as development and research source, not a production-qualified release | Describe the visibility change the same way |
@@ -273,9 +273,9 @@ gh api repos/AI-ModCon/exaserve/branches/main/protection
 ```
 
 The JSON file is a configuration input, not proof that protection is active.
-On 2026-10-21 `AI-ModCon/exaserve` had no branch protection or rulesets; the
-payload is applied before the pull request that adds this record is merged,
-and its read-back is posted in #2.
+On 2026-10-23 the live `main` branch still reported `protected: false` and
+the repository rulesets list was empty. Apply the payload before merging the
+cleanup pull request and post its read-back in #2.
 
 1. Done: the repository was transferred with its commit history, branches,
    tags, issues and evidence links. Do not create a replacement history by
@@ -284,14 +284,14 @@ and its read-back is posted in #2.
    actions in [CI](../.github/workflows/ci.yml), the workflow token is
    read-only and Actions cannot approve pull requests. Keep it that way, and do
    not expose privileged credentials to untrusted PR code.
-3. Done before integration (read-back in #2): protect `main` with a
+3. Before integration: protect `main` and post the read-back in #2, with a
    ruleset/branch protection requiring pull requests, at least one approval
    from a human reviewer other than the author, dismissal of stale approvals,
    resolved review conversations, and required CI checks. Restrict bypass
    permissions; disable force pushes and branch deletion.
    Configure actual human/team ownership after the team names and access are
    confirmed; do not use a guessed CODEOWNERS entry.
-4. Done before integration (read-back in #2): require the exact checks that
+4. Before integration: require the exact checks that
    CI emits:
    `portable uv lock (py3.12)`, `Go replay client tests`,
    `hermetic tests (py3.12, fixed)`, `hermetic tests (py3.12, random)`,

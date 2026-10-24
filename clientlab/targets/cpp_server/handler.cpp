@@ -61,23 +61,34 @@ bool parse_headers(const char* buf, size_t len, ParsedRequest& req, size_t& head
         req.method = ParsedRequest::UNKNOWN;
     }
 
-    // Parse Content-Length (case-insensitive). Values without digits or above
-    // kMaxContentLength (which also rules out overflow) mark the request malformed.
+    // This server only drains fixed-length bodies; chunked framing is unsupported.
+    if (find_case_insensitive(buf, end, "\r\nTransfer-Encoding:")) {
+        req.malformed = true;
+    }
+
+    // Parse one complete Content-Length value (case-insensitive). Ambiguous or
+    // invalid lengths must not leave body bytes on a keep-alive connection.
     // Headers start after a CRLF, so other names ending in "Content-Length" do not match.
     const char* cl = find_case_insensitive(buf, end, "\r\nContent-Length:");
     if (cl && cl < end) {
         constexpr uint64_t kMaxContentLength = uint64_t{1} << 30;
         cl += 17;
-        while (cl < end && (*cl == ' ' || *cl == '\t')) cl++;
+        if (find_case_insensitive(cl, end, "\r\nContent-Length:")) {
+            req.malformed = true;
+        }
+        const char* value_end = static_cast<const char*>(memmem(cl, end - cl, "\r\n", 2));
+        if (!value_end) value_end = end;
+        while (cl < value_end && (*cl == ' ' || *cl == '\t')) cl++;
         uint64_t content_length = 0;
         bool any_digit = false;
-        while (cl < end && *cl >= '0' && *cl <= '9') {
+        while (cl < value_end && *cl >= '0' && *cl <= '9') {
             content_length = (content_length * 10) + static_cast<uint64_t>(*cl - '0');
             any_digit = true;
             if (content_length > kMaxContentLength) break;
             cl++;
         }
-        if (!any_digit || content_length > kMaxContentLength) {
+        while (cl < value_end && (*cl == ' ' || *cl == '\t')) cl++;
+        if (!any_digit || content_length > kMaxContentLength || cl != value_end) {
             req.malformed = true;
         } else {
             req.content_length = static_cast<int>(content_length);
