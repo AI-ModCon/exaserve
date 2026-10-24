@@ -23,7 +23,8 @@ matrix:
   # letting them be killed after staging. The 32-, 64- and 128-node cells can
   # run together as the children of the prod256 allocation campaign
   # (python3 -m eval.cli allocation ...), which needs a passed qualification
-  # campaign first; otherwise point scheduler.queue at a reservation queue.
+  # campaign first; otherwise change the scheduler.queue expression above to a
+  # reservation queue.
   - path: scheduler.walltime
     expr: '"04:00:00" if num_nodes >= 256 else "02:00:00"'
 trace:

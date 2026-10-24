@@ -144,6 +144,8 @@ eval tooling imports ExaServe from the checkout's `src/`), inspect an example
 specification without launching it:
 
 ```bash
+# In a shell kept for eval and ClientLab, not the one you use for
+# exaserve-serve-submit or the installed-wheel check:
 export PYTHONPATH="$PWD:$PWD/src"
 python3 -m eval.cli spec validate eval/specs/smoke_haproxy_1node.yaml
 ```

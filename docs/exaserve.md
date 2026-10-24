@@ -151,6 +151,8 @@ printed. Run ClientLab `run` and `smoke` studies in a compute session
 ([AGENTS.md](../AGENTS.md)).
 
 ```bash
+# In a shell kept for eval and ClientLab, not the one you use for
+# exaserve-serve-submit or the installed-wheel check:
 export PYTHONPATH="$PWD:$PWD/src"
 python3 -m eval.cli spec validate eval/specs/smoke_haproxy_1node.yaml
 python3 -m eval.cli run materialize eval/specs/smoke_haproxy_1node.yaml

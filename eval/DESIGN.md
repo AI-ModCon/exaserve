@@ -30,6 +30,10 @@ strictly validated for numeric bounds, paths, replay topology, and plan hash.
 
 ## Commands
 
+Run them from the repository root with `PYTHONPATH="$PWD:$PWD/src"`; eval
+imports ExaServe from the checkout's `src/`
+([getting started](../docs/getting_started.md#configure-evaluation-environment-preparation)).
+
 ```bash
 python3 -m eval.cli spec validate <spec>
 python3 -m eval.cli spec list

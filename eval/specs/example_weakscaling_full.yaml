@@ -146,12 +146,12 @@ backend:
         num_workers: 2
         # Passed verbatim to the proxy backend.
         #
-        # LiteLLM-specific option keys currently consumed by src/exaserve/proxy/litellm_proxy.py:
+        # LiteLLM option keys (master_key and db_url are read by src/exaserve/composition.py, the others by src/exaserve/proxy/litellm_proxy.py):
         #   master_key: {secret_ref: "ENV:EXASERVE_LITELLM_MASTER_KEY"}
         #   routing_strategy: "least-busy" | "simple-shuffle" | "latency-based-routing"
         #   num_retries: 2
         #   timeout: 300
-        #   db_url: ""
+        #   db_url: {secret_ref: "ENV:EXASERVE_LITELLM_DB_URL"}   # optional
         #   extra_router: {}
         #   extra_general: {}
         #

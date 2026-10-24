@@ -23,8 +23,8 @@ matrix:
   # refuse the 17-255-node cells before contacting the scheduler instead of
   # letting them be killed after staging. Aurora's public queues give 17-255
   # nodes one hour at most, and the allocation campaign takes none of these
-  # cells (it needs two non-streaming runs with clean_stage), so point
-  # scheduler.queue at a reservation queue to run them.
+  # cells (it needs two non-streaming runs with clean_stage), so change the
+  # scheduler.queue expression below to a reservation queue to run them.
   - path: scheduler.queue
     expr: '"capacity" if num_nodes <= 16 else ("prod" if num_nodes >= 256 else "debug-scaling")'
   - path: scheduler.walltime

@@ -79,7 +79,8 @@ barrier off for iteration speed.
   non-streaming HAProxy curve `full/pp405b_pp2_haproxy_nostream_v040`; and the
   duration tests in `calibration/`. These specs request two hours below 256
   nodes and four from 256, so `submit` refuses their 17-255-node cells, which
-  exceed the one-hour debug-scaling limit; run those in a reservation queue.
+  exceed the one-hour debug-scaling limit; run those in a reservation queue by
+  changing the spec's derived `scheduler.queue` expression.
   Only the 32-, 64- and 128-node cells of
   `full/pp405b_pp2_haproxy_nostream_v040` also fit the allocation campaign
   (two non-streaming runs, clean staging, after a qualification campaign)

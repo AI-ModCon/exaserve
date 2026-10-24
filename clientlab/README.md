@@ -10,6 +10,10 @@ ClientLab is a standalone measurement system for studying `eval/go_client/bin/go
 - `python3 -m clientlab compare <study_dir_a> <study_dir_b>`
 - `python3 -m clientlab smoke <preset>`
 
+Run them from the repository root with `PYTHONPATH="$PWD:$PWD/src"`; ClientLab
+imports ExaServe from the checkout's `src/`
+([getting started](../docs/getting_started.md#configure-evaluation-environment-preparation)).
+
 Built-in presets live in [`clientlab/specs`](specs):
 
 - `aurora_internode`

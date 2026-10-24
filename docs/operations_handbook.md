@@ -181,7 +181,9 @@ At 17-255 nodes that exceeds the one-hour debug-scaling limit, so `submit` and
 `submit-all` refuse those cells before contacting the scheduler and leave them
 PLANNED. Aurora's public queues give 17-255 nodes no more than one hour (prod
 starts at 256 nodes, capacity stops at 16), so run such cells in a reservation
-queue (set `scheduler.queue` to it). Only the 32-, 64- and 128-node cells of
+queue: set `scheduler.queue` to it, and in specs whose `matrix.derived`
+computes `scheduler.queue` (all the 405B sweeps) change that expression
+instead, because a derived value overrides the `scheduler` block. Only the 32-, 64- and 128-node cells of
 `pp405b_pp2_haproxy_nostream_v040` also fit the allocation campaign below,
 which takes real children of exactly those sizes in one 256-node prod
 allocation, each with two non-streaming runs and `clean_stage: true`, and
@@ -523,9 +525,12 @@ missing statistics file as a failure.
 
 **Settings that worked for 405B.** The 405B (TP=8 x PP=2) specs use
 `enforce_eager: true`, `max_num_seqs` 8, `max_model_len` 4096,
-`replica_max_ongoing_requests` 16, `local_stage_path: /tmp/...`, HAProxy
-`leastconn` with `maxconn` 8000, and a client at 0.2 requests/s per node with
-at most four client nodes. The later non-streaming curve
+`replica_max_ongoing_requests` 16 and `local_stage_path: /tmp/...`; those
+behind HAProxy use `leastconn` with `maxconn` 8000. The weak-scaling sweeps
+offer 0.2 requests/s per node from at most four client nodes; the two duration
+tests offer 0.2 from one client node per deployment node, the two-node
+verification specs offer 0.5, and `sat_405b_pp2` searches for saturation from
+one client node. The later non-streaming curve
 (`pp405b_pp2_haproxy_nostream_v040`) also used `gpu_memory_utilization` 0.95
 (at 0.90 one tile had effectively no KV-cache blocks left), readiness initial
 deadline 7,200 s, recovery 3,600 s, canary 300 s,

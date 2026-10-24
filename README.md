@@ -283,6 +283,8 @@ even `spec validate` needs the project root. Run from the repository root:
 the eval tooling imports ExaServe from the checkout's `src/`.
 
 ```bash
+# In a shell kept for eval and ClientLab, not the one you use for
+# exaserve-serve-submit or the installed-wheel check:
 export PYTHONPATH="$PWD:$PWD/src"
 python3 -m eval.cli spec validate eval/specs/smoke_haproxy_1node.yaml
 python3 -m eval.cli run materialize eval/specs/smoke_haproxy_1node.yaml
