@@ -114,6 +114,10 @@ maximum for ExaServe.
 - Model staging requires a configuration's `model_type` to be reviewed for every
   architecture it declares, so a list that names both `LlamaForCausalLM` and
   `GptOssForCausalLM` is refused instead of passing with either model type.
+- The dataset fetcher no longer falls back to BurstGPT's repository copy when
+  the release download fails: that link had moved, and the copy is a different
+  file that it saved under the release file's name. A failed download now stops
+  with its error.
 - The dependency review covers the 141 alerts open on 2026-10-24. The lock
   refreshes filelock to 4.2.4, fixing three additional alerts; 80 are now
   remediated by the lock and 61 have proposed dispositions for maintainer

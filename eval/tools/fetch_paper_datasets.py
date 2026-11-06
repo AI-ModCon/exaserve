@@ -45,7 +45,6 @@ HUMANEVAL_URL = "https://github.com/openai/human-eval/raw/master/data/HumanEval.
 BURSTGPT_URL = (
     "https://github.com/HPMLL/BurstGPT/releases/download/v2.0/BurstGPT_without_fails_1.csv"
 )
-BURSTGPT_FALLBACK_URL = "https://github.com/HPMLL/BurstGPT/raw/master/data/BurstGPT_1.csv"
 
 # Output-length policy (see module docstring).
 HUMANEVAL_OUTPUT_LEN = 512
@@ -186,11 +185,9 @@ def fetch_burstgpt(data_root: Path) -> None:
     if dest.exists() and dest.stat().st_size > 0:
         _log(f"burstgpt: already present at {dest}, skipping")
         return
-    try:
-        _download(BURSTGPT_URL, dest)
-    except Exception as exc:  # noqa: BLE001 — fall back to the repo /data copy
-        _log(f"burstgpt: release URL failed ({exc}); trying repo /data copy")
-        _download(BURSTGPT_FALLBACK_URL, dest)
+    # No fallback: the upstream repository's data/ copy is a different file, and a
+    # fallback would save it under this name. A failed download stops here.
+    _download(BURSTGPT_URL, dest)
 
 
 # --------------------------------------------------------------------------- #
