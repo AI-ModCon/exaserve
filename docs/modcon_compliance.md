@@ -94,7 +94,7 @@ CI policy, plus outdated repository links and disabled security features.
 | Review item | Repository change | Still required |
 |---|---|---|
 | Operational details | Current-tree account paths, compute-node names, allocation-internal addresses, a reservation identifier and PBS job identifiers redacted ([publication redaction](path_migrations.md#publication-redaction)); the allocation name removed from the current tree, with no default PBS account or project root left in code; personal development scratchpad removed; reference card regenerated | Remove the three pre-publication tags and every non-main branch before the visibility change ([decision](#operational-details-kept-for-the-disclosure-decision)) |
-| Dependency alerts | Development lock refreshed; upgrades are expected to close 80 of the 141 alerts open on 2026-10-24 once integrated; request chat templates rejected and model types pinned | Verify the upgrade results and review and record the remaining 61 proposed dispositions below |
+| Dependency alerts | Development lock refreshed; upgrades are expected to close 98 of the 166 alerts open on 2026-11-06 once integrated; request chat templates rejected and model types pinned | Verify the upgrade results and review and record the remaining 68 proposed dispositions below |
 | Review and CI enforcement | The [protection payload](../.github/main-branch-protection.json) names the seven current CI checks and the required review settings; applied to `main` on 2026-10-28 and read back in #2 | — |
 | Repository links | Package metadata, README, documentation and this checklist name `AI-ModCon/exaserve` | — |
 | Security features | Trust assumptions documented in [SECURITY.md](../SECURITY.md#deployment-trust-assumptions) | Enable them (step 5 below) |
@@ -139,22 +139,36 @@ remote code.
 
 ### Dependency alerts
 
-On 2026-10-24 GitHub listed 141 open alerts on `main`, all from `uv.lock`: the
-92 recorded in the 2026-10-21 review, 34 more by 2026-10-23 and 15 since then.
+On 2026-11-06 GitHub listed 166 open alerts on `main`, all from `uv.lock`: the
+92 recorded in the 2026-10-21 review, 34 more by 2026-10-23, 15 more by
+2026-10-24 and 26 since then. One of the 26 replaces an earlier critical certifi
+alert for the same advisory, which GitHub closed.
 The development lock
 is now generated with uv 0.13.4, which the dev group and `requirements/ci.lock`
 also pin, and resolves Python 3.11–3.13. The test group pins Pillow 13.0.0,
 pytest 9.0.3, Pygments 2.20.0 and fontTools 4.60.2, also in
 `requirements/ci.lock`, and the transitive certifi (2026.10.19), aiohttp
-(3.14.5), virtualenv (21.14.5), OpenTelemetry (1.45.1) and filelock (4.2.4)
-resolutions were refreshed. These upgrades are expected to close 80 of the open alerts; verify
-the result after integration. The refresh does not change the ALCF-supplied
+(3.14.5), virtualenv (21.14.5), OpenTelemetry (1.45.1), filelock (4.2.4),
+msgpack (1.2.3), dnspython (2.9.0) and pyasn1 (0.6.5) resolutions and the
+`proxy` extra's LiteLLM (1.102.2) were refreshed. These upgrades are expected
+to close 98 of the open alerts; verify the result after integration. The refresh does not change the ALCF-supplied
 frameworks module, which keeps aiohttp 3.13.3 (3.13.2 vendored in Ray's
 runtime-environment agent), Pillow 12.1.0, filelock 3.20.3, virtualenv 20.36.1, certifi
-2026.1.4, uv 0.10.1, pytest 8.3.5 and Pygments 2.19.2. aiohttp's server
+2026.1.4, msgpack 1.1.2, dnspython 2.8.0, uv 0.10.1, pytest 8.3.5 and Pygments 2.19.2. aiohttp's server
 advisories fall under SECURITY.md's trusted-network assumption, and its three
 client cookie and connection-pool advisories need a malicious server. Pillow's
 fall under text-only requests and virtualenv's under no virtualenv creation.
+msgpack's needs attacker-supplied MessagePack data, which on the serving path
+only Ray's own processes exchange, on the trusted network. dnspython's needs a
+malicious DNS message; in the module only email-validator requires dnspython,
+and ExaServe validates no email addresses. Two of the newer filelock advisories
+also cover filelock 3.20.3. One concerns Windows only; in the other, another
+local user renames or hard-links one of the serving user's files onto a lock
+path, and the serving user's next lock acquisition truncates it.
+vLLM creates its lock files in the process's temporary directory, which
+ExaServe sets to a private (mode 0700) directory under the node-local runtime
+root; in `/tmp` itself, the sticky bit and Aurora's `fs.protected_hardlinks=1`
+block both routes.
 ExaServe's serving path does not use the module's uv, pytest or Pygments.
 certifi 2026.1.4 still trusts the emSign ECC Root CA - G3, whose intermediate
 keys are compromised (the critical certifi advisory), and so does the module's
@@ -179,25 +193,39 @@ Node 20. GitHub has run them on Node 24 since it removed Node 20 from hosted
 runners on 2026-09-23, and CI passes that way; moving to their Node 24 releases
 is left to a later change with its own CI run.
 
-The 15 newest alerts include two Pillow findings already fixed by the locked
-13.0.0, including the critical FlashPix JPEG-decoder overflow. Updating
+The 15 alerts raised from 2026-10-23 to 2026-10-24 include two Pillow findings
+already fixed by the locked 13.0.0, including the critical FlashPix
+JPEG-decoder overflow. Updating
 filelock from 4.0.1 to 4.2.4 fixes three more: the SQLite ReadWriteLock
 side-file/path attacks and two Windows lock defects. The site's filelock
-3.20.3 predates their affected ranges. The remaining ten new alerts concern
+3.20.3 predates their affected ranges. The remaining ten concern
 two vLLM multimodal request paths, setuptools' legacy wheel-to-egg
 installation and seven unused virtualenv creator/seeder/activation paths.
+
+Of the 26 alerts raised since 2026-10-24, the locked filelock 4.2.4 already
+fixes eleven and certifi 2026.10.19 the critical emSign advisory. The msgpack,
+dnspython, pyasn1 and LiteLLM upgrades fix seven more. The other seven concern
+vLLM and are fixed only in vLLM 0.31.0 or 0.32.0: request-controlled
+multimodal processor code, an out-of-vocabulary token id in a pre-tokenized
+prompt, forged handles for the shared-memory multimodal processor cache, image
+inputs passed to Ghostscript, the DeepSeek-OCR and Phi-4-multimodal models,
+and the permissive CORS default of vLLM's HTTP server. None is reachable:
+ExaServe passes vLLM only a text prompt and six validated sampling fields,
+loads models without remote code, admits only text-only Llama and GPT-OSS
+checkpoints and does not run vLLM's HTTP server.
+
 The lock therefore remediates seven of the eight critical alerts; the remaining
 critical vLLM authentication advisory concerns its OpenAI server, which
 ExaServe does not run. Maintainers must still record that disposition.
 
-The other 61 cannot be closed by upgrading without changing the qualified
+The other 68 cannot be closed by upgrading without changing the qualified
 serving stack, the audited build tools, or the pins and extras named below. Each was checked against the code
 paths that ExaServe uses and against the request surface in the
 [API reference](api.md#inference-http-surface):
 
 | Package | Alerts | Locked | Why it stays | Disposition |
 |---|---:|---|---|---|
-| vllm | 33, one critical | 0.15.0 | Exact pin of the qualified `frameworks/2025.3.1` stack | 32 unreachable: ExaServe does not run vLLM's OpenAI server, passes only a text prompt and six validated sampling fields, and serves text-only Llama and GPT-OSS checkpoints; five of the 32 concern code that vLLM 0.15.0 does not contain. 1 accepted: a low-severity KV-block reuse defect |
+| vllm | 40, one critical | 0.15.0 | Exact pin of the qualified `frameworks/2025.3.1` stack | 39 unreachable: ExaServe does not run vLLM's OpenAI server, passes only a text prompt and six validated sampling fields, and serves text-only Llama and GPT-OSS checkpoints; five of the 39 concern code that vLLM 0.15.0 does not contain. 1 accepted: a low-severity KV-block reuse defect |
 | transformers | 5 | 4.57.6 | Exact pin of the qualified stack and the `paper` extra | Unreachable: no Trainer, `save_pretrained`, custom generation or Hub kernels, and staging rejects a configuration whose `model_type` would select another model class |
 | ray | 3 | 2.53.0 | Exact pin of the qualified stack | Unreachable: no Ray Data, no Ray Jobs, dashboard disabled |
 | torch | 2 | 2.9.1 | Pinned by vLLM 0.15.0 | Unreachable: neither affected API is called |
@@ -208,7 +236,7 @@ paths that ExaServe uses and against the request surface in the
 | virtualenv | 12 | 21.14.5 | 21.14.7 and later need packaging 26.3; the test group and `requirements/ci.lock` pin packaging 25.0, and psij-python 0.9.4 and later (the `scheduler` extra; 0.9.11 is locked) cap it at 25.0 or lower, so lifting the pin would pull psij-python back to 0.9.3 | Unreachable: serving supplies only Ray `env_vars`, without a pip/conda/uv environment; the portable development/build profile does not install Python virtualenv |
 | setuptools | 2 | 78.1.1 | Audited build backend; vLLM 0.15.0 requires `<81` | 1 accepted: needs non-ASCII exclusions built on macOS APFS/HFS+; releases are built on Linux by the audited builder, which rejects unexpected sdist members. 1 unreachable: no build or install path calls its legacy wheel-to-egg installation (`Wheel.install_as_egg`) |
 
-Have the responsible maintainer review each of the 61 proposed dispositions.
+Have the responsible maintainer review each of the 68 proposed dispositions.
 Record the resolution or justified dismissal with its reason and a comment
 that states the evidence, citing the supporting code or document where there
 is one. Every critical and serving-stack finding needs an explicit

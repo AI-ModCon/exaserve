@@ -118,9 +118,10 @@ maximum for ExaServe.
   the release download fails: that link had moved, and the copy is a different
   file that it saved under the release file's name. A failed download now stops
   with its error.
-- The dependency review covers the 141 alerts open on 2026-10-24. The lock
-  refreshes filelock to 4.2.4, fixing three additional alerts; 80 are now
-  remediated by the lock and 61 have proposed dispositions for maintainer
+- The dependency review covers the 166 alerts open on 2026-11-06. The lock
+  refreshes filelock to 4.2.4, msgpack to 1.2.3, dnspython to 2.9.0, pyasn1
+  to 0.6.5 and the `proxy` extra's LiteLLM to 1.102.2; 98 alerts are now
+  remediated by the lock and 68 have proposed dispositions for maintainer
   review. The Aurora module and its serving pins are unchanged.
 - Spec comments state what each spec varies and why; run histories, dated
   results and run-group names were removed, and the `_nostream` headers match
