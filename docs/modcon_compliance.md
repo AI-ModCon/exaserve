@@ -133,8 +133,9 @@ not change what `main`'s history holds.
 Hardening found while triaging the alerts, also part of this change: a request
 can no longer supply its own Jinja chat template (the resource-exhaustion
 pattern of CVE-2025-61620, which vLLM's own server refuses by default); staging
-rejects a model configuration whose `model_type` is not the reviewed type for
-its architecture; and the evaluation tools load tokenizers without remote code.
+rejects a model configuration whose `model_type` is not reviewed for every
+architecture it declares; and the evaluation tools load tokenizers without
+remote code.
 
 ### Dependency alerts
 

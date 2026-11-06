@@ -891,14 +891,17 @@ def validate_vllm_modelinfo_seed_coverage(
             f"architecture(s) {unsupported}; refusing a cache-miss subprocess before broadcast"
         )
     model_type = config_data.get("model_type")
-    allowed_model_types = frozenset().union(
+    # Every declared architecture must accept the model_type: a mixed list must not
+    # borrow one architecture's reviewed model_type for another.
+    allowed_model_types = frozenset.intersection(
         *(_ARCHITECTURE_MODEL_TYPES.get(name, frozenset()) for name in architectures)
     )
     if not isinstance(model_type, str) or model_type not in allowed_model_types:
         raise RuntimeError(
             f"[ModelStaging] Model {model_id} at {model_path} declares model_type "
-            f"{model_type!r}, which is not reviewed for architecture(s) {sorted(architectures)}; "
-            "refusing a configuration that would load a different model class"
+            f"{model_type!r}, which is not reviewed for every declared architecture "
+            f"{sorted(architectures)}; refusing a configuration that would load a different "
+            "model class"
         )
     return tuple(architectures)
 

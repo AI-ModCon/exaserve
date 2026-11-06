@@ -111,6 +111,9 @@ maximum for ExaServe.
   digits, has trailing characters, is repeated or exceeds 1 GiB, or that
   carries any `Transfer-Encoding` header (it reads only fixed-length bodies),
   instead of overflowing an `int` or parsing body bytes as the next request.
+- Model staging requires a configuration's `model_type` to be reviewed for every
+  architecture it declares, so a list that names both `LlamaForCausalLM` and
+  `GptOssForCausalLM` is refused instead of passing with either model type.
 - The dependency review covers the 141 alerts open on 2026-10-24. The lock
   refreshes filelock to 4.2.4, fixing three additional alerts; 80 are now
   remediated by the lock and 61 have proposed dispositions for maintainer

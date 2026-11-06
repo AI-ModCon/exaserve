@@ -82,6 +82,26 @@ def test_vllm_modelinfo_seed_coverage_rejects_a_mismatched_model_type(tmp_path):
         validate_vllm_modelinfo_seed_coverage("org/model", model, frozenset({"NewForCausalLM"}))
 
 
+def test_vllm_modelinfo_seed_coverage_rejects_a_mixed_architecture_list(tmp_path):
+    model = tmp_path / "model"
+    model.mkdir()
+    config = model / "config.json"
+    supported = frozenset({"LlamaForCausalLM", "GptOssForCausalLM"})
+
+    # Each architecture's reviewed model_type is valid for that architecture only,
+    # so no model_type is valid for a list that declares both.
+    for architectures in (
+        ["LlamaForCausalLM", "GptOssForCausalLM"],
+        ["GptOssForCausalLM", "LlamaForCausalLM"],
+    ):
+        for model_type in ("llama", "gpt_oss"):
+            config.write_text(
+                json.dumps({"architectures": architectures, "model_type": model_type})
+            )
+            with pytest.raises(RuntimeError, match="every declared architecture"):
+                validate_vllm_modelinfo_seed_coverage("org/model", model, supported)
+
+
 def test_node_local_directory_creation_rejects_intermediate_home_symlink(tmp_path):
     local = tmp_path / "local"
     local.mkdir()
