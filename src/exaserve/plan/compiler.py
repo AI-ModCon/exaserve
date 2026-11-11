@@ -141,6 +141,8 @@ _SCHEDULER_KEYS = {
     "secret_refs",
 }
 _CONTROL_KEYS = {item.name for item in fields(ControlLimits)} - {"evidence_backed"}
+_LARGE_START_UP_NODES = 16
+_LARGE_START_UP_RECONNECT_GRACE_S = 300.0
 _READINESS_KEYS = {item.name for item in fields(ReadinessLimits)} - {"evidence_backed"}
 _RUNTIME_KEYS = {item.name for item in fields(RuntimePolicy)}
 _SECRET_NAMES = re.compile(r"(?:^|_)(?:password|secret|token|api_key|master_key)(?:$|_)")
@@ -1255,6 +1257,14 @@ def compile_deployment_plan(
     raw_control = _optional_mapping(deployment.get("control"), "deployment.control")
     _reject_unknown(raw_control, _CONTROL_KEYS, "deployment.control")
     base_control = {item.name: getattr(site.control, item.name) for item in fields(ControlLimits)}
+    if num_nodes >= _LARGE_START_UP_NODES:
+        # Rank sessions that drop during a synchronized engine start-up at 16
+        # nodes or more could not reconnect within 60 s, and the deployment
+        # failed before READY; 300 s recovered every rank. An explicit
+        # deployment.control.reconnect_grace_s still wins.
+        base_control["reconnect_grace_s"] = max(
+            base_control["reconnect_grace_s"], _LARGE_START_UP_RECONNECT_GRACE_S
+        )
     for key, value in raw_control.items():
         if key.startswith("max_"):
             base_control[key] = _integer(value, f"deployment.control.{key}", minimum=1)

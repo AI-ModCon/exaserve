@@ -140,6 +140,18 @@ dimensions require their own authorized qualification work. See
 [the request example](usage.md#send-a-non-streaming-request) and
 [`request_validation.py`](../src/exaserve/request_validation.py) for input checks.
 
+Request handling is deliberately narrower than vLLM's own server. A completion
+`prompt` must be one string, and chat `content` must be text or a list of text
+parts; image, audio, video and token-ID inputs are rejected with HTTP 400. Only
+`temperature` (0 to 2), `top_p` (0 to 1), `max_tokens`, `min_tokens`, `stop` and
+`ignore_eos` are passed to vLLM's sampling parameters; other fields, such as
+`n`, `logprobs`, `response_format`, `structured_outputs`, `tools`, `cache_salt`
+and `prompt_embeds`, are ignored. A chat request cannot supply its own
+`chat_template` (HTTP 400); `chat_template_kwargs` may set variables for the
+served model's own template, except the arguments the server sets itself. The
+server generates every engine request ID. ExaServe does not run vLLM's
+OpenAI-compatible server.
+
 ## Installed command reference
 
 Entry points are declared in [pyproject.toml](../pyproject.toml) and dispatch
@@ -168,7 +180,8 @@ outside their required allocation and supervision context.
 
 ## Repository-local control planes
 
-`python3 -m eval.cli` exposes `spec`, `trace`, `run`, and `allocation` commands;
+`python3 -m eval.cli` exposes `spec`, `trace`, `run`, `allocation`, and
+`derive-params` commands;
 [`eval/cli.py`](../eval/cli.py) defines the parser. `run submit-all` requires an
 explicit `--run-group`. See [usage](usage.md) and [eval design](../eval/DESIGN.md).
 

@@ -1,12 +1,10 @@
 name: longctx_v2_eqsat
-# Long-context, FAIR comparison #2: each input_len at ~80% of its measured
-# per-node capacity. Rate calibration (best estimate from prior runs):
-#   - input=64:   72 rps/N  (slo_curve_v1 showed 60 = green, 110 = saturated;
-#                            so capacity ~= 90, 80% ~= 72)
-#   - input=4096: 16 rps/N  (longctx_v1 ran 4 rps/N under-saturated; ~12
-#                            tiles/node * decode-bound 8B should sustain
-#                            more — 16 is a deliberate stress test;
-#                            adjust after this run if TTFT collapses)
+# Long-context, FAIR comparison #2: each input_len at ~80% of its estimated
+# per-node capacity:
+#   - input=64:   72 rps/N  (capacity ~= 90, 80% ~= 72)
+#   - input=4096: 16 rps/N  (12 tiles/node of a decode-bound 8B should sustain
+#                            more than 4 rps/N; 16 is a deliberate stress
+#                            test; lower it if TTFT collapses)
 # Expected reading: BOTH at high load -> TTFT shape comparable, dominated by
 # saturation effects per input length rather than queue depth from rate mismatch.
 matrix:

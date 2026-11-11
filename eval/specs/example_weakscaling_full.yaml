@@ -63,7 +63,7 @@ deployment:
   # Base value when the matrix does not overwrite deployment.num_nodes.
   num_nodes: 1
   # Optional. If omitted, site_config.model_storage_path is used.
-  # model_storage_path: /lus/flare/projects/AuroraGPT/<user>/models
+  # model_storage_path: /lus/flare/projects/YOUR_PROJECT/YOUR_USER/models
   # Optional. If omitted, site_config.local_stage_path is used.
   # local_stage_path: /tmp/hf_home
   # This maps directly to Ray Serve's `max_ongoing_requests` for each replica.
@@ -126,7 +126,7 @@ backend:
     ray:
       launch:
         # Override the env script used inside the PBS job if needed.
-        # env_script: /home/<user>/script/env_aurora
+        # env_script: /absolute/path/to/site-environment.sh
         # Compiles null_compute into the hash-bearing DeploymentPlan runtime policy.
         null_compute: false
         # Ray head port written into the runtime manifest.
@@ -141,21 +141,21 @@ backend:
         # Backend Ray Serve HTTP port on each node.
         backend_port: 8000
         # Optional. If omitted, site_config.litellm_python_path is used.
-        # python_path: /home/<user>/agpt/venv/litellm/bin/python3
+        # python_path: /absolute/path/to/litellm-runtime/bin/python3
         # Worker count for the proxy implementation.
         num_workers: 2
         # Passed verbatim to the proxy backend.
         #
-        # LiteLLM-specific option keys currently consumed by src/proxy/litellm_proxy.py:
-        #   master_key: "sk-..."
+        # LiteLLM option keys (master_key and db_url are read by src/exaserve/composition.py, the others by src/exaserve/proxy/litellm_proxy.py):
+        #   master_key: {secret_ref: "ENV:EXASERVE_LITELLM_MASTER_KEY"}
         #   routing_strategy: "least-busy" | "simple-shuffle" | "latency-based-routing"
         #   num_retries: 2
         #   timeout: 300
-        #   db_url: ""
+        #   db_url: {secret_ref: "ENV:EXASERVE_LITELLM_DB_URL"}   # optional
         #   extra_router: {}
         #   extra_general: {}
         #
-        # HAProxy-specific option keys currently consumed by src/proxy/haproxy_proxy.py:
+        # HAProxy-specific option keys currently consumed by src/exaserve/proxy/haproxy_proxy.py:
         #   balance: "leastconn" | "roundrobin" | "random"
         #   check_interval: 5000
         #   check_fall: 3
@@ -173,7 +173,7 @@ scheduler:
   queue: capacity
   # Optional. If omitted, eval chooses a default walltime from node count.
   walltime: "01:00:00"
-  project: AuroraGPT
+  project: YOUR_PROJECT
   filesystems: home:flare
   keep_output: doe
   # Optional. If omitted, site_config.pbs_mail_user is used.

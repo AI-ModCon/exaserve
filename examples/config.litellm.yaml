@@ -3,11 +3,20 @@
 # API with API-key auth, rate limiting, usage tracking, and model-aware
 # routing. Clients hit http://<head>:4001/v1/... with Authorization.
 #
-# Requires a separate litellm venv because LiteLLM pins different
-# dependency versions than Ray/vLLM. See scripts/setup_litellm_venv.sh (release branch) or build a venv that pins LiteLLM yourself.
+# Requires a separate LiteLLM virtual environment, because LiteLLM pins
+# different dependency versions than Ray/vLLM. Build one that pins LiteLLM
+# and set executable_ref to its `litellm` script (the launcher runs it
+# directly).
 #
-# Run with:
-#   exaserve-serve-submit examples/config.litellm.yaml
+# Run with (docs/getting_started.md describes the variables):
+#   export EXASERVE_ENV_SCRIPT_AURORA=/absolute/path/to/environment.sh
+#   export EXASERVE_PROJECT_ROOT=/lus/flare/projects/YOUR_PROJECT
+#   exaserve-serve-submit examples/config.litellm.yaml --project-account YOUR_PROJECT
+# The batch job must also find EXASERVE_LITELLM_MASTER_KEY (gateway.options.
+# master_key below) in its own environment, or the launcher refuses to start
+# LiteLLM. The job does not inherit the submitting shell; set the key where the
+# job reads it, for example in a private (mode 600) file that your shell
+# profile sources.
 
 ray_port: 6379
 node_cpus: 64
@@ -33,17 +42,14 @@ gateway:
   port: 4001
   backend_port: 8000
 
-  # Absolute path to the python in your litellm venv. The launcher derives
-  # the `litellm` console script from this (<dir>/litellm).
+  # Absolute path of the `litellm` script in your LiteLLM virtual
+  # environment. The launcher runs it directly.
   executable_ref: /path/to/litellm-venv/bin/litellm
 
-  # uvicorn worker count. Keep at 1 on Aurora.
-  # Higher values fork more children, and individual children frequently
-  # die during startup (uvicorn re-spawns them, which is self-healing but
-  # stretches cluster ready-time by minutes per retry). A single worker
-  # is plenty for the typical proxy throughput requirement here; raise
-  # only after measuring a real throughput ceiling and accepting the
-  # longer startup.
+  # uvicorn worker count, passed to LiteLLM as --num_workers. LiteLLM starts
+  # every worker before it binds its port: on Aurora that took 51 s with one
+  # worker and 59 s with eight, and the compiler gives the gateway at least
+  # 120 s to start. The paper's LiteLLM runs used eight workers.
   worker_count: 1
   options:
     master_key: {secret_ref: "ENV:EXASERVE_LITELLM_MASTER_KEY"}

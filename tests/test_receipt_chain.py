@@ -1219,8 +1219,8 @@ def test_a_short_hostname_matches_its_bound_fqdn(monkeypatch, tmp_path):
         generation=7,
         scheduler_allocation_id="job1",
         nodes=[
-            "x4303c4s1b0n0.hsn.cm.aurora.alcf.anl.gov",
-            "x4310c4s0b0n0.hsn.cm.aurora.alcf.anl.gov",
+            "node-10-4-1.hsn.cm.aurora.alcf.anl.gov",
+            "node-13-4-0.hsn.cm.aurora.alcf.anl.gov",
         ],
     )
     monkeypatch.setenv("EXASERVE_DEPLOYMENT_ID", "d1")
@@ -1234,7 +1234,7 @@ def test_a_short_hostname_matches_its_bound_fqdn(monkeypatch, tmp_path):
         component_id="ray",
         owner_scope="RANK",
         owner_rank=1,
-        node_id="x4310c4s0b0n0",
+        node_id="node-13-4-0",
         postcondition=lambda patch_id: patch_id == "RS-02",
     )
     ledger = ExactReceiptLedger(plan, binding)
@@ -1243,7 +1243,7 @@ def test_a_short_hostname_matches_its_bound_fqdn(monkeypatch, tmp_path):
         required_patch_ids=("RS-02",),
         resolved_not_required=("SC-11",),
         session_rank=1,
-        session_node="x4310c4s0b0n0",
+        session_node="node-13-4-0",
     )
     assert ok, detail
 

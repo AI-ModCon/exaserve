@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Final packaged-artifact lifecycle qualification on Aurora.
 
-The site shell is only responsible for sourcing ``env_aurora`` and invoking
+The site shell is only responsible for sourcing the site environment script and invoking
 this program.  This harness then starts the installed ExaServe composition
 root directly, observes only the canonical status/receipt artifacts, and
 records a self-contained evidence bundle for fresh generations.  The default
@@ -396,10 +396,10 @@ def _validated_nodes(expected: int, *, acquisition_source: str) -> tuple[str, ..
         raise RuntimeError("a readable PBS_NODEFILE and PBS_JOBID are required")
     if acquisition_source == "subjob":
         if os.environ.get("AURORA_SUBJOB") != "1":
-            raise RuntimeError("subjob qualification requires AURORA_SUBJOB=1")
+            raise RuntimeError("lease-sourced qualification requires AURORA_SUBJOB=1")
     elif acquisition_source == "interactive_pbs":
         if os.environ.get("AURORA_SUBJOB") == "1":
-            raise RuntimeError("interactive_pbs was declared inside a subjob lease")
+            raise RuntimeError("interactive_pbs was declared inside an allocation lease")
         if os.environ.get("PBS_ENVIRONMENT") != "PBS_INTERACTIVE":
             raise RuntimeError(
                 "interactive_pbs qualification requires PBS_ENVIRONMENT=PBS_INTERACTIVE"

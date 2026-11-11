@@ -5,7 +5,11 @@
 # the static x86_64 Linux release from envoyproxy/envoy on GitHub.
 #
 # Usage: ENVOY_BINARY_SHA256=<sha256> bash scripts/install_envoy.sh [version]
-#   version defaults to v1.32.3.
+#   version defaults to v1.32.3, the release this helper was written against.
+#   The 1.32 line is outside Envoy's support window and v1.32.3 is affected by
+#   published Envoy security advisories; install a supported release before any
+#   use beyond trusted benchmarks. Envoy is a validation and benchmark gateway
+#   only (see scripts/hardening/README.md).
 
 set -euo pipefail
 

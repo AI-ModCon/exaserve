@@ -847,6 +847,15 @@ def validate_tensor_parallel_compatibility(
         )
 
 
+# Hugging Face ``model_type`` values that each reviewed architecture may declare.
+# Transformers selects the configuration class by ``model_type``, not by
+# ``architectures``, so a mismatched pair would load a different, unreviewed class.
+_ARCHITECTURE_MODEL_TYPES = {
+    "LlamaForCausalLM": frozenset({"llama"}),
+    "GptOssForCausalLM": frozenset({"gpt_oss"}),
+}
+
+
 def validate_vllm_modelinfo_seed_coverage(
     model_id: str,
     model_path: Path,
@@ -880,6 +889,19 @@ def validate_vllm_modelinfo_seed_coverage(
         raise RuntimeError(
             f"[ModelStaging] Model {model_id} requires unreviewed vLLM model-info "
             f"architecture(s) {unsupported}; refusing a cache-miss subprocess before broadcast"
+        )
+    model_type = config_data.get("model_type")
+    # Every declared architecture must accept the model_type: a mixed list must not
+    # borrow one architecture's reviewed model_type for another.
+    allowed_model_types = frozenset.intersection(
+        *(_ARCHITECTURE_MODEL_TYPES.get(name, frozenset()) for name in architectures)
+    )
+    if not isinstance(model_type, str) or model_type not in allowed_model_types:
+        raise RuntimeError(
+            f"[ModelStaging] Model {model_id} at {model_path} declares model_type "
+            f"{model_type!r}, which is not reviewed for every declared architecture "
+            f"{sorted(architectures)}; refusing a configuration that would load a different "
+            "model class"
         )
     return tuple(architectures)
 

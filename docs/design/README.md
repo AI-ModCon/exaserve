@@ -31,9 +31,12 @@ require explicit validation mode. Slurm, PSI/J, CUDA, ROCm, and SGLang code is
 retained for future qualification but the Aurora profile rejects it before
 submission or launch. Implemented does not mean production-qualified.
 
-The currently evidence-backed node maximum and the larger unapproved candidate
-target are recorded in `SiteProfile.scale_envelopes` and the hardening status
-documents; historical runs do not automatically qualify the new architecture.
+ExaServe's scale evaluations reached 256 Aurora nodes on earlier snapshots of
+this code. The release-admission fields in `SiteProfile.scale_envelopes` govern
+production admission of every non-validation plan compiled from this tree (at
+most two nodes today); fix-specific verification is recorded in the changelog
+and does not redefine the measured scale. See the hardening status for release
+gates.
 
 ## Related notes
 

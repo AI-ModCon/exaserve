@@ -31,6 +31,19 @@ from exaserve.plan.contracts import (
 from exaserve.site import default_site_profile
 
 
+def eval_site_profile() -> SiteProfile:
+    """The default SiteProfile, falling back to eval's configured model path.
+
+    Serving derives the model storage path from EXASERVE_MODEL_STORAGE_PATH or
+    EXASERVE_PROJECT_ROOT and fails without them. Eval also accepts project_root
+    or model_storage_path from its local overrides, so the path its site
+    configuration resolved is used when neither variable is set.
+    """
+    from eval.site_config import get_site_config
+
+    return default_site_profile(fallback_model_storage_path=get_site_config().model_storage_path)
+
+
 def deployment_raw_from_spec(
     deployment,
     *,
@@ -148,7 +161,7 @@ def _gateway_from_backend(backend_args: dict) -> tuple[Optional[dict], bool, Opt
         from eval.site_config import get_site_config
 
         # LiteLLM intentionally lives in a separate virtual environment from
-        # Ray/vLLM.  The parent job must retain env_aurora, so an omitted
+        # Ray/vLLM.  The parent job must retain the site environment, so an omitted
         # override resolves through the site-configured LiteLLM interpreter
         # instead of an unavailable ambient PATH entry.
         python_path = proxy.get("python_path") or get_site_config().litellm_python_path
@@ -222,7 +235,7 @@ def compile_shared_deployment_plan(
         streaming_mode=streaming_mode,
     )
     return compile_deployment_plan(
-        raw, site=site or default_site_profile(), deployment_id=deployment_id
+        raw, site=site or eval_site_profile(), deployment_id=deployment_id
     )
 
 
@@ -327,7 +340,7 @@ def compile_shared_run_plan(
     )
     return compile_run_plan(
         raw,
-        site=site or default_site_profile(),
+        site=site or eval_site_profile(),
         run_id=run_id,
         deployment_id=deployment_id,
         scheduler=scheduler,

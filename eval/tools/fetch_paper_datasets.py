@@ -16,15 +16,14 @@ BurstGPT is handled separately: the raw release CSV is downloaded to
 the trace generator, not here).
 
 This is NODE-ONLY work: it reads the 670 MB ShareGPT bank into memory and runs
-the HF tokenizer, which would get a login node killed. Run it inside a subjob:
+the HF tokenizer, which would get a login node killed. Run it on a compute node
+of an interactive allocation:
 
-    subjob 1
-    # on the node:
-    source ~/script/env_aurora
+    source "$EXASERVE_ENV_SCRIPT_AURORA"    # the site environment script
     python -m eval.tools.fetch_paper_datasets --sample 200 --datasets humaneval burstgpt
     #   ^ validate small first, then drop --sample / widen --datasets
 
-Network egress uses the proxy that env_aurora exports (HTTPS_PROXY).
+Network egress uses the proxy that the site environment exports (HTTPS_PROXY).
 """
 
 from __future__ import annotations
@@ -39,7 +38,6 @@ from pathlib import Path
 
 from eval.site_config import get_site_config
 
-DEFAULT_DATA_ROOT = get_site_config().user_data_root
 
 HUMANEVAL_URL = "https://github.com/openai/human-eval/raw/master/data/HumanEval.jsonl.gz"
 # Cleaned single-region BurstGPT trace (≈1.4M rows); closest analogue to the
@@ -47,7 +45,6 @@ HUMANEVAL_URL = "https://github.com/openai/human-eval/raw/master/data/HumanEval.
 BURSTGPT_URL = (
     "https://github.com/HPMLL/BurstGPT/releases/download/v2.0/BurstGPT_without_fails_1.csv"
 )
-BURSTGPT_FALLBACK_URL = "https://github.com/HPMLL/BurstGPT/raw/master/data/BurstGPT_1.csv"
 
 # Output-length policy (see module docstring).
 HUMANEVAL_OUTPUT_LEN = 512
@@ -119,7 +116,8 @@ def fetch_cnn_dailymail(out_dir: Path, sample: int | None) -> None:
     except ImportError:
         _log(
             "cnn_dailymail: ERROR — `datasets` not importable. "
-            "Run under `module load frameworks` / env_aurora, or `pip install datasets`."
+            "Run under the site environment script ('Prepare the runtime' in "
+            "docs/getting_started.md), or `pip install datasets`."
         )
         raise
     n = sample or 5000
@@ -152,7 +150,7 @@ def fetch_sharegpt_natural(
         _log("sharegpt_natural: ERROR — `transformers` not importable (need frameworks env).")
         raise
     _log(f"sharegpt_natural: loading tokenizer {tokenizer_id}")
-    tok = AutoTokenizer.from_pretrained(tokenizer_id, trust_remote_code=True)
+    tok = AutoTokenizer.from_pretrained(tokenizer_id, trust_remote_code=False)
     tok.model_max_length = 100_000_000
     _log(f"sharegpt_natural: reading bank {sharegpt_path} (large; node-only)")
     with open(sharegpt_path, "r", encoding="utf-8") as fh:
@@ -187,11 +185,9 @@ def fetch_burstgpt(data_root: Path) -> None:
     if dest.exists() and dest.stat().st_size > 0:
         _log(f"burstgpt: already present at {dest}, skipping")
         return
-    try:
-        _download(BURSTGPT_URL, dest)
-    except Exception as exc:  # noqa: BLE001 — fall back to the repo /data copy
-        _log(f"burstgpt: release URL failed ({exc}); trying repo /data copy")
-        _download(BURSTGPT_FALLBACK_URL, dest)
+    # No fallback: the upstream repository's data/ copy is a different file, and a
+    # fallback would save it under this name. A failed download stops here.
+    _download(BURSTGPT_URL, dest)
 
 
 # --------------------------------------------------------------------------- #
@@ -203,8 +199,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     p.add_argument(
         "--data-root",
-        default=DEFAULT_DATA_ROOT,
-        help=f"Lustre data root (default: {DEFAULT_DATA_ROOT})",
+        default=None,
+        help="Lustre data root (default: the site configuration's user_data_root)",
     )
     p.add_argument(
         "--datasets",
@@ -226,7 +222,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = p.parse_args(argv)
 
-    data_root = Path(args.data_root)
+    data_root = Path(args.data_root or get_site_config().user_data_root)
     out_dir = data_root / "paper_datasets"
     sharegpt_path = (
         data_root / "input_traces" / "ShareGPT_V3_unfiltered_cleaned_split_no_imsorry.json"

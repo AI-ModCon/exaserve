@@ -1,4 +1,6 @@
-# Qualified heavy runtime supplied by `module load frameworks/2025.3.1`.
+# Qualified heavy runtime of Aurora's frameworks/2025.3.1 module, loaded from
+# the 26.26.0 image's module tree (see "Prepare the runtime" in
+# docs/getting_started.md).
 # This file is an environment identity/verification lock, not a public-PyPI
 # installation recipe: ALCF supplies locally built XPU distributions.
 ray[serve]==2.53.0

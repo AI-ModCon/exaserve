@@ -22,7 +22,7 @@ gateway:
     balance: leastconn
     maxconn: 8000
 
-model_storage_path: /lus/flare/projects/AuroraGPT/wenyiw/models
+model_storage_path: /lus/flare/projects/YOUR_PROJECT/YOUR_USER/models
 local_stage_path: /tmp/hf_home
 deployment_name: exaserve_serve
 replica_max_ongoing_requests: 32

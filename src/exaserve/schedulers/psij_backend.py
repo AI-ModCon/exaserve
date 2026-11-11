@@ -144,8 +144,8 @@ class PSIJScheduler(SchedulerBackend):
             ) from exc
 
         # Absolutize: PSI/J executes the payload from the JOB's cwd ($HOME on
-        # PBS), so a relative script path is simply not found (measured: job
-        # 8731123 died with "No such file or directory"). And run bash with -l:
+        # PBS), so a relative script path is simply not found (measured: a job
+        # died with "No such file or directory"). And run bash with -l:
         # PSI/J invokes `/bin/bash <script>`, which ignores the script's
         # `#!/bin/bash -l` shebang — without a login shell there is no `module`
         # function for env_setup (native qsub honors the shebang).

@@ -63,7 +63,7 @@ def test_qualification_config_has_a_real_cancellation_window():
     root = Path(__file__).resolve().parents[2]
     config = yaml.safe_load(
         (
-            root / "eval/specs/sc26workshop/smokes/nullcompute_haproxy_subset_cancel_2node.yaml"
+            root / "eval/specs/arxiv-submission/smokes/nullcompute_haproxy_subset_cancel_2node.yaml"
         ).read_text(encoding="utf-8")
     )
     assert config["deployment"]["num_nodes"] == 2
@@ -382,10 +382,14 @@ def qualification_contract(tmp_path):
             }
         )
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "root": str(tmp_path),
         "qualification_mode": True,
         "qualification": None,
+        "bootstrap": {
+            "env_script": "/site/environment.sh",
+            "pbs_spool": str(tmp_path / "spool"),
+        },
         "cleanup_reserve_s": 900,
         "child_timeout_s": 480,
         "scheduler": dataclass_to_dict(
@@ -394,7 +398,7 @@ def qualification_contract(tmp_path):
                 nodes=4,
                 queue="capacity",
                 walltime="01:00:00",
-                account="AuroraGPT",
+                account="example-project",
                 filesystem_refs=("home", "flare"),
                 launcher="mpi",
             )

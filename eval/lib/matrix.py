@@ -5,9 +5,10 @@ values: [1,2,4]}]), expand_matrix() produces one VariantSpec per point in
 the Cartesian product. Each variant gets a deep-copied spec with the axis
 values injected into the targeted dotted paths (e.g., "deployment.num_nodes").
 
-Axes can target any field on the spec via dotted_set(). Fields *not* targeted
-by the matrix (like client.num_nodes, scheduler.nodes) are auto-synced to
-deployment.num_nodes so they stay consistent unless explicitly swept.
+Axes can target any field on the spec via dotted_set(). scheduler.nodes, when
+not targeted, is synced to deployment.num_nodes. An omitted client.num_nodes
+is re-derived per variant (spec_io.default_client_nodes: a bounded count for
+proxy runs, one rank per node for direct runs); an explicit value is kept.
 
 Derived fields (matrix.derived) are evaluated after all axis values are set
 for each combination. Expressions can reference any axis name and use basic
@@ -292,8 +293,16 @@ def expand_matrix(spec: ExperimentSpec) -> list[VariantSpec]:
 
         targeted_fields = {t for axis in spec.matrix.axes for t in axis.targets}
         derived_fields = {d.path for d in spec.matrix.derived}
-        if "client.num_nodes" not in targeted_fields and "client.num_nodes" not in derived_fields:
-            spec_copy.client.num_nodes = spec_copy.deployment.num_nodes
+        if "client.num_nodes" in targeted_fields or "client.num_nodes" in derived_fields:
+            spec_copy.client.num_nodes_auto = False
+        elif spec_copy.client.num_nodes_auto:
+            # KI-C5: an omitted count is re-derived for this variant's node
+            # count; an explicit value is kept as written.
+            from .spec_io import default_client_nodes
+
+            spec_copy.client.num_nodes = default_client_nodes(
+                spec_copy.client, spec_copy.deployment.num_nodes
+            )
         if "scheduler.nodes" not in targeted_fields and "scheduler.nodes" not in derived_fields:
             spec_copy.scheduler.nodes = spec_copy.deployment.num_nodes
 

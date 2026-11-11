@@ -132,9 +132,6 @@ def _model_search_roots(storage_path: str) -> list[Path]:
     roots: list[Path] = []
     if storage_path:
         roots.append(Path(storage_path))
-    home_models = Path.home() / "agpt" / "models"
-    if home_models.is_dir():
-        roots.append(home_models)
     hf_home = os.environ.get("HF_HOME")
     if hf_home:
         roots.append(Path(hf_home))
@@ -282,8 +279,10 @@ def tokenizer_source_identity(spec: ExperimentSpec) -> dict[str, Any]:
         source = _find_local_model_path(model.model_id, search_roots)
         if source is None:
             raise ValueError(
-                f"model {model.model_id!r} has no local tokenizer source; stage a pinned "
-                "snapshot before materializing a content-addressed trace"
+                f"model {model.model_id!r} has no local tokenizer source under "
+                f"{[str(root) for root in search_roots]}; stage a pinned snapshot there or "
+                "correct deployment.model_storage_path before materializing a "
+                "content-addressed trace"
             )
         models.append(
             {
@@ -319,7 +318,7 @@ def build_tokenizer_map(spec: ExperimentSpec) -> dict[str, Any]:
         source = _find_local_model_path(model.model_id, search_roots) or model.model_id
         tokenizer = AutoTokenizer.from_pretrained(
             source,
-            trust_remote_code=True,
+            trust_remote_code=False,
         )
         tokenizer.model_max_length = 100_000_000
         tokenizers[model.model_id] = tokenizer

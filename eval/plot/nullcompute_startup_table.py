@@ -15,7 +15,7 @@ from pathlib import Path
 from statistics import mean, stdev
 
 from eval.lib.paper_acceptance import require_accepted_paper_run
-from eval.site_config import get_runs_root
+from eval.site_config import get_paper_suite_root
 from exaserve.state.atomic import strict_json_load_path
 
 SPEC_NAME = "nullcompute_haproxy_scale_to256_v040"
@@ -128,7 +128,7 @@ def _load_trial(root: Path, run_group: str, nodes: int) -> dict:
 
 
 def load_curve(runs_root: Path | None = None) -> list[dict]:
-    root = (runs_root or get_runs_root()) / "sc26workshop" / "full"
+    root = (runs_root / "arxiv-submission" if runs_root else get_paper_suite_root()) / "full"
     trials = {
         nodes: [_load_trial(root, run_group, nodes) for run_group in RUN_GROUPS]
         for nodes in NODE_COUNTS

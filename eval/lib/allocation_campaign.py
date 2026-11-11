@@ -21,6 +21,7 @@ import time
 from pathlib import Path
 from types import SimpleNamespace
 
+from exaserve.config import get_site_defaults
 from exaserve.plan.contracts import SchedulerPlan, canonical_hash, canonical_node_id
 from exaserve.exception_notes import add_exception_note
 from exaserve.schedulers import JobSpec, SubmissionRejected, get_scheduler
@@ -37,6 +38,8 @@ from exaserve.state.atomic import (
     strict_json_loads,
 )
 
+from eval.site_config import get_site_config
+
 from .run_planner import (
     _detect_repo_state,
     _ensure_repo_snapshot,
@@ -46,8 +49,11 @@ from .run_planner import (
 from .utils import dataclass_to_dict
 
 
-_SCHEMA = 1
+_SCHEMA = 2
 _CLEANUP_S = 900
+# The production campaign's one shape: real children of exactly these sizes in
+# one 256-node prod allocation.
+PRODUCTION_CHILD_NODES = (32, 64, 128)
 _FORCE_S = 30
 _FIELDS = {
     "schema_version",
@@ -59,6 +65,7 @@ _FIELDS = {
     "cleanup_reserve_s",
     "qualification_mode",
     "qualification",
+    "bootstrap",
     "created_at",
     "campaign_hash",
 }
@@ -132,10 +139,19 @@ def _validate_contract(campaign: dict) -> None:
     ):
         raise ValueError("campaign SchedulerPlan shape mismatch")
     request = SchedulerPlan(**request_raw)
+    if not isinstance(request.account, str) or not request.account:
+        raise ValueError("campaign scheduler account must be a non-empty string")
+    bootstrap = campaign["bootstrap"]
+    if (
+        not isinstance(bootstrap, dict)
+        or set(bootstrap) != {"env_script", "pbs_spool"}
+        or not all(isinstance(value, str) and os.path.isabs(value) for value in bootstrap.values())
+    ):
+        raise ValueError("campaign bootstrap must name absolute env_script and pbs_spool paths")
     expected = SchedulerPlan(
         type="pbs",
         nodes=request.nodes,
-        account="AuroraGPT",
+        account=request.account,
         queue=request.queue,
         walltime=request.walltime,
         filesystem_refs=("home", "flare"),
@@ -197,9 +213,11 @@ def _validate_contract(campaign: dict) -> None:
             )
         if campaign["qualification"] is not None:
             raise ValueError("qualification mode cannot consume another proof")
-    elif (request.nodes, request.queue, logical) != (256, "prod", [32, 64, 128]) or any(
-        child["null_compute"] for child in children
-    ):
+    elif (request.nodes, request.queue, logical) != (
+        256,
+        "prod",
+        list(PRODUCTION_CHILD_NODES),
+    ) or any(child["null_compute"] for child in children):
         raise ValueError("production requires prod256 and real logical32/64/128 children")
     timeout = _positive(campaign["child_timeout_s"], "child_timeout_s")
     walltime = _seconds(request.walltime)
@@ -209,17 +227,31 @@ def _validate_contract(campaign: dict) -> None:
         raise ValueError("walltime cannot cover all child deadlines plus reserved cleanup")
 
 
-def _child_reference(path: str) -> dict:
-    plan = load_run_plan(str(Path(path).resolve()))
+def child_shape_violation(plan) -> str | None:
+    """Why ``plan`` cannot be a campaign child, or None if its own shape allows it.
+
+    Only the checks that need nothing but the plan; the campaign also requires
+    its children's sizes (PRODUCTION_CHILD_NODES), one frozen source and the
+    other conditions that materialize_campaign checks.
+    """
     deployment = plan.semantic_plan.deployment
     if plan.scheduler.type != "pbs" or plan.scheduler.nodes != deployment.num_nodes:
-        raise ValueError("campaign children require exact-size canonical PBS plans")
+        return "campaign children require exact-size canonical PBS plans"
     if plan.client.startup_only or not deployment.runtime.clean_stage:
-        raise ValueError("campaign children require full replay and clean_stage=true")
+        return "campaign children require full replay and clean_stage=true"
     if plan.client.num_runs != 2 or plan.client.stream:
-        raise ValueError("campaign requires two complete non-streaming replay runs")
+        return "campaign requires two complete non-streaming replay runs"
     if deployment.control.watchdog_cleanup_deadline_s > _CLEANUP_S:
-        raise ValueError("child watchdog exceeds campaign's reserved graceful-cleanup budget")
+        return "child watchdog exceeds campaign's reserved graceful-cleanup budget"
+    return None
+
+
+def _child_reference(path: str) -> dict:
+    plan = load_run_plan(str(Path(path).resolve()))
+    reason = child_shape_violation(plan)
+    if reason is not None:
+        raise ValueError(reason)
+    deployment = plan.semantic_plan.deployment
     paths = [
         plan.bundle.run_yaml_path,
         plan.bundle.job_path,
@@ -426,8 +458,26 @@ def materialize_campaign(
     qualification_mode: bool = False,
     repo_root: str | None = None,
     allow_dirty: bool = False,
+    account: str | None = None,
+    env_script: str | None = None,
+    pbs_spool: str | None = None,
 ) -> str:
     """Create immutable acquisition intent. No child is submitted or modified."""
+    account = account or get_site_defaults().project_account
+    if not account:
+        raise ValueError(
+            "allocation campaigns need a PBS account: pass --account or set "
+            "EXASERVE_PROJECT_ACCOUNT"
+        )
+    env_script = env_script or get_site_config().env_script_aurora
+    if not env_script or not os.path.isabs(os.path.expanduser(env_script)):
+        raise ValueError(
+            "allocation campaigns need an absolute site environment script: pass "
+            "--env-script or set EXASERVE_ENV_SCRIPT_AURORA"
+        )
+    spool = Path(pbs_spool).expanduser() if pbs_spool else Path.home() / ".cache/exaserve/pbs"
+    if not spool.is_absolute():
+        raise ValueError("--pbs-spool must be an absolute path")
     if type(qualification_mode) is not bool or type(allow_dirty) is not bool:
         raise ValueError("mode flags must be boolean")
     if not isinstance(children, list) or not children or len(children) != len(set(children)):
@@ -437,7 +487,7 @@ def materialize_campaign(
         type="pbs",
         nodes=physical_nodes,
         queue=queue,
-        account="AuroraGPT",
+        account=account,
         walltime=walltime,
         filesystem_refs=("home", "flare"),
         launcher="mpi",
@@ -455,7 +505,7 @@ def materialize_campaign(
             raise ValueError("qualification requires null children and at most one hour")
         if qualification_path is not None:
             raise ValueError("qualification mode does not consume another qualification")
-    elif (physical_nodes, queue, logical) != (256, "prod", [32, 64, 128]):
+    elif (physical_nodes, queue, logical) != (256, "prod", list(PRODUCTION_CHILD_NODES)):
         raise ValueError("current production campaign is exactly prod256 with logical32/64/128")
     if _seconds(walltime) > (3600 if qualification_mode else 21600):
         raise ValueError("campaign exceeds its approved finite walltime budget")
@@ -485,6 +535,12 @@ def materialize_campaign(
         "cleanup_reserve_s": _CLEANUP_S,
         "qualification_mode": qualification_mode,
         "qualification": qualification,
+        # The job's site setup and PBS output location are part of the
+        # immutable campaign identity.
+        "bootstrap": {
+            "env_script": os.path.expanduser(env_script),
+            "pbs_spool": ensure_owned_directory(spool),
+        },
         "created_at": _now(),
     }
     _validate_contract(payload)
@@ -509,8 +565,8 @@ def _job_spec(campaign: dict) -> JobSpec:
     root = Path(campaign["root"])
     controller = Path(campaign["controller"]["snapshot_root"])
     identity = "ac-" + campaign["campaign_hash"][:12]
-    # Site-required PBS spool locations; child evidence stays in its bundle.
-    spool = Path.home() / "aurora_rayserver/tmp"
+    # PBS spool from the campaign identity; child evidence stays in its bundle.
+    spool = Path(campaign["bootstrap"]["pbs_spool"])
     return JobSpec(
         job_name=identity,
         num_nodes=request.nodes,
@@ -521,7 +577,7 @@ def _job_spec(campaign: dict) -> JobSpec:
         stdout_dir=spool,
         stderr_dir=spool,
         cwd=controller,
-        source_env_script=Path.home() / "script/env_aurora",
+        source_env_script=Path(campaign["bootstrap"]["env_script"]),
         pythonpath=(controller, controller / "src"),
         run_identity=identity,
         environment_unset=("ONEAPI_DEVICE_SELECTOR",),
@@ -539,7 +595,7 @@ def _job_spec(campaign: dict) -> JobSpec:
 def _load_campaign(path: str) -> dict:
     value = strict_json_load_path(path)
     if not isinstance(value, dict) or set(value) != _FIELDS or value["schema_version"] != _SCHEMA:
-        raise ValueError("campaign artifact shape/version mismatch")
+        raise ValueError("campaign artifact shape or schema version mismatch")
     _validate_contract(value)
     payload = {key: item for key, item in value.items() if key != "campaign_hash"}
     if canonical_hash(payload) != value["campaign_hash"]:

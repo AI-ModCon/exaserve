@@ -50,7 +50,7 @@ Hardware evidence:
 - `artifacts/hardening/final43-real-2n-20260809-a1/qualification/result.json`;
 - `artifacts/hardening/final43-supervisor-watchdog-v3q2-2n-20260809-a1/qualification/result.json`.
 
-All four name wheel
+All five name wheel
 `1041be53eb5b5875d198d5ee6c6664718b4085775dcba99107873dd3d1fcdff2`.
 
 ## Dependency limitations retained from the feasibility ladder

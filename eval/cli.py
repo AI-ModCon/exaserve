@@ -8,9 +8,11 @@ Subcommands:
   trace materialize <spec>          — generate cached trace artifacts for a spec
   run materialize <spec>            — create run bundles (traces + PBS jobs + run.yaml)
   run submit <target>               — qsub the PBS job for a materialized run bundle
-  run submit-all <spec_name>       — submit all pending runs for a spec, respecting queue limits
+  run submit-all <spec_name> --run-group <runN>
+                                    — submit one run group's pending runs, respecting queue limits
   run execute <run.yaml>            — execute a run inside a PBS job (called by job.pbs)
   allocation materialize/submit/execute — finite parent allocation for frozen logical children
+  derive-params <result_dir>        — derive client parameters from Phase 0 saturation results
 
 Scheduler job bodies are rendered by the shared scheduler backend. A finite
 allocation controller may invoke frozen ``run execute`` children; only those
@@ -123,6 +125,17 @@ def build_parser() -> argparse.ArgumentParser:
     allocation_materialize.add_argument("--qualification-mode", action="store_true")
     allocation_materialize.add_argument("--repo-root", default=None)
     allocation_materialize.add_argument("--allow-dirty", action="store_true")
+    allocation_materialize.add_argument(
+        "--account", default=None, help="PBS account (default: EXASERVE_PROJECT_ACCOUNT)"
+    )
+    allocation_materialize.add_argument(
+        "--env-script",
+        default=None,
+        help="site environment script (default: EXASERVE_ENV_SCRIPT_AURORA)",
+    )
+    allocation_materialize.add_argument(
+        "--pbs-spool", default=None, help="PBS output directory (default: ~/.cache/exaserve/pbs)"
+    )
     for name in ("submit", "execute"):
         allocation_commands.add_parser(name).add_argument("campaign")
 
@@ -168,6 +181,9 @@ def main(argv: list[str] | None = None) -> int:
                     qualification_mode=args.qualification_mode,
                     repo_root=args.repo_root,
                     allow_dirty=args.allow_dirty,
+                    account=args.account,
+                    env_script=args.env_script,
+                    pbs_spool=args.pbs_spool,
                 )
             )
             return 0

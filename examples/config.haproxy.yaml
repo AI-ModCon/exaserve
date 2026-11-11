@@ -3,10 +3,16 @@
 # Ray Serve HTTP proxy. Clients hit http://<head>:4001/. Pure L7 routing;
 # no API keys or usage tracking. Best performance baseline.
 #
-# Requires haproxy on $PATH. Install via your distro / Aurora module.
+# Requires haproxy on $PATH; Aurora provides none, so build it with
+# scripts/build_haproxy.sh on a compute node.
 #
-# Run with:
-#   exaserve-serve-submit examples/config.haproxy.yaml
+# This is a production configuration. Its submission currently fails closed
+# with "production execution is not qualified" (see docs/hardening/STATUS.md).
+#
+# Run with (docs/getting_started.md describes the variables):
+#   export EXASERVE_ENV_SCRIPT_AURORA=/absolute/path/to/environment.sh
+#   export EXASERVE_PROJECT_ROOT=/lus/flare/projects/YOUR_PROJECT
+#   exaserve-serve-submit examples/config.haproxy.yaml --project-account YOUR_PROJECT
 
 ray_port: 6379
 node_cpus: 64

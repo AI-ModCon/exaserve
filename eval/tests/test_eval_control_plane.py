@@ -609,6 +609,57 @@ def test_keyboard_interrupt_publishes_cancelled_after_cleanup(monkeypatch):
     assert transitions[-1][1]["error"].startswith("KeyboardInterrupt:")
 
 
+def test_ray_launch_reads_no_site_configuration_and_passes_none_on(tmp_path, monkeypatch):
+    """A batch job sources the environment script baked into it at
+    materialization; the site configuration (shared-storage paths) must not be
+    needed at launch nor reach the composition root."""
+    from types import SimpleNamespace
+
+    from eval.lib.backends import ray as ray_backend
+
+    monkeypatch.setattr(
+        ray_backend, "get_site_config", lambda: pytest.fail("launch read the site configuration")
+    )
+    configured = {"EXASERVE_PROJECT_ROOT", "EXASERVE_ENV_SCRIPT_AURORA", "EXASERVE_SNAPSHOT_DIR"}
+    for name in configured:
+        monkeypatch.setenv(name, f"/lus/project/{name.lower()}")
+    launched_env = {}
+
+    class Launched(Exception):
+        pass
+
+    def fake_popen(_cmd, **kwargs):
+        launched_env.update(kwargs["env"])
+        raise Launched
+
+    monkeypatch.setattr(ray_backend.subprocess, "Popen", fake_popen)
+    run_plan = SimpleNamespace(
+        repo_root=str(tmp_path),
+        bundle=SimpleNamespace(logs_dir=str(tmp_path / "logs"), results_dir=str(tmp_path / "r")),
+        run_id="r",
+        run_semantic_hash="a" * 64,
+        source_snapshot_hash="b" * 64,
+        site_profile_path=str(tmp_path / "site.profile.json"),
+        semantic_plan_path=str(tmp_path / "run.plan.json"),
+        runtime_manifest_path=str(tmp_path / "manifest.yaml"),
+        deployment_plan_path=str(tmp_path / "deployment.plan.json"),
+    )
+    with pytest.raises(Launched):
+        ray_backend.RayBackendAdapter().launch(SimpleNamespace(run_plan=run_plan))
+    assert launched_env["EXASERVE_RUN_ID"] == "r"
+    assert not configured & launched_env.keys()
+
+
+def test_replay_environment_leaves_site_configuration_on_the_head(monkeypatch):
+    monkeypatch.setenv("EXASERVE_SNAPSHOT_DIR", "/lus/project/snapshots")
+    monkeypatch.setenv("EXASERVE_EXPERIMENTS_ROOT", "/lus/project/experiments")
+    monkeypatch.setenv("REPLAY_TEST_SETTING", "kept")
+    base = run_executor._replay_base_environment({"EXASERVE_LOCAL_RUNTIME_ROOT": "/tmp/rt"})
+    assert "EXASERVE_SNAPSHOT_DIR" not in base and "EXASERVE_EXPERIMENTS_ROOT" not in base
+    assert base["REPLAY_TEST_SETTING"] == "kept"
+    assert base["EXASERVE_LOCAL_RUNTIME_ROOT"] == "/tmp/rt"
+
+
 @pytest.mark.parametrize("clean", [True, False])
 def test_ray_backend_stop_requires_clean_terminal_evidence(tmp_path, monkeypatch, clean):
     from types import SimpleNamespace
@@ -1013,7 +1064,7 @@ def test_dirty_repo_warning_and_snapshot_excludes_uncommitted_content(
 
 
 def test_ray_adapter_always_uses_exaserve_env(temp_spec, tmp_path, monkeypatch):
-    """Backend always uses env_aurora; litellm runs as a separate subprocess."""
+    """Backend always uses the site environment; litellm runs as a separate subprocess."""
     prompt_path = tmp_path / "prompts.json"
     spec_path = tmp_path / "ray_spec.yaml"
     repo_root = _init_git_repo(tmp_path / "repo")
@@ -1030,7 +1081,9 @@ def test_ray_adapter_always_uses_exaserve_env(temp_spec, tmp_path, monkeypatch):
     )
     adapter = get_backend_adapter("ray")
     runtime_env = adapter.runtime_env(plans[0])
-    assert runtime_env.env_script.endswith("env_aurora")
+    # Materialization runs in worker processes, so this uses the session's
+    # site settings from conftest.py rather than a per-test override.
+    assert runtime_env.env_script == os.environ["EXASERVE_ENV_SCRIPT_AURORA"]
     gateway = plans[0].semantic_plan.deployment.gateway
     assert gateway is not None
     assert gateway.executable_ref == str(
@@ -1120,6 +1173,40 @@ def test_submit_all_rejects_mixed_scheduler_group_before_scheduler_contact(
     output = capsys.readouterr().out
     assert "Mixed scheduler types" in output
     assert "No scheduler was contacted" in output
+
+
+def test_a_walltime_the_queue_cannot_hold_is_refused_before_scheduler_contact(tmp_path):
+    from types import SimpleNamespace
+
+    from exaserve.state.status import RunState, StatusStore
+
+    state_path = tmp_path / "run_status.json"
+    StatusStore.run(state_path).initialize("g/r", RunState.PLANNED)
+    deployment = SimpleNamespace(
+        num_nodes=192,
+        runtime=SimpleNamespace(clean_stage=False, null_compute=False),
+        control=SimpleNamespace(watchdog_cleanup_deadline_s=300),
+    )
+    run_plan = SimpleNamespace(
+        bundle=SimpleNamespace(state_path=str(state_path)),
+        scheduler=SimpleNamespace(
+            type="pbs", nodes=192, queue="debug-scaling", walltime="02:00:00"
+        ),
+        client=SimpleNamespace(startup_only=False, num_runs=6, stream=True),
+        semantic_plan=SimpleNamespace(deployment=deployment),
+        run_semantic_hash="a" * 64,
+        spec_name="s",
+        run_group_id="g",
+        run_id="r",
+    )
+    scheduler = SimpleNamespace(submit=lambda _path: pytest.fail("the scheduler was contacted"))
+
+    kind, detail = run_executor._submit_run_once(run_plan, scheduler, submit_attempt=1)
+    assert kind == "invalid"
+    assert "debug-scaling queue's maximum of 01:00:00" in detail
+    assert "no allocation-campaign shape takes this cell" in detail
+    record = StatusStore.run(state_path).load()
+    assert (record.state, record.revision) == ("PLANNED", 0)  # no intent was written
 
 
 def test_plot_scripts_resolve_an_exact_run_group_and_result(tmp_path, monkeypatch):

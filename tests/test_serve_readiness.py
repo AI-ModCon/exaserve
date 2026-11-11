@@ -178,8 +178,8 @@ def test_activator_normalizes_only_scheduler_fallback_not_canonical_id(monkeypat
 
     for var in ("EXASERVE_DEPLOYMENT_ID", "EXASERVE_SCALING_TRACE_TOKEN", "EXASERVE_JOBID"):
         monkeypatch.delenv(var, raising=False)
-    monkeypatch.setenv("PBS_JOBID", "8736431.aurora-pbs-0001.hostmgmt.example")
-    assert CompatibilityActivator().deployment_id == "8736431"
+    monkeypatch.setenv("PBS_JOBID", "1234567.pbs-server.example")
+    assert CompatibilityActivator().deployment_id == "1234567"
 
     canonical = "fq-final37-supervisor-watchdog-2n-20260809.with-semantic-suffix"
     monkeypatch.setenv("EXASERVE_DEPLOYMENT_ID", canonical)

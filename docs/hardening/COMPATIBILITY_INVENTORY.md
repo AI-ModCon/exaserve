@@ -98,7 +98,7 @@ evidence, not merely adding a cache file.
 ### VC-01 seed provenance and review
 
 The reviewed inputs were the pre-existing Aurora vLLM cache entries
-`/home/wenyiw/.cache/vllm/modelinfos/vllm-model_executor-models-llama-LlamaForCausalLM.json`
+`/home/YOUR_USER/.cache/vllm/modelinfos/vllm-model_executor-models-llama-LlamaForCausalLM.json`
 and
 `vllm-model_executor-models-gpt_oss-GptOssForCausalLM.json`, whose observed
 SHA-256 values were respectively
@@ -121,8 +121,8 @@ and one trailing newline. Their resulting committed SHA-256 identities are
 source and all six vLLM sources that implement or interpret this private cache
 and RPC-path format.
 
-The cold-cache failure is sealed by 8B diagnostic `run3/n2`, PBS `8808281`:
-vLLM's registry subprocess exited `-11`/`SIGSEGV` while inspecting
+The cold-cache failure was reproduced with an 8B diagnostic run: vLLM's
+registry subprocess exited `-11`/`SIGSEGV` while inspecting
 `LlamaForCausalLM`. A VC-01 candidate is not qualified merely by these static
 checks; Aurora evidence must also show that a fresh generation-local cache
 consumes the seeded entry without launching that subprocess, followed by a

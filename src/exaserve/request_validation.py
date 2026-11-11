@@ -77,9 +77,9 @@ def _req_float(body: dict, key: str, *, lo: float, hi: float) -> float:
     value = body[key]
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise RequestValidationError(f"{key} must be a number, got {value!r}")
-    value = float(value)
     if not (lo <= value <= hi):
         raise RequestValidationError(f"{key} must be in [{lo}, {hi}], got {value}")
+    value = float(value)
     return value
 
 
@@ -198,17 +198,34 @@ def validate_messages(messages: Any) -> None:
                 )
 
 
+# Arguments that the engines pass to ``apply_chat_template`` themselves.
+_RESERVED_CHAT_TEMPLATE_KWARGS = frozenset(
+    {"conversation", "chat_template", "tokenize", "add_generation_prompt", "continue_final_message"}
+)
+
+
 def validate_chat_options(body: dict) -> None:
-    """Validate optional tokenizer inputs before ``**kwargs`` expansion."""
+    """Validate optional tokenizer inputs before ``**kwargs`` expansion.
+
+    A request cannot supply its own Jinja chat template: rendering one is the
+    resource-exhaustion vector of CVE-2025-61620, which vLLM's own server also
+    refuses by default. ``chat_template_kwargs`` may still set variables for the
+    served model's own template.
+    """
     require_object_body(body)
-    template = body.get("chat_template")
-    if template is not None and not isinstance(template, str):
-        raise RequestValidationError("chat_template must be a string or null")
+    if body.get("chat_template") is not None:
+        raise RequestValidationError(
+            "chat_template is not accepted; the served model's own chat template is used"
+        )
     kwargs = body.get("chat_template_kwargs")
     if kwargs is not None and not isinstance(kwargs, dict):
         raise RequestValidationError("chat_template_kwargs must be an object or null")
-    if isinstance(kwargs, dict) and not all(isinstance(key, str) for key in kwargs):
-        raise RequestValidationError("chat_template_kwargs keys must be strings")
+    if isinstance(kwargs, dict):
+        if not all(isinstance(key, str) for key in kwargs):
+            raise RequestValidationError("chat_template_kwargs keys must be strings")
+        reserved = sorted(_RESERVED_CHAT_TEMPLATE_KWARGS.intersection(kwargs))
+        if reserved:
+            raise RequestValidationError(f"chat_template_kwargs cannot set {', '.join(reserved)}")
 
 
 def validate_prompt(prompt: Any) -> str:

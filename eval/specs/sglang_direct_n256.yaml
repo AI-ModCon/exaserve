@@ -1,12 +1,11 @@
 name: sglang_direct_n256
 # SGLang backend, 256-node point in Direct-MPI dispatch (one client rank per
 # node hits its LOCAL Ray Serve port; no shared proxy). Companion to
-# sglang_haproxy_full run8: identical paper protocol (Meta-Llama-3-8B-Instruct,
-# seqs64/ongoing256, rate 15 = 0.9*S), only the dispatch path differs — run8's
-# n256 plateaued at ~2.0-2.3k rps (7.9/node, 59.8% eff, 0 errors, engines idle)
-# on the single head-node HAProxy streaming ceiling, mirroring the vLLM
-# proxycmp finding. Direct mode removes the proxy to show the backend itself
-# scales; client mirrors proxycmp_direct (num_go_procs=8, each rank owns a node).
+# sglang_haproxy_full: identical paper protocol (Meta-Llama-3-8B-Instruct,
+# seqs64/ongoing256, rate 15 = 0.9*S), only the dispatch path differs. At 256
+# nodes streaming through the single head-node HAProxy is limited by the proxy,
+# as with vLLM; direct mode removes the proxy to show whether the backend itself
+# scales. Client mirrors proxycmp_direct (num_go_procs=8, each rank owns a node).
 matrix:
   name_template: 'n{num_nodes}'
   axes:

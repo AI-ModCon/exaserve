@@ -10,12 +10,20 @@ ClientLab is a standalone measurement system for studying `eval/go_client/bin/go
 - `python3 -m clientlab compare <study_dir_a> <study_dir_b>`
 - `python3 -m clientlab smoke <preset>`
 
+Run them from the repository root with `PYTHONPATH="$PWD:$PWD/src"`; ClientLab
+imports ExaServe from the checkout's `src/`
+([getting started](../docs/getting_started.md#configure-evaluation-environment-preparation)).
+
 Built-in presets live in [`clientlab/specs`](specs):
 
+- `aurora_internode`
+- `client_dispatch_ceiling`
+- `client_dispatch_scaling`
 - `client_microbench`
-- `latency_capacity_map`
+- `client_safe_zone`
 - `fanout_and_affinity`
-- `exaserve_internode`
+- `latency_capacity_map`
+- `saturation_smoke`
 
 ## What It Produces
 
@@ -73,6 +81,6 @@ Supported fault controls include fixed or distributed service time, service conc
 
 ## Notes
 
-- Local smoke runs are safe to execute on the login node because they are intentionally tiny.
+- Run even smoke studies in a compute session (see `AGENTS.md`); `--local` and preset names do not make a run login-node safe.
 - Larger or internode studies should follow the repository PBS workflow in `AGENTS.md`.
 - The new Go client metrics use full request lifetime through body drain, not header-return timing.

@@ -70,15 +70,28 @@ def test_messages_validation():
 
 def test_chat_template_options_are_typed_before_backend_expansion():
     validate_chat_options({})
-    validate_chat_options(
-        {"chat_template": "{{ messages }}", "chat_template_kwargs": {"tools": []}}
-    )
+    validate_chat_options({"chat_template": None, "chat_template_kwargs": {"tools": []}})
     for bad in (
-        {"chat_template": 7},
         {"chat_template_kwargs": []},
+        {"chat_template_kwargs": {1: "x"}},
     ):
         with pytest.raises(RequestValidationError):
             validate_chat_options(bad)
+
+
+def test_request_supplied_chat_templates_are_rejected():
+    for template in ("{{ messages }}", "", 7):
+        with pytest.raises(RequestValidationError, match="chat_template is not accepted"):
+            validate_chat_options({"chat_template": template})
+    for reserved in (
+        "conversation",
+        "chat_template",
+        "tokenize",
+        "add_generation_prompt",
+        "continue_final_message",
+    ):
+        with pytest.raises(RequestValidationError, match=f"cannot set {reserved}"):
+            validate_chat_options({"chat_template_kwargs": {reserved: "{{ messages }}"}})
 
 
 def test_completion_prompt_rejects_unimplemented_batch_forms():
@@ -119,3 +132,23 @@ def test_context_window_attributes_a_prompt_that_alone_exceeds_the_limit():
             prompt_param="messages",
         )
     assert excinfo.value.param == "messages"
+
+
+@pytest.mark.parametrize("field", ["temperature", "top_p"])
+@pytest.mark.parametrize(
+    ("literal", "value"),
+    [
+        ("NaN", float("nan")),
+        ("Infinity", float("inf")),
+        ("-Infinity", float("-inf")),
+        ("1" + "0" * 400, 10**400),  # float() of it raised OverflowError -> 500
+    ],
+)
+def test_non_finite_and_huge_sampling_values_are_400_class(field, literal, value):
+    import json
+
+    # The handlers parse bodies with json.loads, which yields these exact values;
+    # only RequestValidationError is mapped to HTTP 400.
+    for body in ({field: value}, json.loads(f'{{"{field}": {literal}}}')):
+        with pytest.raises(RequestValidationError, match=f"{field} must be in"):
+            parse_sampling(body)

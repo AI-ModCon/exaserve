@@ -344,7 +344,7 @@ def test_broadcast_uses_plan_ranks_not_binding_prefix(tmp_path, monkeypatch):
     source = tmp_path / "source"
     source.mkdir()
     (source / "config.json").write_text(
-        '{"architectures":["LlamaForCausalLM"],"num_attention_heads":4}'
+        '{"architectures":["LlamaForCausalLM"],"model_type":"llama","num_attention_heads":4}'
     )
     (source / "model.safetensors").write_text("weights")
 

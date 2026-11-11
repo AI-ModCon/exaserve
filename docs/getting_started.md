@@ -6,22 +6,29 @@ environment is not an installation recipe for Aurora's serving stack.
 ## Portable development
 
 Use a Linux workstation or a suitable CI runner with Git, Make, Python, and
-`uv==0.10.1` (install it with `python3 -m pip install uv==0.10.1`).
+`uv==0.13.4` (install it with `python3 -m pip install uv==0.13.4`).
 Package metadata accepts Python 3.10 or newer; current portable CI targets
 Python 3.12, matching Aurora's current Python 3.12.12 runtime. Use Python 3.12
 for development. Other interpreter versions are outside the current CI scope,
 and portable CI does not qualify any GPU runtime.
 
-The committed uv lock resolves Linux Python 3.10–3.13; the existing optional
-vLLM dependency excludes Python 3.14. Use a CI interpreter version above for
-development rather than assuming every version allowed by package metadata is
-covered by the lock or tested by CI.
+The committed uv lock resolves Linux Python 3.11–3.13; the existing optional
+vLLM dependency excludes Python 3.14, and the test group's Pillow 13.0.0 requires
+Python 3.11. Use a CI interpreter version above for development rather than
+assuming every version allowed by package metadata is covered by the lock or
+tested by CI.
 
 ```bash
-git clone https://github.com/globus-labs/exaserve.git
+git clone https://github.com/AI-ModCon/exaserve.git
 cd exaserve
 make install-dev
 ```
+
+On Aurora, the stack loaded in [Prepare the runtime](#prepare-the-runtime)
+puts its own uv 0.10.1 first on `PATH`, which this project refuses. Install the
+pinned uv for your user with `python3 -m pip install --user uv==0.13.4` and
+pass it to make, for example
+`make UV="$(python3 -m site --user-base)/bin/uv" install-dev`.
 
 `make install-dev` synchronizes the portable development and test dependency
 groups from [uv.lock](../uv.lock). The dependency declarations and tool settings
@@ -100,22 +107,34 @@ head is limited to nodes actually assigned to that session.
 
 ### Prepare the runtime
 
-Load Aurora's site toolchain in every fresh session. Brief permitted login-node
-Python/Go checks also need these modules rather than the old system Python:
+The serving profile is Aurora's `frameworks/2025.3.1` stack: Python 3.12.12,
+Ray 2.53.0 and vLLM 0.15.0+xpu. Since Aurora's default image changed to
+26.181.0 in late September 2026, the unversioned `frameworks` module is
+2026.1.0 (Python 3.12, Ray 2.56.1, vLLM 0.26), which ExaServe's compatibility
+check rejects, and `module load frameworks/2025.3.1` fails from the default
+module tree. The validation runs loaded the profiled stack from the 26.26.0
+image's module tree, as below. Load it this way in every fresh session; brief
+permitted login-node Python/Go checks also need it rather than the old system
+Python:
 
 ```bash
-module load frameworks
+module purge
+_old=/opt/aurora/26.26.0/spack/unified/1.1.1/install/modulefiles
+_mpich=$_old/mpich/5.0.0.aurora_test.87e2045-po72xy6
+export MODULEPATH=$_mpich/Core:$_mpich/intel-oneapi-compilers/2025.3.1:$_old/Core:$_old/intel-oneapi-compilers/2025.3.1:/usr/share/lmod/modulefiles/Linux:/usr/share/lmod/modulefiles/Core:/usr/share/lmod/lmod/modulefiles/Core:/opt/cray/pals/lmod/modulefiles/core:/opt/cray/modulefiles:/opt/aurora/26.26.0/modulefiles
+unset _old _mpich
+module load frameworks/2025.3.1 cray-pals cray-libpals
 module load go
 unset ONEAPI_DEVICE_SELECTOR
 ```
 
-The serving profile records Python 3.12.12, Ray 2.53.0 and vLLM 0.15.0+xpu.
-Compare the loaded module with the
+The recipe uses the 26.26.0 image's MPICH and oneAPI 2025.3.1 module trees, and
+`cray-pals` provides `mpiexec`. It works only while ALCF keeps the 26.26.0
+tree. Compare the loaded stack with the
 [site dependency record](../requirements/aurora-frameworks-2025.3.1.lock) and
-[compatibility matrix](hardening/COMPATIBILITY_MATRIX.md). The unversioned
-module name can change; a version mismatch requires an approved runtime update,
-not bypassing compatibility checks. These are site-built distributions, not
-a public-PyPI installation recipe.
+[compatibility matrix](hardening/COMPATIBILITY_MATRIX.md). A version mismatch
+requires an approved runtime update, not bypassing compatibility checks. These
+are site-built distributions, not a public-PyPI installation recipe.
 
 Use the qualified module-provided interpreter. Canonical launch requires its
 executable to be non-shared and inside a declared read-only site root
@@ -164,28 +183,61 @@ Successful command lookup is a preflight check, not hardware qualification.
 
 ### Configure evaluation environment preparation
 
-For ordinary Ray evaluation jobs, explicitly select your own setup file instead
-of relying on a home-directory default. Save a site-reviewed shell file at an
-absolute path readable by the job head. Its job is only environment preparation;
-it must not launch daemons, implement readiness/cleanup, or stage data per node.
-For example, adapting the paths to your installation:
+Serving submissions and ordinary Ray evaluation jobs both source a setup file
+that you select; there is no home-directory default. Save a site-reviewed shell
+file at an absolute path readable by the job head. Its job is only environment
+preparation; it must not launch daemons, implement readiness/cleanup, or stage
+data per node. For example, using the recipe from
+[Prepare the runtime](#prepare-the-runtime) and adapting the paths to your
+installation:
 
 ```bash
 # Contents of your operator-owned environment.sh; sourced by the job head.
-module load frameworks || return 1
+module purge
+_old=/opt/aurora/26.26.0/spack/unified/1.1.1/install/modulefiles
+_mpich=$_old/mpich/5.0.0.aurora_test.87e2045-po72xy6
+export MODULEPATH=$_mpich/Core:$_mpich/intel-oneapi-compilers/2025.3.1:$_old/Core:$_old/intel-oneapi-compilers/2025.3.1:/usr/share/lmod/modulefiles/Linux:/usr/share/lmod/modulefiles/Core:/usr/share/lmod/lmod/modulefiles/Core:/opt/cray/pals/lmod/modulefiles/core:/opt/cray/modulefiles:/opt/aurora/26.26.0/modulefiles
+unset _old _mpich
+module load frameworks/2025.3.1 cray-pals cray-libpals || return 1
 module load go || return 1
 unset ONEAPI_DEVICE_SELECTOR
 export PATH="/absolute/path/to/haproxy/bin:$PATH"
 ```
 
 Keep the module-provided `python3`; do not prepend a home virtualenv's Python.
-Select the setup file before materializing the run:
+Select the setup file and the site variables before submitting a deployment or
+materializing a run:
 
 ```bash
 export EXASERVE_ENV_SCRIPT_AURORA=/absolute/path/to/environment.sh
 export EXASERVE_PROJECT_ROOT=/lus/flare/projects/YOUR_PROJECT
-python3 -m eval.site_config get env_script_aurora
+export EXASERVE_PROJECT_ACCOUNT=YOUR_PROJECT
+PYTHONPATH="$PWD:$PWD/src" python3 -m eval.site_config get env_script_aurora
 ```
+
+Eval and ClientLab run from the checkout and import ExaServe from its `src/`
+tree, as their materialized jobs do: run them from the repository root with
+`PYTHONPATH="$PWD:$PWD/src"`, as in the check above. Do not set it in the
+shell you use for the installed-wheel check or for `exaserve-serve-submit`.
+
+None of these variables has a built-in default. `exaserve-serve-submit` needs
+the environment script, the project root (or `EXASERVE_MODEL_STORAGE_PATH`)
+and an account (`--project-account` or `EXASERVE_PROJECT_ACCOUNT`). Its job
+sources `EXASERVE_ENV_SCRIPT_AURORA`, which must name an existing file when you
+submit. The site profile derives the site's
+model-storage root from `EXASERVE_PROJECT_ROOT` (or takes
+`EXASERVE_MODEL_STORAGE_PATH`), even when the YAML sets `model_storage_path`;
+a YAML launch with `exaserve-launch-cluster` needs it too. The PBS account
+comes from `--project-account` or `EXASERVE_PROJECT_ACCOUNT`. Evaluation
+derives storage paths that are not set explicitly from `EXASERVE_PROJECT_ROOT`
+and charges PBS jobs to `EXASERVE_PROJECT_ACCOUNT` unless a spec sets
+`scheduler.project`; when neither storage variable is exported, `run
+materialize` takes the storage path from the local site configuration below
+(serving does not). Commands that need a value fail with an error that names
+it. These variables configure planning and submission on the head only: a
+batch job does not need them, and ExaServe drops the path-valued ones from
+every rank's environment (the account name is not a path), so exporting them
+in a shell profile is safe.
 
 Set model/data/output paths in your
 [local site configuration](../eval/site_config_local.example.py).
@@ -201,26 +253,26 @@ not required filenames. If using the validation-only LiteLLM gateway, configure
 Environment preparation is not yet uniform across all entry points:
 
 - **Serving CLI:** captures the submitting interpreter's `sys.executable`.
-  Its job bootstrap still checks `$HOME/script/env_aurora` and otherwise loads
-  `frameworks`; no custom setup-file CLI option exists. That private file is
-  optional, but if present it is executed. The eval environment override above
-  does not affect this entry point. Ensure the recorded interpreter, required
-  libraries and gateway are available after that bootstrap; inspect the rendered
-  job with `--dry-run` before submission. Loading a different module in the job
-  does not change the recorded interpreter.
-- **Allocation campaigns:** currently hard-code a private environment-script
-  path, spool location and account assumptions in
-  [the controller](../eval/lib/allocation_campaign.py). They do not honor the
-  ordinary eval override. Treat that path as operator-specific, not a portable
-  deployment recipe. Making it configurable must bind the setup to the immutable
-  campaign identity and re-run the WP12 proof; do not edit a generated campaign
-  or fabricate private helper files to make it pass.
-- **Historical hardening helpers and the mock eval backend:** some retain
-  maintainer-local paths. They are not the general installation interface.
+  Its job bootstrap sources the script that `EXASERVE_ENV_SCRIPT_AURORA` names
+  at submission (an absolute path). The variable is required: without it,
+  submission fails before writing anything, with an error that names it; no
+  module is loaded by default. A retry that reuses a prepared or rejected
+  submission (same `--log-dir`) is refused if the stored job sources a
+  different script; use a fresh `--log-dir` or remove the intent record that
+  the error names. Ensure the recorded interpreter, required libraries and
+  gateway are available after that bootstrap; inspect the rendered job with
+  `--dry-run` before submission. Loading a different module in the job does
+  not change the recorded interpreter.
+- **Allocation campaigns:** take the PBS account, the site environment script
+  and the PBS output directory from `--account`, `--env-script` and
+  `--pbs-spool` (or `EXASERVE_PROJECT_ACCOUNT` and `EXASERVE_ENV_SCRIPT_AURORA`)
+  and record them in the immutable campaign identity (schema 2). The WP12 proof
+  has not been re-run for this bootstrap; do not edit a generated campaign.
+- **Historical hardening helpers:** some still assume the maintainer's
+  allocation-lease helper. They are not the general installation interface.
 
-These limitations are recorded, not fixed by changing documentation. Use the
-ordinary explicit-config Ray evaluation path where applicable; do not advertise
-the allocation controller as portable until its bootstrap is corrected and
+Use the ordinary explicit-config Ray evaluation path where applicable; do not
+advertise the allocation controller as portable until its new bootstrap is
 qualified.
 
 ### Before the first run

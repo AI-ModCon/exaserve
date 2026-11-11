@@ -295,13 +295,15 @@ class StatusStore:
             raise ValueError("status detail must be null or a string")
 
     @staticmethod
-    def _validate_expected_revision(expected_revision: int | None) -> None:
-        if expected_revision is not None and (
+    def _validate_expected_revision(expected_revision: int) -> None:
+        if (
             isinstance(expected_revision, bool)
             or not isinstance(expected_revision, int)
             or expected_revision < 0
         ):
-            raise ValueError("status expected_revision must be null or non-negative integer")
+            raise ValueError(
+                "status expected_revision must be the non-negative revision the caller read"
+            )
 
     @staticmethod
     def _append_history(record: StatusRecord, event: dict[str, Any]) -> None:
@@ -365,16 +367,16 @@ class StatusStore:
         reason_code: str,
         detail: str | None = None,
         data_update: dict[str, Any] | None = None,
-        expected_revision: int | None = None,
+        expected_revision: int,
         commit_data_factory: Callable[[int], dict[str, Any]] | None = None,
     ) -> StatusRecord:
         """Compare-and-set a lifecycle transition.
 
         IMP-B07: comparing only the state enum admits an ABA race — a writer
         that observed READY at revision 5 could still commit after the record
-        went READY→VALIDATING→READY at revision 7. Callers that read a record
-        should pass ``expected_revision=record.revision``; the transition then
-        fails closed if anything changed in between.
+        went READY→VALIDATING→READY at revision 7. Every caller therefore
+        passes ``expected_revision=record.revision`` from the record it read;
+        the transition fails closed if anything changed in between.
         """
         expected_state = self._enum(expected)
         new_state = self._enum(new)
@@ -391,7 +393,7 @@ class StatusStore:
                 raise StatusConflict(f"{self.path} not initialized")
             if record.state != expected_state.value:
                 raise StatusConflict(f"expected {expected_state.value}, found {record.state}")
-            if expected_revision is not None and record.revision != expected_revision:
+            if record.revision != expected_revision:
                 raise StatusConflict(
                     f"stale writer: expected revision {expected_revision}, "
                     f"found {record.revision} (state cycled back to "
@@ -431,10 +433,13 @@ class StatusStore:
         reason_code: str,
         detail: str | None = None,
         data_update: dict[str, Any] | None = None,
-        expected_revision: int | None = None,
+        expected_revision: int,
         record_history: bool = True,
     ) -> StatusRecord:
-        """CAS-update data without fabricating a lifecycle transition."""
+        """CAS-update data without fabricating a lifecycle transition.
+
+        Like transition(), it requires the revision the caller read.
+        """
         if type(record_history) is not bool:
             raise ValueError("record_history must be a boolean")
         self._validate_reason_detail(reason_code, detail)
@@ -447,7 +452,7 @@ class StatusStore:
                 raise StatusConflict(f"{self.path} not initialized")
             if record.state != expected_state.value:
                 raise StatusConflict(f"expected {expected_state.value}, found {record.state}")
-            if expected_revision is not None and record.revision != expected_revision:
+            if record.revision != expected_revision:
                 raise StatusConflict(
                     f"stale writer: expected revision {expected_revision}, found {record.revision}"
                 )

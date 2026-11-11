@@ -1,16 +1,19 @@
-# Historical benchmark results
+# Benchmark helpers
 
-This directory retains analysis helpers and historical measurements produced by
-the pre-hardening benchmark harness. It is not a deployment or experiment entry
-point and is outside the production release surface.
+This directory is not a deployment or experiment entry point and is outside the
+production release surface.
 
-The old `bench_client.py`, `bench_proxy.py`, stub launchers, and shell
-orchestrators were removed because they generated the retired eval manifest,
-owned process groups independently of the canonical supervisor, and could no
-longer produce trustworthy current results.
+- `netstats.py` samples `/proc/net/dev`; ClientLab's `netstats` collector runs
+  it, and [stats.md](stats.md) explains its fields and how to read them.
+- `analyze.py` and `port_model.py` are legacy analysis helpers for an older
+  result format; nothing else in the repository uses them. The matching plot
+  script is [`eval/plot/internode.py`](../eval/plot/internode.py), with the
+  other plotting scripts.
 
-Use ClientLab for client, proxy, synthetic-target, saturation, and internode
-studies:
+The pre-hardening benchmark harness (client, proxy and stub launchers and shell
+orchestrators) was removed: it generated a retired manifest format and owned
+process groups outside the canonical supervisor. Use ClientLab for client,
+proxy, synthetic-target, saturation and internode studies:
 
 ```bash
 python3 -m clientlab plan clientlab/specs/client_microbench.yaml
@@ -18,7 +21,7 @@ python3 -m clientlab run clientlab/specs/client_microbench.yaml --local
 python3 -m clientlab report <study-directory>
 ```
 
-Use `python3 -m eval.cli` for serving experiments. Follow `AGENTS.md` for every
-nontrivial or multi-node run. Existing files such as `stats.md` and analysis
-scripts describe old result formats only and do not qualify the hardened
-architecture.
+Use `python3 -m eval.cli` for serving experiments, and follow `AGENTS.md` for
+every nontrivial or multi-node run. Measured client ceilings and network
+diagnosis practice are in the
+[operations handbook](../docs/operations_handbook.md).

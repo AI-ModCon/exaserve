@@ -1,7 +1,7 @@
 meta:
   created: 2026-08-05
   baseline_revision: 005891e
-  baseline_doc: doc/hardening/BASELINE.md
+  baseline_doc: doc/hardening/BASELINE.md (Git history; removed from the current tree)
   adjudicated: '2026-08-09'
   candidate: final43
   wheel_sha256: 1041be53eb5b5875d198d5ee6c6664718b4085775dcba99107873dd3d1fcdff2
@@ -1216,8 +1216,8 @@ findings:
   - doc/KNOWN_ISSUES.md
   - src/exaserve/capabilities.py
   - eval/lib/replay_engine.py
-  - eval/plot/sc26_preview.py
-  - eval/plot/sc26_full_figures.py
+  - eval/plot/arxiv_submission_preview.py
+  - eval/plot/arxiv_submission_full_figures.py
   acceptance_tests:
   - AC-OBS-01
   status: FIXED
@@ -1228,8 +1228,8 @@ findings:
   - eval/tests/test_timing_semantics.py
   - src/exaserve/capabilities.py
   - eval/lib/replay_engine.py
-  - eval/plot/sc26_preview.py
-  - eval/plot/sc26_full_figures.py
+  - eval/plot/arxiv_submission_preview.py
+  - eval/plot/arxiv_submission_full_figures.py
   fallback: Fail closed; there is no legacy lifecycle or evidence fallback.
   residual_risk: Historical result files without a timing classification are retained as evidence but fail closed for TTFT/TBT and must be rematerialized for current timing comparisons.
   support_impact: LiteLLM remains a validation throughput/error benchmark and is not represented as a real streaming transport.
@@ -1949,7 +1949,8 @@ findings:
   invariant: \"unit tests are hermetic (no live HF across forkserver workers)\"
   primary_work_package: WP0
   affected_regions:
-  - doc/hardening/BASELINE.md
+  - conftest.py
+  - pyproject.toml
   acceptance_tests:
   - AC-TST-01
   status: FIXED
@@ -1976,7 +1977,7 @@ findings:
   invariant: \"child processes inherit the source-layout contract\"
   primary_work_package: WP0
   affected_regions:
-  - doc/hardening/BASELINE.md
+  - conftest.py
   acceptance_tests:
   - AC-TST-01
   status: FIXED
@@ -2002,7 +2003,7 @@ findings:
   invariant: \"ClientLab analysis applies schema defaults\"
   primary_work_package: WP9
   affected_regions:
-  - doc/hardening/BASELINE.md
+  - clientlab/analysis
   acceptance_tests:
   - AC-OBS-01
   status: FIXED
@@ -2025,7 +2026,8 @@ findings:
   invariant: \"HAProxy health-check tests match the intended /-/healthz design\"
   primary_work_package: WP7
   affected_regions:
-  - doc/hardening/BASELINE.md
+  - src/exaserve/proxy/haproxy_proxy.py
+  - tests/test_haproxy_proxy.py
   acceptance_tests:
   - AC-PROXY-01
   status: FIXED
@@ -2055,7 +2057,8 @@ findings:
   invariant: \"HAProxy multi-model health-check tests match the intended design\"
   primary_work_package: WP7
   affected_regions:
-  - doc/hardening/BASELINE.md
+  - src/exaserve/proxy/haproxy_proxy.py
+  - tests/test_haproxy_proxy.py
   acceptance_tests:
   - AC-PROXY-01
   status: FIXED
@@ -2085,7 +2088,8 @@ findings:
   invariant: \"submit tests pin both the PSI/J default and the PBS renderer\"
   primary_work_package: WP8
   affected_regions:
-  - doc/hardening/BASELINE.md
+  - src/exaserve/schedulers/pbs.py
+  - tests/test_submit.py
   acceptance_tests:
   - AC-PLAN-01
   status: FIXED
@@ -2110,7 +2114,8 @@ findings:
   invariant: \"no test depends on an undeclared host executable\"
   primary_work_package: WP0
   affected_regions:
-  - doc/hardening/BASELINE.md
+  - conftest.py
+  - pyproject.toml
   acceptance_tests:
   - AC-TST-01
   status: FIXED
@@ -2136,7 +2141,8 @@ findings:
   invariant: \"every test subtree is independently collectible\"
   primary_work_package: WP0
   affected_regions:
-  - doc/hardening/BASELINE.md
+  - conftest.py
+  - pyproject.toml
   acceptance_tests:
   - AC-TST-01
   status: FIXED
@@ -2530,7 +2536,6 @@ findings:
   primary_work_package: WP11
   affected_regions:
   - doc/hardening/STATUS.md
-  - doc/hardening/FINAL_AUDIT.md
   - artifacts/hardening/final43-candidate-review.json
   acceptance_tests:
   - AC-TST-01
@@ -2557,7 +2562,6 @@ findings:
   - doc/KNOWN_ISSUES.md
   - doc/TODO.md
   - doc/hardening/STATUS.md
-  - doc/hardening/FINAL_AUDIT.md
   acceptance_tests:
   - AC-TST-01
   status: FIXED
@@ -2567,7 +2571,6 @@ findings:
   - doc/KNOWN_ISSUES.md
   - doc/TODO.md
   - doc/hardening/STATUS.md
-  - doc/hardening/FINAL_AUDIT.md
   fallback: Treat candidate-specific operational prose as stale whenever it disagrees with the candidate review.
   residual_risk: Historical documents intentionally retain earlier candidate names and must not be read as current status.
   support_impact: Current operator-facing documents no longer direct users to a superseded ladder or unavailable interface.
@@ -2606,7 +2609,6 @@ findings:
   primary_work_package: WP12
   affected_regions:
   - doc/hardening/STATUS.md
-  - doc/hardening/FINAL_AUDIT.md
   - scripts/hardening/config.final-real.haproxy.2n.yaml
   acceptance_tests:
   - AC-SCALE-01
@@ -2614,7 +2616,6 @@ findings:
   decision: Status and final-audit claims now state that every final43 campaign used validation mode, identify the limited runtime differences, and leave the positive production-qualification branch explicitly unclaimed.
   evidence:
   - doc/hardening/STATUS.md
-  - doc/hardening/FINAL_AUDIT.md
   - artifacts/hardening/final43-experiment-plan.json
   - artifacts/hardening/final43-real-2n-20260809-a1/qualification/result.json
   fallback: Block production execution until an approved and measured SiteProfile satisfies the qualification contract.
@@ -2631,7 +2632,6 @@ findings:
   affected_regions:
   - scripts/hardening/run_packaged_gate.sh
   - doc/hardening/STATUS.md
-  - doc/hardening/FINAL_AUDIT.md
   acceptance_tests:
   - AC-TST-01
   status: FIXED
@@ -2639,7 +2639,6 @@ findings:
   evidence:
   - scripts/hardening/run_packaged_gate.sh
   - artifacts/hardening/final43-packaged-gate-20260809-a1/mypy.log
-  - doc/hardening/FINAL_AUDIT.md
   fallback: Report narrow static checks by their exact target list and options.
   residual_risk: Most runtime modules remain outside mypy until a broader typing migration is funded.
   support_impact: The passing mypy claim is precise and no longer overstates coverage.

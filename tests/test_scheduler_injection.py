@@ -24,7 +24,7 @@ def _spec(**over):
     base = dict(
         num_nodes=1,
         walltime="01:00:00",
-        account="AuroraGPT",
+        account="example-project",
         job_name="exaserve-serve",
         stdout_dir=Path("/tmp/logs"),
         stderr_dir=Path("/tmp/logs"),
@@ -54,11 +54,11 @@ def test_scheduler_unsets_site_environment_after_bootstrap():
 
     script = PBSScheduler().render_job(
         _spec(
-            source_env_script=Path("/tmp/env_aurora"),
+            source_env_script=Path("/tmp/site-environment.sh"),
             environment_unset=("ONEAPI_DEVICE_SELECTOR",),
         )
     )
-    source_at = script.index("source /tmp/env_aurora")
+    source_at = script.index("source /tmp/site-environment.sh")
     no_user_site_at = script.index("export PYTHONNOUSERSITE=1", source_at)
     safe_path_at = script.index("export PYTHONSAFEPATH=1", source_at)
     unset_at = script.index("unset ONEAPI_DEVICE_SELECTOR")
@@ -152,7 +152,7 @@ def test_eval_body_quotes_and_validates():
             num_nodes=1,
             queue="debug",
             walltime="01:00:00",
-            account="AuroraGPT",
+            account="example-project",
             filesystems="home:flare",
             keep_flag="doe",
             stdout_dir="/tmp",
@@ -200,7 +200,7 @@ def test_eval_body_never_expands_metacharacters_in_paths():
             num_nodes=1,
             queue="debug",
             walltime="01:00:00",
-            account="AuroraGPT",
+            account="example-project",
             filesystems="home:flare",
             keep_flag="doe",
             stdout_dir="/tmp",

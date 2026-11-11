@@ -1,4 +1,4 @@
-"""Fail-closed evidence readers for the SC26 405B PP=2 figure.
+"""Fail-closed evidence readers for the paper's 405B PP=2 figure.
 
 The original streaming campaign predates the canonical ResultManifest.  Its
 selected artifacts are therefore authenticated by a checked-in ledger, exact
@@ -28,8 +28,10 @@ import numpy as np
 from exaserve.state.atomic import regular_file_reader, strict_json_loads
 
 PP405B_NODE_COUNTS = (4, 8, 16, 32, 64, 128, 256)
-_PBS_STDOUT_SUFFIX = "aurora-pbs-0001.hostmgmt.cm.aurora.alcf.anl.gov.OU"
-_PBS_SERVER = "aurora-pbs-0001.hostmgmt.cm.aurora.alcf.anl.gov"
+# A retained PBS stdout file is named "<job id>.<PBS server>.OU". A cell can keep
+# several (resubmissions); the ledger pins the producing one by SHA-256, and its
+# job id and server are read from the name rather than stored.
+_PBS_STDOUT_NAME = re.compile(r"(\d+)\.([A-Za-z0-9][A-Za-z0-9.-]*)\.OU")
 _STAGE_HOSTS = re.compile(
     r"^\[pp_stage\] bcast stage ([01]) \([^)]*\) -> (\d+) node\(s\): (\[.*\])$"
 )
@@ -66,7 +68,6 @@ class LegacyPP405BRef:
     result_sha256: str
     run_yaml_sha256: str
     source_commit: str
-    pbs_job_id: int
     stdout_sha256: str
     errors_by_run: tuple[int, ...]
     expected_successful_rps: float
@@ -87,10 +88,6 @@ class LegacyPP405BRef:
     @property
     def expected_run_indices(self) -> tuple[int, ...]:
         return tuple(range(len(self.errors_by_run)))
-
-    @property
-    def stdout_name(self) -> str:
-        return f"{self.pbs_job_id}.{_PBS_STDOUT_SUFFIX}"
 
 
 @dataclass(frozen=True)
@@ -219,7 +216,7 @@ def load_legacy_pp405b_ledger(path: str | Path) -> Mapping[str, tuple[LegacyPP40
         context=str(path),
     )
     _require_exact_fields(
-        (("schema_version", document["schema_version"], 2),),
+        (("schema_version", document["schema_version"], 3),),
         context=str(path),
     )
     node_counts = document["active_node_counts"]
@@ -261,7 +258,6 @@ def load_legacy_pp405b_ledger(path: str | Path) -> Mapping[str, tuple[LegacyPP40
         "result_sha256",
         "run_yaml_sha256",
         "source_commit",
-        "pbs_job_id",
         "stdout_sha256",
         "errors_by_run",
         "expected_successful_rps",
@@ -316,7 +312,6 @@ def load_legacy_pp405b_ledger(path: str | Path) -> Mapping[str, tuple[LegacyPP40
                 result_sha256=point["result_sha256"],
                 run_yaml_sha256=point["run_yaml_sha256"],
                 source_commit=point["source_commit"],
-                pbs_job_id=point["pbs_job_id"],
                 stdout_sha256=point["stdout_sha256"],
                 errors_by_run=tuple(errors),
                 expected_successful_rps=point["expected_successful_rps"],
@@ -369,8 +364,6 @@ def _validate_legacy_ref(ref: LegacyPP405BRef, *, context: str) -> None:
             raise RuntimeError(f"{context}.{field} must be a lowercase SHA-256")
     if not _is_lower_hex(ref.source_commit, 40):
         raise RuntimeError(f"{context}.source_commit must be a lowercase Git commit")
-    if type(ref.pbs_job_id) is not int or ref.pbs_job_id <= 0:
-        raise RuntimeError(f"{context}.pbs_job_id must be a positive integer")
     if (
         type(ref.errors_by_run) is not tuple
         or len(ref.errors_by_run) < 2
@@ -656,9 +649,13 @@ def _validate_producing_stdout(
         else:  # guarded by _validate_legacy_ref; keep this helper fail-closed
             raise RuntimeError(f"pinned legacy PBS stdout has no typed subset marker: {path}")
         subset_path = original_cell / f"nodefile_{ref.active_nodes}.txt"
+        name = _PBS_STDOUT_NAME.fullmatch(path.name)
+        if name is None:
+            raise RuntimeError(f"legacy PBS stdout name is not <job id>.<server>.OU: {path}")
+        job_id, pbs_server = name.groups()
         counts = [
             header,
-            f"{ref.allocated_nodes:5d} /var/spool/pbs/aux/{ref.pbs_job_id}.{_PBS_SERVER}",
+            f"{ref.allocated_nodes:5d} /var/spool/pbs/aux/{job_id}.{pbs_server}",
             f"{ref.active_nodes:5d} {subset_path}",
             f"{ref.allocated_nodes + ref.active_nodes:5d} total",
         ]
@@ -998,6 +995,32 @@ def _validate_series(series: PP405BSeries) -> None:
             _validate_current_ref(ref, context=f"PP=2 series {series.key}.refs[{offset}]")
 
 
+def _legacy_stdout(stdout_dir: Path, expected_sha256: str) -> tuple[Path, bytes]:
+    """Return the retained PBS stdout file of a legacy cell whose bytes are pinned."""
+    try:
+        names = sorted(entry.name for entry in stdout_dir.iterdir())
+    except OSError as exc:
+        raise RuntimeError(f"legacy PBS stdout directory is unreadable: {stdout_dir}") from exc
+    candidates = [stdout_dir / name for name in names if _PBS_STDOUT_NAME.fullmatch(name)]
+    matches = []
+    mismatches = []
+    for candidate in candidates:
+        try:
+            payload = _sha_bound_bytes(candidate, expected_sha256, label="legacy PBS stdout")
+        except RuntimeError as exc:
+            mismatches.append(exc)
+            continue
+        matches.append((candidate, payload))
+    if len(matches) == 1:
+        return matches[0]
+    if not matches and len(mismatches) == 1:
+        raise mismatches[0]  # the cell's only stdout file: report its own hash mismatch
+    raise RuntimeError(
+        "legacy PBS stdout directory must hold exactly one <job id>.<server>.OU file "
+        f"with the pinned SHA-256, found {len(matches)} of {len(candidates)}: {stdout_dir}"
+    )
+
+
 def load_pp405b_points(series: PP405BSeries, *, runs_root: str | Path) -> list[dict[str, Any]]:
     """Load one exact seven-node curve under its explicit evidence contract."""
     _validate_series(series)
@@ -1008,10 +1031,11 @@ def load_pp405b_points(series: PP405BSeries, *, runs_root: str | Path) -> list[d
             cell = root / series.stem / ref.run_group_id / ref.run_id
             plan_path = cell / "run.yaml"
             result_path = cell / "results" / ref.result_name
-            stdout_path = cell / "logs" / "pbs" / "stdout" / ref.stdout_name
+            stdout_path, stdout = _legacy_stdout(
+                cell / "logs" / "pbs" / "stdout", ref.stdout_sha256
+            )
             plan = _load_sha_bound_yaml(plan_path, ref.run_yaml_sha256, label="legacy run.yaml")
             original_cell = _validate_legacy_plan(plan, path=plan_path, series=series, ref=ref)
-            stdout = _sha_bound_bytes(stdout_path, ref.stdout_sha256, label="legacy PBS stdout")
             _validate_producing_stdout(
                 stdout,
                 path=stdout_path,

@@ -5,7 +5,9 @@
 Do not disclose suspected vulnerabilities, exploit instructions, credentials, or
 private operational details in public GitHub issues or pull requests.
 
-Send vulnerability reports privately to the current maintainer, Wenyi Wang, at
+Report vulnerabilities privately: use **Report a vulnerability** on this
+repository's Security tab where GitHub offers it, or send the report to the
+current maintainer, Wenyi Wang, at
 [wenyiw@uchicago.edu](mailto:wenyiw@uchicago.edu). Do not use a public issue as a
 substitute for a private vulnerability report.
 
@@ -38,6 +40,33 @@ qualification gates. Qualification is specific to the artifact and deployment
 dimensions; it is not a guarantee that a deployment is free of vulnerabilities.
 The current production-candidate design assumes a trusted allocation-internal
 network and is not a public Internet service security boundary.
+
+## Deployment trust assumptions
+
+ExaServe's inference endpoints have no authentication, TLS or rate limiting.
+HAProxy and the per-node Ray Serve proxies listen on all interfaces of the
+allocated nodes, and Ray's own ports are unauthenticated in this
+configuration. Anyone who can connect to those nodes can send inference
+requests, and anyone who can reach the Ray ports can run code as the job user.
+Deploy ExaServe only where the site network limits these ports to users you
+trust; ExaServe does not check this.
+
+Model weights, `config.json`, tokenizer and chat-template files are trusted
+input and are treated like code. ExaServe loads them with
+`trust_remote_code=False`, Hugging Face offline mode and an architecture
+allowlist (`LlamaForCausalLM`, `GptOssForCausalLM`) that also pins each
+architecture's `model_type`, but these checks are not a sandbox. Stage only models from sources you trust, and keep
+`model_storage_path` writable only by the operator. Requests cannot supply
+their own chat template.
+
+Ray, vLLM, PyTorch and Transformers come from the qualified Aurora
+`frameworks/2025.3.1` module, loaded from the 26.26.0 image's module tree (see
+[getting started](docs/getting_started.md#prepare-the-runtime) and
+[`requirements/aurora-frameworks-2025.3.1.lock`](requirements/aurora-frameworks-2025.3.1.lock)),
+and change only through requalification. Advisories against those versions are
+assessed against the request surface in
+[docs/api.md](docs/api.md#inference-http-surface). Low-severity engine defects
+that ordinary requests can reach are accepted until the next requalified stack.
 
 ## Coordination and updates
 

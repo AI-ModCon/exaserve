@@ -31,6 +31,7 @@ from .base import (  # noqa: F401
     SubmissionError,
     SubmissionRejected,
     default_queue_and_walltime,
+    queue_walltime_violation,
 )
 
 _REGISTRY: Dict[str, Type[SchedulerBackend]] = {}
@@ -81,4 +82,5 @@ __all__ = [
     "SchedulerState",
     "AllocationMetadata",
     "default_queue_and_walltime",
+    "queue_walltime_violation",
 ]

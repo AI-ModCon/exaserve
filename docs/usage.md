@@ -9,10 +9,13 @@ batch session, not on the login node.
 
 ## Configure a deployment
 
-Start from [the HAProxy example](../examples/config.haproxy.yaml) and use
-[the reference configuration](../examples/config.reference.yaml) for available
-fields. Use a new local filename and update the model storage path, account,
-topology, and resource choices to match the intended allocation.
+Start from [the HAProxy example](../examples/config.haproxy.yaml).
+[`examples/config.reference.yaml`](../examples/config.reference.yaml) is a
+reference configuration of the commonly used fields; the accepted keys are
+defined in [`src/exaserve/plan/compiler.py`](../src/exaserve/plan/compiler.py).
+Use a new local filename and update the model storage path, topology and
+resource choices to match the intended allocation; pass the account with
+`--project-account` or `EXASERVE_PROJECT_ACCOUNT`.
 
 The deployment input is a flat YAML mapping with model, gateway, and exposure
 sections. Its compiler produces an immutable `DeploymentPlan`; runtime code
@@ -32,9 +35,15 @@ scope.
 
 For an authorized validation configuration or a separately qualified production
 configuration, render a submission into a new output location without calling
-the scheduler:
+the scheduler. Export the site variables from
+[getting started](getting_started.md#configure-evaluation-environment-preparation)
+first:
 
 ```bash
+# The job sources this site environment script; submission requires it.
+export EXASERVE_ENV_SCRIPT_AURORA=/absolute/path/to/environment.sh
+# The site profile derives its model-storage root from this, even when the YAML sets model_storage_path.
+export EXASERVE_PROJECT_ROOT=/lus/flare/projects/YOUR_PROJECT
 exaserve-serve-submit my_config.yaml \
   --project-account YOUR_PROJECT \
   --log-dir ./submit-preview \
@@ -43,6 +52,8 @@ exaserve-serve-submit my_config.yaml \
 
 `--dry-run` can create local plan/submission artifacts; it means no scheduler
 submission, not no filesystem writes. Choose a fresh output directory.
+The PBS account comes from `--project-account` or `EXASERVE_PROJECT_ACCOUNT`;
+there is no built-in allocation.
 
 Submit only after the relevant approval, environment, and input checks:
 
@@ -124,15 +135,22 @@ Eval and ClientLab are source-tree tools; the ExaServe wheel packages
 `src/exaserve`, not the top-level `eval` or `clientlab` directories. Invoke them
 from a checkout with the appropriate dependencies and site configuration.
 
-Inspect an example specification without launching it:
+First configure an
+[operator-owned environment file](getting_started.md#configure-evaluation-environment-preparation)
+and export `EXASERVE_PROJECT_ROOT`, plus `EXASERVE_PROJECT_ACCOUNT` and
+`EXASERVE_ENV_SCRIPT_AURORA` for materialization and submission; even
+`spec validate` needs the project root. Then, from the repository root (the
+eval tooling imports ExaServe from the checkout's `src/`), inspect an example
+specification without launching it:
 
 ```bash
+# In a shell kept for eval and ClientLab, not the one you use for
+# exaserve-serve-submit or the installed-wheel check:
+export PYTHONPATH="$PWD:$PWD/src"
 python3 -m eval.cli spec validate eval/specs/smoke_haproxy_1node.yaml
 ```
 
-The example is explicitly validation-only. First configure an
-[operator-owned environment file](getting_started.md#configure-evaluation-environment-preparation).
-Before materializing or running it,
+The example is explicitly validation-only. Before materializing or running it,
 review its model paths, site settings, resource requirements, output roots, and
 authorization. See [site override examples](../eval/site_config_local.example.py)
 and [the eval design](../eval/DESIGN.md).
@@ -167,11 +185,14 @@ the canonical executor; do not reconstruct deployment lifecycle in a shell
 wrapper.
 
 The separate `eval.cli allocation` controller can pack logical child runs into
-a finite physical allocation campaign. It currently has
-[operator-specific bootstrap limitations](getting_started.md#current-bootstrap-limitations)
-and does not honor the ordinary eval environment override. Its WP12 isolation proof and
-qualification requirements still apply. Report physical allocation nodes and
-logical child nodes separately; this is not a keepalive or fabricated lease.
+a finite physical allocation campaign. It takes its PBS account, site
+environment script and PBS output directory from `--account`, `--env-script`
+and `--pbs-spool` (or `EXASERVE_PROJECT_ACCOUNT` and
+`EXASERVE_ENV_SCRIPT_AURORA`) and records them in its schema-2 identity; that
+bootstrap has not been re-proven (WP12; see the
+[current bootstrap limitations](getting_started.md#current-bootstrap-limitations)).
+Its qualification requirements still apply. Report physical allocation nodes and
+logical child nodes separately; this is not a held or fabricated lease.
 
 ## ClientLab studies
 

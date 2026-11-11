@@ -99,7 +99,7 @@ def test_rank_launcher_splits_head_scheduler_env_from_rank_application_env():
         scheduler="pbs",
         env={
             "PBS_JOBID": "job",
-            "PBS_NODEFILE": "/home/user/.aurora_leases/nodes",
+            "PBS_NODEFILE": "/home/user/allocation/nodes",
             "PMIX_RANK": "head-only-rank",
             "PALS_RANKID": "head-only-rank",
         },

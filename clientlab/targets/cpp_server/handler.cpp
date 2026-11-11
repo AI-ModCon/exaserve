@@ -1,5 +1,6 @@
 #include "handler.hpp"
 #include <cctype>
+#include <cstdint>
 #include <cstring>
 #include <ctime>
 #include <string>
@@ -60,24 +61,45 @@ bool parse_headers(const char* buf, size_t len, ParsedRequest& req, size_t& head
         req.method = ParsedRequest::UNKNOWN;
     }
 
-    // Parse Content-Length (case-insensitive).
-    const char* cl = find_case_insensitive(buf, end, "Content-Length:");
+    // This server only drains fixed-length bodies; chunked framing is unsupported.
+    if (find_case_insensitive(buf, end, "\r\nTransfer-Encoding:")) {
+        req.malformed = true;
+    }
+
+    // Parse one complete Content-Length value (case-insensitive). Ambiguous or
+    // invalid lengths must not leave body bytes on a keep-alive connection.
+    // Headers start after a CRLF, so other names ending in "Content-Length" do not match.
+    const char* cl = find_case_insensitive(buf, end, "\r\nContent-Length:");
     if (cl && cl < end) {
-        cl += 15;
-        while (cl < end && (*cl == ' ' || *cl == '\t')) cl++;
-        int content_length = 0;
-        while (cl < end && *cl >= '0' && *cl <= '9') {
-            content_length = (content_length * 10) + (*cl - '0');
+        constexpr uint64_t kMaxContentLength = uint64_t{1} << 30;
+        cl += 17;
+        if (find_case_insensitive(cl, end, "\r\nContent-Length:")) {
+            req.malformed = true;
+        }
+        const char* value_end = static_cast<const char*>(memmem(cl, end - cl, "\r\n", 2));
+        if (!value_end) value_end = end;
+        while (cl < value_end && (*cl == ' ' || *cl == '\t')) cl++;
+        uint64_t content_length = 0;
+        bool any_digit = false;
+        while (cl < value_end && *cl >= '0' && *cl <= '9') {
+            content_length = (content_length * 10) + static_cast<uint64_t>(*cl - '0');
+            any_digit = true;
+            if (content_length > kMaxContentLength) break;
             cl++;
         }
-        req.content_length = content_length;
+        while (cl < value_end && (*cl == ' ' || *cl == '\t')) cl++;
+        if (!any_digit || content_length > kMaxContentLength || cl != value_end) {
+            req.malformed = true;
+        } else {
+            req.content_length = static_cast<int>(content_length);
+        }
     }
 
     // Parse Connection header for keep-alive.
     req.keep_alive = true;
-    const char* conn = find_case_insensitive(buf, end, "Connection:");
+    const char* conn = find_case_insensitive(buf, end, "\r\nConnection:");
     if (conn && conn < end) {
-        conn += 11;
+        conn += 13;
         while (conn < end && (*conn == ' ' || *conn == '\t')) conn++;
         if (has_case_insensitive_prefix(conn, end, "close")) {
             req.keep_alive = false;

@@ -11,7 +11,7 @@ from typing import Any
 
 import ijson
 
-from eval.site_config import get_runs_root
+from eval.site_config import get_paper_suite_root
 from exaserve.state.atomic import atomic_write_json
 
 
@@ -25,8 +25,8 @@ def percentile(values: list[float], quantile: float) -> float:
     return ordered[lower] + (ordered[upper] - ordered[lower]) * (position - lower)
 
 
-def result_files(runs_root: Path) -> dict[int, Path]:
-    paper_root = runs_root / "sc26workshop" / "full"
+def result_files(suite_root: Path) -> dict[int, Path]:
+    paper_root = suite_root / "full"
     return {
         1: paper_root / "proxycmp_direct" / "run0" / "n1" / "results" / "result0.json",
         64: paper_root / "proxycmp_direct" / "run0" / "n64" / "results" / "result0.json",
@@ -87,22 +87,26 @@ def analyze_result(path: Path) -> dict[int, dict[str, float | int]]:
     return result
 
 
-def analyze(runs_root: Path) -> dict[int, dict[int, dict[str, float | int]]]:
-    return {nodes: analyze_result(path) for nodes, path in result_files(runs_root).items()}
+def analyze(suite_root: Path) -> dict[int, dict[int, dict[str, float | int]]]:
+    return {nodes: analyze_result(path) for nodes, path in result_files(suite_root).items()}
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--runs-root",
+        "--suite-root",
         type=Path,
-        default=get_runs_root(),
-        help="Experiment runs root (defaults to the centralized site configuration)",
+        default=None,
+        help="Paper suite run-group folder (default: <runs>/arxiv-submission, or "
+        "EXASERVE_PAPER_SUITE_ROOT)",
     )
     parser.add_argument("--output", type=Path, help="Atomically write JSON to this path")
     args = parser.parse_args(argv)
+    # Resolved only when needed, so --help and an explicit --suite-root work
+    # without site configuration.
+    suite_root = args.suite_root or get_paper_suite_root()
 
-    output: dict[str, Any] = analyze(args.runs_root)
+    output: dict[str, Any] = analyze(suite_root)
     for nodes, runs in output.items():
         print(f"=== N={nodes} ===", file=sys.stderr)
         for run_index, values in runs.items():

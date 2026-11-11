@@ -2,8 +2,7 @@ name: sglang_haproxy_ws
 # SGLang weak-scaling via Ray Serve (SGLangWorker embeds sgl.Engine) + HAProxy + Go
 # replay client. SGLang is encoded in the spec, but the default Aurora release
 # SiteProfile rejects it until a separately qualified SGLang profile is supplied.
-# so launch_cluster/driver/server select the SGLang engine on the frameworks-inheriting
-# venv. Apples-to-apples vs the vLLM weak-scaling: same control plane / proxy / client.
+# Apples-to-apples vs the vLLM weak-scaling: same control plane / proxy / client.
 matrix:
   name_template: '{num_nodes}_nodes'
   axes:

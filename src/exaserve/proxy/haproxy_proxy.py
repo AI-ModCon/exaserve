@@ -59,8 +59,9 @@ class HAProxyProxy(ProxyBackend):
             stats_port (int):    HAProxy stats page port. Default: 9999.
                                  Set to 0 to disable stats.
             maxconn (int):       Max concurrent connections. Default: 8000,
-                                 which fits Aurora's 16384-descriptor hard limit
-                                 through the currently qualified 64-node tier.
+                                 which fits a 16384-descriptor hard limit (the
+                                 Aurora login-node limit) with 64 backends.
+                                 Aurora compute nodes allowed 1048575.
 
         Note: HAProxy uses one backend *per unique model_id*. Nodes serving the
         same model are grouped together. If all backends serve the same model (the
@@ -130,9 +131,9 @@ class HAProxyProxy(ProxyBackend):
             options.get("abortonclose", False), "proxy.options.abortonclose"
         )
         # HAProxy parallelism = threads (modern HAProxy is threaded, not multi-proc).
-        # 0/unset -> omit nbthread (HAProxy auto-detects = bound CPUs). Set
-        # options.nbthread (alias: num_workers) to pin more accept/processing threads
-        # — relevant to the 256n connection-bound streaming case.
+        # 0/unset -> omit nbthread (HAProxy auto-detects = bound CPUs). The
+        # composition root passes gateway.worker_count here only when it is above
+        # 1; options.nbthread overrides both.
         nbthread = _strict_opt_int(
             options.get("nbthread", 0), "proxy.options.nbthread", minimum=0, maximum=4096
         )

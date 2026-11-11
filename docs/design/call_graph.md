@@ -5,8 +5,8 @@ An annotated, diagrammed walkthrough of every function between
 [`examples/config.haproxy.yaml`](../../examples/config.haproxy.yaml) at two
 nodes with one Llama-3-8B model.
 
-Originally traced at commit `7b20715`, then reconciled on 2026-08-30 against
-the `release-v0.4.0` source candidate descended from `ccccb82`. This checked-in
+Originally traced at commit `7b20715`; reconciled with the current tree's
+single-application layout in October 2026. This checked-in
 document is the durable authority; no private rendering or external artifact is
 required to read it. If a future refactor moves any boundary below, update this
 document with the corresponding contract tests.
@@ -25,10 +25,12 @@ and the live verdict remains [`../hardening/STATUS.md`](../hardening/STATUS.md).
 | Gateway | HAProxy `:4001` → Ray Serve `:8000` on each node |
 
 Derived by `plan.compiler`: **24 logical replicas** (12 per rank),
-**26 Ray Serve applications** (24 model applications at `/<route>_r0…_r23` plus
-two route-less proxy anchors), and **54 receipt requirements**
+**3 Ray Serve applications** (one model application at `/<route>` holding all 24
+replicas, plus two route-less proxy anchors), and **54 receipt requirements**
 (1 supervisor + 1 gateway + 2 Ray daemons + 2 node supervisors + 24 replicas +
-24 engine cores). A different TP, PP, or model count changes all four numbers.
+24 engine cores). A different TP, PP, or model count changes all four numbers;
+sparse, multi-device, pipeline-parallel and multi-model plans compile to one
+application per replica instead (`DeploymentPlan.uses_single_serve_application`).
 
 ## Ownership
 
@@ -47,7 +49,7 @@ PBS job (2 nodes)
    │                            └─ ray start --head | --address    [each node]
    │                                 └─ Ray-owned Serve proxy and actor workers
    ├─ exaserve.server_bootstrap · same process calls exaserve.server.main
-   │     serve.start(EveryNode) + serve.run_many(26 apps)
+   │     serve.start(EveryNode) + serve.run_many(3 apps)
    │        ⇢ asks Ray to create Serve HTTP proxy :8000 + EngineWorker ×12/node
    └─ haproxy -f … -db      inherits the listening fd the root already holds
 ```
@@ -99,22 +101,24 @@ Four orderings are deliberate and easy to break by accident:
 
 ```text
 client → HAProxy :4001
-           http-request set-var(txn.ridx) rand(24)
-           set-path /<route>_r{ridx}<orig-path>
            balance leastconn across 2 servers, check GET /-/healthz
        → Ray Serve HTTP proxy :8000 (node 0 or node 1)
-       → EngineWorker application _r{ridx}, node-pinned by the compiler
+       → model application /<route>; Serve's router picks one of 24 replicas
        → vLLM AsyncLLM on one PVC tile
 ```
 
-Two independent decisions: HAProxy picks the *replica* by path rewrite, then
-spreads TCP across node proxies. Health checks hit each proxy's own
+Two independent decisions: HAProxy spreads connections across the node
+proxies, and Serve's router picks the *replica*. Layouts with one application
+per replica instead have HAProxy pick the replica by rewriting the path to
+`/<route>_r{ridx}`. Health checks hit each proxy's own
 `/-/healthz` and never a model route — funnelling every server's check through
 one replica is what produced the 405B/256-node backend flap.
 
 ## Scope
 
-This describes the code path, not a support claim. The evidence-backed maximum
-for the current candidate is two nodes; see
-[`../hardening/STATUS.md`](../hardening/STATUS.md) and
-[`../hardening/decisions/ADR-000-production-envelope.md`](../hardening/decisions/ADR-000-production-envelope.md).
+The worked configuration is a compact example of the code path. ExaServe's
+scale evaluations reached 256 Aurora nodes on earlier snapshots of this code;
+this example's size does not set the system's scale. See the
+[hardening status](../hardening/STATUS.md) for release admission and the
+[changelog](../../CHANGELOG.md#validation-coverage) for fix-specific
+verification coverage.

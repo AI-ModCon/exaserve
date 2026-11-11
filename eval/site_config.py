@@ -12,7 +12,7 @@ from exaserve.site import local_account_name
 
 _FIELD_DEFAULTS = OrderedDict(
     [
-        ("project_root", "/lus/flare/projects/AuroraGPT"),
+        ("project_root", ""),
         ("user_data_root", ""),
         ("model_storage_path", ""),
         ("input_trace_path", ""),
@@ -125,6 +125,14 @@ def _load_local_overrides() -> Dict[str, Any]:
     return overrides
 
 
+def site_config_environment_names() -> frozenset:
+    """The environment variables that configure this tooling on the head."""
+    return frozenset(
+        ["EXASERVE_SITE_CONFIG_LOCAL", "EXASERVE_PAPER_SUITE_ROOT"]
+        + ["EXASERVE_{0}".format(field_name.upper()) for field_name in _FIELD_NAMES]
+    )
+
+
 def _load_env_overrides() -> Dict[str, Any]:
     overrides = {}
     for field_name in _FIELD_NAMES:
@@ -149,11 +157,16 @@ def _normalize_config(config: SiteConfig) -> SiteConfig:
     current_user = (
         local_account_name() if not config.user_data_root or not config.model_storage_path else ""
     )
-    home_dir = str(Path.home())
 
     project_root = _coerce_field_value("project_root", config.project_root)
-    if not os.path.isabs(project_root):
+    if project_root and not os.path.isabs(project_root):
         raise ValueError("project_root must be an absolute path")
+    if not project_root and not (config.user_data_root and config.model_storage_path):
+        raise ValueError(
+            "site config project_root is not set; set EXASERVE_PROJECT_ROOT, or project_root "
+            "in the local overrides (eval/site_config_local.py or the file that "
+            "EXASERVE_SITE_CONFIG_LOCAL names), or set both user_data_root and model_storage_path"
+        )
     user_data_root = config.user_data_root or os.path.join(project_root, current_user, "data")
     model_storage_path = config.model_storage_path or os.path.join(
         project_root, current_user, "models"
@@ -170,25 +183,13 @@ def _normalize_config(config: SiteConfig) -> SiteConfig:
     )
     output_trace_dir = config.output_trace_dir or os.path.join(user_data_root, "output_traces")
     experiments_root = config.experiments_root or os.path.join(user_data_root, "experiments")
-    litellm_python_path = config.litellm_python_path or os.path.join(
-        home_dir,
-        "agpt",
-        "venv",
-        "litellm",
-        "bin",
-        "python3",
-    )
-    snapshot_dir = config.snapshot_dir or os.path.join(home_dir, "agpt", "data", "snapshots")
-    bench_results_dir = config.bench_results_dir or os.path.join(
-        home_dir,
-        "agpt",
-        "data",
-        "bench_results",
-    )
-    env_script_aurora = config.env_script_aurora or os.path.join(home_dir, "script", "env_aurora")
-    env_script_litellm = config.env_script_litellm or os.path.join(
-        home_dir, "script", "env_litellm"
-    )
+    # Environment scripts and the LiteLLM interpreter have no default location;
+    # run snapshots and benchmark results default to the configured data root.
+    litellm_python_path = config.litellm_python_path
+    snapshot_dir = config.snapshot_dir or os.path.join(user_data_root, "snapshots")
+    bench_results_dir = config.bench_results_dir or os.path.join(user_data_root, "bench_results")
+    env_script_aurora = config.env_script_aurora
+    env_script_litellm = config.env_script_litellm
 
     normalized = config.with_updates(
         project_root=project_root,
@@ -228,6 +229,24 @@ def get_runs_root() -> Path:
     """Return the configured immutable run-store root used by analysis tools."""
 
     return Path(get_site_config().experiments_root) / "runs"
+
+
+def get_paper_suite_root() -> Path:
+    """Return the run-group folder of the paper's evaluation suite.
+
+    Run groups of specs under eval/specs/arxiv-submission/ resolve under
+    ``<runs>/arxiv-submission``. A run group's run.yaml binds the absolute path it
+    was written to, so groups recorded under another folder are rejected once
+    moved or renamed; ``EXASERVE_PAPER_SUITE_ROOT`` names such a folder so the
+    paper's figure scripts read them where they are.
+    """
+
+    override = os.environ.get("EXASERVE_PAPER_SUITE_ROOT", "")
+    if not override:
+        return get_runs_root() / "arxiv-submission"
+    if not os.path.isabs(override):
+        raise ValueError("EXASERVE_PAPER_SUITE_ROOT must be an absolute path")
+    return Path(override)
 
 
 def _build_arg_parser() -> argparse.ArgumentParser:

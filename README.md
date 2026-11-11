@@ -1,39 +1,68 @@
 # ExaServe
 
 ExaServe is an allocation-scoped Ray Serve control plane for OpenAI-compatible
-LLM inference on ALCF Aurora. The current production candidate is deliberately
-narrow: Aurora PBS, Intel PVC/XPU, vLLM, HAProxy, non-streaming requests, and a
-trusted allocation-internal network. Slurm, CUDA/ROCm, SGLang, streaming, direct
-Serve exposure, and alternate gateways are rejected or validation-only unless a
-separately qualified `SiteProfile` says otherwise.
+LLM inference on ALCF Aurora. **ExaServe has been evaluated from 1 to 256 Aurora
+nodes**, including HAProxy-fronted Llama-3-8B serving and multi-node,
+pipeline-parallel Llama-3.1-405B inference. The non-streaming study reached
+27.1k requests/s at 256 nodes; streaming and gateway-specific limits are
+documented in the [operations handbook](docs/operations_handbook.md). These
+measurements were made on earlier snapshots of this code; the current tree has
+not been re-measured at that scale.
 
-The shared development baseline is `main`, which includes the scaling and
-hardening history previously developed on `paper/missing-scale-v0.4.0`.
-Historical package and hardware receipts qualify their exact artifacts, not
-every later commit. Paper measurements are not silently promoted into release
-evidence or cross-platform support claims.
+The reference runtime is Aurora PBS, Intel PVC/XPU, vLLM, HAProxy, non-streaming
+completions and a trusted allocation-internal network. Slurm, CUDA/ROCm, SGLang,
+streaming, direct Serve exposure and other gateways are rejected or
+validation-only under the default `SiteProfile`; other platforms need their own
+runtime profiles and validation.
 
-Qualification is immutable-candidate and dimension specific. The proposed
-64-node target is not a support claim: it needs product-owner scope approval
-and the predeclared exact-candidate ladder. See
-[`docs/hardening/STATUS.md`](docs/hardening/STATUS.md) for the current artifact,
-evidence-backed maximum, and unresolved gates.
+The original design and its measurements on Aurora are described in
+[ExaServe: Large-Scale LLM Serving on Exascale HPC Systems](https://arxiv.org/abs/2609.10812).
+The 256-node evaluations establish the demonstrated scale of the system for
+those workloads; they are not release evidence for the current tree. Focused
+regression checks for later fixes have their own coverage, recorded in the
+[changelog](CHANGELOG.md#validation-coverage); their allocation size does not
+redefine that demonstrated scale. No artifact of the current tree is
+production-qualified, and production submission fails closed; see
+[`docs/hardening/STATUS.md`](docs/hardening/STATUS.md).
+
+**Differences from the paper.** The current tree differs from the design the
+paper describes in five ways:
+
+- The deployment YAML is one flat mapping. The paper's nested
+  `ray_cluster_config`, `model_deployment_config` and `proxy_config` sections
+  are rejected ([canonical deployment YAML](#canonical-deployment-yaml)).
+- Compatibility patches are applied to hash-checked copies of the installed
+  Ray and vLLM modules, which stay unmodified, and the compiled plan selects
+  the patches. The paper's corrected Ray Serve file copies and its per-patch
+  environment switches are gone.
+- Readiness is a generation-bound predicate over the plan, not the stdout
+  markers the paper describes
+  ([readiness and compatibility](#readiness-and-compatibility)).
+- A dense HAProxy deployment is one model application holding every replica,
+  plus a proxy-anchor application on each node, instead of one Serve
+  application per node.
+- Only the allocation head reads or writes shared storage during a run. It
+  broadcasts each pipeline stage's shards to the nodes that run that stage; in
+  the paper, each node read its 405B stage from Lustre.
 
 ## Documentation and AI-ModCon preparation
 
 Start with the [documentation index](docs/index.md),
 [getting-started guide](docs/getting_started.md), [usage examples](docs/usage.md),
 and [API reference](docs/api.md). The unified `docs/` tree also contains the
-authoritative architecture plan, design notes, hardening records, and
-[research findings](docs/findings/index.md). The
+authoritative architecture plan, design notes, the hardening status and the
+[operations handbook](docs/operations_handbook.md), which collects measured
+behaviour, limits, failures seen and their fixes. The
 [path migration guide](docs/path_migrations.md) explains relocated historical
-references and the [archived scratchpad](docs/archive/README.md).
+references.
 
-This repository is being prepared for transfer to AI-ModCon. The
-[compliance and transfer checklist](docs/modcon_compliance.md) records the
+The repository is [`AI-ModCon/exaserve`](https://github.com/AI-ModCon/exaserve).
+It is published as development and research source, not as a
+production-qualified release; [hardening status](docs/hardening/STATUS.md)
+records what each candidate has and has not qualified. The
+[AI-ModCon compliance checklist](docs/modcon_compliance.md) records the
 BaseTemplate revision, implemented requirements, validation limits, and GitHub
-administrator steps. Repository links continue to identify the current
-`globus-labs/exaserve` location until the transfer is actually completed.
+administrator steps.
 
 ## Architecture
 
@@ -75,18 +104,19 @@ function by function, worked against the canonical two-node HAProxy example.
 Prepare the site runtime using the
 [deployment setup guide](docs/getting_started.md#aurora-development-and-serving).
 The current serving profile requires the qualified site-local interpreter, not
-a home-directory virtualenv. In a validated compute session, check the
-site-provisioned environment:
+a home-directory virtualenv. In a validated compute session, load the profiled
+stack as [Prepare the runtime](docs/getting_started.md#prepare-the-runtime)
+shows (the default `frameworks` module fails ExaServe's compatibility check),
+then check the site-provisioned environment:
 
 ```bash
-module load frameworks
-unset ONEAPI_DEVICE_SELECTOR
 PYTHONNOUSERSITE=1 PYTHONSAFEPATH=1 python3 -c 'import sys, exaserve; print(sys.executable); print(exaserve.__file__)'
 command -v mpiexec
 command -v haproxy
 ```
 
-Ray, vLLM, MPI, and the XPU stack come from Aurora's `frameworks` module. The
+Ray, vLLM, MPI, and the XPU stack come from Aurora's `frameworks/2025.3.1`
+module, loaded from the 26.26.0 image's module tree as that section shows. The
 selected Python and package paths must match the intended approved runtime and
 ExaServe artifact, not an incidental checkout. If the package is unavailable,
 have the operator provision the exact wheel and control-plane dependencies for
@@ -114,12 +144,17 @@ production envelope, so submitting the canonical HAProxy example currently
 fails with `production execution is not qualified`. That is a release gate, not
 a setup error. After `docs/hardening/STATUS.md` records the required measurements
 and approval, copy the canonical HAProxy example and change the shared model
-path:
+path. Submission also needs the site variables described in
+[getting started](docs/getting_started.md#configure-evaluation-environment-preparation):
 
 ```bash
 cp examples/config.haproxy.yaml my_config.yaml
 $EDITOR my_config.yaml
 
+# The job sources this site environment script; submission requires it.
+export EXASERVE_ENV_SCRIPT_AURORA=/absolute/path/to/environment.sh
+# The site profile derives its model-storage root from this, even when the YAML sets model_storage_path.
+export EXASERVE_PROJECT_ROOT=/lus/flare/projects/YOUR_PROJECT
 exaserve-serve-submit my_config.yaml \
   --project-account YOUR_PROJECT \
   --wait
@@ -145,7 +180,7 @@ Useful commands:
 
 ```bash
 # For an authorized validation or qualified production config, render without submitting.
-exaserve-serve-submit my_config.yaml --dry-run --log-dir ./submit-preview
+exaserve-serve-submit my_config.yaml --project-account YOUR_PROJECT --dry-run --log-dir ./submit-preview
 
 # Resolve an already submitted job; add --wait to poll canonical status.
 exaserve-serve-url JOB_ID --wait
@@ -203,14 +238,17 @@ gateway:
     maxconn: 8000
 ```
 
-`maxconn: 8000` is intentional. ExaServe computes HAProxy's descriptor demand
-as `2 * maxconn + backend_count + 256`, verifies the hard `RLIMIT_NOFILE`, and
-raises the soft limit when allowed. Larger copied values such as 50,000 or
-100,000 cannot run under Aurora's observed 16,384 hard limit and fail before
-launch.
+`maxconn: 8000` is a conservative default, not a site ceiling. ExaServe
+computes HAProxy's descriptor demand as `2 * maxconn + backend_count + 256`,
+checks it against the hard `RLIMIT_NOFILE` before launch, and raises the soft
+limit when allowed. Aurora compute nodes allowed 1,048,575 descriptors when
+measured in October 2026 (login nodes allow 16,384). Size `maxconn` to the
+offered rate times end-to-end latency, plus headroom.
 
-See [`examples/config.reference.yaml`](examples/config.reference.yaml) for the
-complete schema. [`examples/config.direct.yaml`](examples/config.direct.yaml)
+[`examples/config.reference.yaml`](examples/config.reference.yaml) is a
+reference configuration of the commonly used fields; the accepted keys are
+defined in [`src/exaserve/plan/compiler.py`](src/exaserve/plan/compiler.py).
+[`examples/config.direct.yaml`](examples/config.direct.yaml)
 is explicitly `DIRECT_VALIDATION`, and `config.litellm.yaml` is a
 validation-only alternate-gateway example. NGINX, Envoy, and Pingora adapters
 exist for future qualification/benchmark work, but no shipped example or
@@ -238,7 +276,16 @@ The eval control plane compiles an immutable `RunPlan` containing the exact
 `DeploymentPlan`; its runtime manifest references the plan by path and SHA-256
 instead of copying serving fields.
 
+Set `EXASERVE_PROJECT_ROOT`, and for materialization and submission also
+`EXASERVE_PROJECT_ACCOUNT` and `EXASERVE_ENV_SCRIPT_AURORA`, as in
+[getting started](docs/getting_started.md#configure-evaluation-environment-preparation);
+even `spec validate` needs the project root. Run from the repository root:
+the eval tooling imports ExaServe from the checkout's `src/`.
+
 ```bash
+# In a shell kept for eval and ClientLab, not the one you use for
+# exaserve-serve-submit or the installed-wheel check:
+export PYTHONPATH="$PWD:$PWD/src"
 python3 -m eval.cli spec validate eval/specs/smoke_haproxy_1node.yaml
 python3 -m eval.cli run materialize eval/specs/smoke_haproxy_1node.yaml
 python3 -m eval.cli run submit-all smoke_haproxy_1node --run-group run0
@@ -259,7 +306,7 @@ For a portable Linux development environment, use the pinned uv version and
 the repository's locked tooling. No server/GPU extras are selected by default:
 
 ```bash
-python3 -m pip install uv==0.10.1
+python3 -m pip install uv==0.13.4
 make install-dev
 make lock-check
 make lint
@@ -267,16 +314,29 @@ make format-check
 make type-check
 ```
 
-The uv resolution envelope is Linux with Python 3.10–3.13 because the existing
-optional vLLM version excludes Python 3.14. CI tests the portable core on Python
-3.12, matching the current Aurora Python 3.12.12 runtime. The published core
-minimum remains 3.10, but older interpreters are outside the current CI scope.
+The uv resolution envelope is Linux with Python 3.11–3.13: the existing
+optional vLLM version excludes Python 3.14, and Pillow 13.0.0, the first release
+without its known advisories, requires Python 3.11. CI tests the portable core
+on Python 3.12, matching the current Aurora Python 3.12.12 runtime. The
+published core minimum remains 3.10, but Python 3.10 is outside the lock and
+the current CI scope.
 This is not a claim that a GPU stack or every interpreter is qualified.
 `requirements/aurora-frameworks-2025.3.1.lock` remains the separate
 site runtime record. Do not use `uv sync --all-extras` to replace the Aurora
 frameworks environment.
 
-On Aurora, load `frameworks` and `go` before brief static checks. Full test
+On Aurora, load the stack in
+[Prepare the runtime](docs/getting_started.md#prepare-the-runtime), which
+includes `go`, before brief static checks. That stack puts its own uv 0.10.1
+first on `PATH`, which this project refuses, so install the pinned uv for your
+user and pass it to make:
+
+```bash
+python3 -m pip install --user uv==0.13.4
+make UV="$(python3 -m site --user-base)/bin/uv" install-dev lint format-check type-check
+```
+
+Use the same `UV=` for `make test`, `test-cov` and `build`. Full test
 suites, package builds, MPI and GPU work require a validated compute session
 and fresh [environment setup](docs/getting_started.md#aurora-development-and-serving). Once in that session
 (or on a suitable non-HPC development machine), use:
@@ -330,7 +390,7 @@ Repository infrastructure and community guidance draw on
 [AI-ModCon/BaseTemplate](https://github.com/AI-ModCon/BaseTemplate).
 We acknowledge the U.S. Department of Energy's Genesis Mission support for
 the ModCon Base collaboration. This statement does not assert a project-specific
-award or a completed repository transfer.
+award.
 
 ## License
 

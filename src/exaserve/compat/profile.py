@@ -29,6 +29,10 @@ _SHA256 = re.compile(r"^[0-9a-f]{64}$")
 # and head-side receipt validator cannot silently derive different required
 # patch sets for the same logical engine slot.
 PP_PATCH_GATE = "EXASERVE_VLLM_PATCH_PP_LAYER_FILTER"
+# What the PP patches do when a layer name has no exact or canonical match:
+# "fail" (production plans) or "record" (validation plans). The patch module
+# spells the same name literally because it must import nothing from exaserve.
+PP_LAYER_FALLBACK_POLICY = "EXASERVE_VLLM_PP_LAYER_FALLBACK"
 RAY_WORKER_PATCH_GATE = "EXASERVE_VLLM_PATCH_RAY_WORKERS"
 MULTIPROC_WORKER_PATCH_GATE = "EXASERVE_VLLM_PATCH_MULTIPROC_WORKERS"
 

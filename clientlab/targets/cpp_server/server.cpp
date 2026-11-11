@@ -409,6 +409,11 @@ void WorkerReactor::handle_readable(ConnectionState& conn) {
         // Try to parse headers.
         size_t header_end_offset = 0;
         if (parse_headers(conn.read_buf, conn.read_len, conn.req, header_end_offset)) {
+            if (conn.req.malformed) {
+                // Unusable Content-Length or Transfer-Encoding: the body boundary is unknown.
+                close_connection(conn);
+                return;
+            }
             // Headers complete. Check for body.
             if (conn.req.content_length > 0) {
                 size_t body_already = conn.read_len - header_end_offset;

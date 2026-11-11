@@ -21,12 +21,13 @@ run_logs/
 # hardening run artifacts (raw logs/binaries/staged copies); results are
 # recorded in docs/hardening/ instead (plan §8).
 artifacts/
-tools/bcast
 tools/*.o
 tmp/
 site_config_local.py
 eval/site_config_local.py
 codex_hooks/
+# local AI-assistant settings
+.codex
 # wheel/sdist build artifacts
 build/
 build.bak.*/

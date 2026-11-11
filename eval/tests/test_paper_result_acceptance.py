@@ -222,13 +222,7 @@ def _write_legacy_pp_cell(
     plan_path = cell / "run.yaml"
     plan_path.write_text(yaml.safe_dump(plan, sort_keys=False), encoding="utf-8")
     pbs_job_id = 8_000_000 + nodes
-    stdout_path = (
-        cell
-        / "logs"
-        / "pbs"
-        / "stdout"
-        / f"{pbs_job_id}.aurora-pbs-0001.hostmgmt.cm.aurora.alcf.anl.gov.OU"
-    )
+    stdout_path = cell / "logs" / "pbs" / "stdout" / f"{pbs_job_id}.pbs-server.example.OU"
     stdout_path.parent.mkdir(parents=True)
     allocated_nodes = nodes if allocated_nodes is None else allocated_nodes
     subset_method = (
@@ -246,7 +240,7 @@ def _write_legacy_pp_cell(
         stdout_lines.extend(
             [
                 header,
-                f"{allocated_nodes:5d} /var/spool/pbs/aux/{pbs_job_id}.aurora-pbs-0001.hostmgmt.cm.aurora.alcf.anl.gov",
+                f"{allocated_nodes:5d} /var/spool/pbs/aux/{pbs_job_id}.pbs-server.example",
                 f"{nodes:5d} {cell / f'nodefile_{nodes}.txt'}",
                 f"{allocated_nodes + nodes:5d} total",
             ]
@@ -279,7 +273,6 @@ def _write_legacy_pp_cell(
         result_sha256=hashlib.sha256(result_path.read_bytes()).hexdigest(),
         run_yaml_sha256=hashlib.sha256(plan_path.read_bytes()).hexdigest(),
         source_commit=source_commit,
-        pbs_job_id=pbs_job_id,
         stdout_sha256=hashlib.sha256(stdout_path.read_bytes()).hexdigest(),
         errors_by_run=errors,
         expected_successful_rps=sum(
@@ -440,7 +433,7 @@ def test_legacy_pp_reader_uses_exact_refs_and_keeps_declared_errors(tmp_path):
 @pytest.mark.parametrize("mutation", ["missing", "duplicate"])
 def test_legacy_pp_reader_requires_the_exact_seven_node_ladder(mutation):
     from eval.lib import pp405b_evidence as evidence
-    from eval.plot import sc26_full_figures as figures
+    from eval.plot import arxiv_submission_full_figures as figures
 
     refs = figures._pp405b_variants()[0].legacy_refs
     if mutation == "missing":
@@ -470,9 +463,31 @@ def test_legacy_pp_json_is_hashed_before_strict_parsing(tmp_path):
             evidence._load_sha_bound_json(artifact, digest, label="test result")
 
 
+def test_legacy_pp_stdout_is_selected_by_its_pinned_hash(tmp_path):
+    from eval.lib import pp405b_evidence as evidence
+
+    stdout_dir = tmp_path / "stdout"
+    stdout_dir.mkdir()
+    pinned = hashlib.sha256(b"producing run\n").hexdigest()
+    with pytest.raises(RuntimeError, match="with the pinned SHA-256, found 0"):
+        evidence._legacy_stdout(stdout_dir, pinned)
+    # A cell can retain several PBS stdout files from resubmissions.
+    (stdout_dir / "1234567.pbs-server.example.OU").write_bytes(b"earlier attempt\n")
+    (stdout_dir / "1234568.pbs-server.example.OU").write_bytes(b"producing run\n")
+    (stdout_dir / "notes.txt").write_bytes(b"producing run\n")
+    path, payload = evidence._legacy_stdout(stdout_dir, pinned)
+    assert path.name == "1234568.pbs-server.example.OU"
+    assert payload == b"producing run\n"
+    with pytest.raises(RuntimeError, match="found 0"):
+        evidence._legacy_stdout(stdout_dir, hashlib.sha256(b"missing\n").hexdigest())
+    (stdout_dir / "1234569.pbs-server.example.OU").write_bytes(b"producing run\n")
+    with pytest.raises(RuntimeError, match="found 2"):
+        evidence._legacy_stdout(stdout_dir, pinned)
+
+
 def test_legacy_pp_yaml_errors_are_normalized(tmp_path):
     from eval.lib import pp405b_evidence as evidence
-    from eval.plot import sc26_full_figures as figures
+    from eval.plot import arxiv_submission_full_figures as figures
 
     duplicate = tmp_path / "duplicate.yaml"
     duplicate.write_text("schema_version: 1\nschema_version: 2\n", encoding="utf-8")
@@ -485,14 +500,14 @@ def test_legacy_pp_yaml_errors_are_normalized(tmp_path):
 
     obsolete = tmp_path / "v1.yaml"
     current = figures.PP405B_LEGACY_LEDGER_PATH.read_text(encoding="utf-8")
-    obsolete.write_text(current.replace("schema_version: 2", "schema_version: 1", 1))
-    with pytest.raises(RuntimeError, match="schema_version.*expected 2"):
+    obsolete.write_text(current.replace("schema_version: 3", "schema_version: 2", 1))
+    with pytest.raises(RuntimeError, match="schema_version.*expected 3"):
         evidence.load_legacy_pp405b_ledger(obsolete)
 
 
 def test_legacy_pp_plan_binds_source_run_and_serving_semantics():
     from eval.lib import pp405b_evidence as evidence
-    from eval.plot import sc26_full_figures as figures
+    from eval.plot import arxiv_submission_full_figures as figures
 
     series = figures._pp405b_variants()[0]
     ref = series.legacy_refs[0]
@@ -543,7 +558,7 @@ def test_legacy_pp_plan_binds_source_run_and_serving_semantics():
 
 def test_legacy_haproxy_plan_binds_worker_and_balance_contract():
     from eval.lib import pp405b_evidence as evidence
-    from eval.plot import sc26_full_figures as figures
+    from eval.plot import arxiv_submission_full_figures as figures
 
     series = figures._pp405b_variants()[1]
     ref = series.legacy_refs[0]
@@ -596,7 +611,7 @@ def test_legacy_pp_stdout_rejects_tamper_and_allocation_mismatch(tmp_path, line_
     series = _legacy_pp_series(tmp_path, evidence)
     ref = series.legacy_refs[0]
     cell = tmp_path / series.stem / ref.run_group_id / ref.run_id
-    stdout_path = cell / "logs" / "pbs" / "stdout" / ref.stdout_name
+    stdout_path, _ = evidence._legacy_stdout(cell / "logs" / "pbs" / "stdout", ref.stdout_sha256)
     lines = stdout_path.read_text(encoding="utf-8").splitlines()
     lines[line_index] = replacement
     payload = ("\n".join(lines) + "\n").encode()
@@ -615,7 +630,7 @@ def test_legacy_pp_stdout_requires_typed_subset_only_when_declared(tmp_path):
     series = _legacy_pp_series(tmp_path, evidence)
     ref = series.legacy_refs[4]
     cell = tmp_path / series.stem / ref.run_group_id / ref.run_id
-    stdout_path = cell / "logs" / "pbs" / "stdout" / ref.stdout_name
+    stdout_path, _ = evidence._legacy_stdout(cell / "logs" / "pbs" / "stdout", ref.stdout_sha256)
     payload = stdout_path.read_bytes()
     evidence._validate_producing_stdout(
         payload,
@@ -651,7 +666,7 @@ def test_legacy_pp_stdout_accepts_and_binds_prod256_subset(tmp_path):
         evidence_marker=evidence.AllocationEvidenceMarker.PROD256,
     )
     cell = tmp_path / "legacy_proxy" / "run5" / "n128"
-    stdout_path = cell / "logs" / "pbs" / "stdout" / ref.stdout_name
+    stdout_path, _ = evidence._legacy_stdout(cell / "logs" / "pbs" / "stdout", ref.stdout_sha256)
     payload = stdout_path.read_bytes()
     evidence._validate_producing_stdout(
         payload,
@@ -679,7 +694,7 @@ def test_legacy_pp_stdout_requires_exact_disjoint_stage_and_replica_placement(tm
     series = _legacy_pp_series(tmp_path, evidence)
     ref = series.legacy_refs[0]
     cell = tmp_path / series.stem / ref.run_group_id / ref.run_id
-    stdout_path = cell / "logs" / "pbs" / "stdout" / ref.stdout_name
+    stdout_path, _ = evidence._legacy_stdout(cell / "logs" / "pbs" / "stdout", ref.stdout_sha256)
     lines = stdout_path.read_text(encoding="utf-8").splitlines()
 
     duplicate_stage = list(lines)
@@ -722,7 +737,7 @@ def test_legacy_pp_loader_rejects_stdout_byte_tamper(tmp_path):
     series = _legacy_pp_series(tmp_path, evidence)
     ref = series.legacy_refs[0]
     cell = tmp_path / series.stem / ref.run_group_id / ref.run_id
-    stdout_path = cell / "logs" / "pbs" / "stdout" / ref.stdout_name
+    stdout_path, _ = evidence._legacy_stdout(cell / "logs" / "pbs" / "stdout", ref.stdout_sha256)
     stdout_path.write_text(stdout_path.read_text(encoding="utf-8") + "tamper\n", encoding="utf-8")
     with pytest.raises(RuntimeError, match="PBS stdout SHA-256 mismatch"):
         evidence.load_pp405b_points(series, runs_root=tmp_path)
@@ -730,7 +745,7 @@ def test_legacy_pp_loader_rejects_stdout_byte_tamper(tmp_path):
 
 def test_legacy_pp_accounting_accepts_only_the_declared_nonzero_errors():
     from eval.lib import pp405b_evidence as evidence
-    from eval.plot import sc26_full_figures as figures
+    from eval.plot import arxiv_submission_full_figures as figures
 
     base = figures._pp405b_variants()[1].legacy_refs[4]
     ref = replace(
@@ -774,7 +789,7 @@ def test_legacy_pp_accounting_accepts_only_the_declared_nonzero_errors():
 
 def test_pp_loader_dispatch_rejects_unknown_kinds(tmp_path):
     from eval.lib import pp405b_evidence as evidence
-    from eval.plot import sc26_full_figures as figures
+    from eval.plot import arxiv_submission_full_figures as figures
 
     legacy = figures._pp405b_variants()[0]
     with pytest.raises(ValueError, match="unsupported PP=2 loader kind"):
@@ -783,7 +798,7 @@ def test_pp_loader_dispatch_rejects_unknown_kinds(tmp_path):
 
 def test_current_pp_reader_rejects_a_truncated_node_ladder(tmp_path):
     from eval.lib import pp405b_evidence as evidence
-    from eval.plot import sc26_full_figures as figures
+    from eval.plot import arxiv_submission_full_figures as figures
 
     series = evidence.PP405BSeries.current(
         stem="pp405b_pp2_haproxy_nostream_v040",
@@ -799,7 +814,7 @@ def test_current_pp_reader_rejects_a_truncated_node_ladder(tmp_path):
 def test_current_pp_loader_succeeds_through_the_manifest_path(tmp_path, monkeypatch):
     from eval.lib import pp405b_evidence as evidence
     from eval.lib import paper_acceptance
-    from eval.plot import sc26_full_figures as figures
+    from eval.plot import arxiv_submission_full_figures as figures
     from exaserve.state.results import ResultEntry
 
     series = figures._pp405b_variants()[2]
@@ -846,7 +861,7 @@ def test_current_pp_loader_succeeds_through_the_manifest_path(tmp_path, monkeypa
 
 def test_current_pp_plan_accepts_only_the_reviewed_node_to_source_mapping():
     from eval.lib import pp405b_evidence as evidence
-    from eval.plot import sc26_full_figures as figures
+    from eval.plot import arxiv_submission_full_figures as figures
 
     series = figures._pp405b_variants()[2]
     for ref in series.current_refs:
@@ -917,7 +932,7 @@ def test_current_pp_plan_accepts_only_the_reviewed_node_to_source_mapping():
 )
 def test_current_pp_plan_rejects_semantic_drift(path, value, field):
     from eval.lib import pp405b_evidence as evidence
-    from eval.plot import sc26_full_figures as figures
+    from eval.plot import arxiv_submission_full_figures as figures
 
     series = figures._pp405b_variants()[2]
     ref = series.current_refs[0]
@@ -936,7 +951,7 @@ def test_current_pp_plan_rejects_semantic_drift(path, value, field):
 )
 def test_current_pp_plan_rejects_any_unreviewed_source(nodes, replacement, field):
     from eval.lib import pp405b_evidence as evidence
-    from eval.plot import sc26_full_figures as figures
+    from eval.plot import arxiv_submission_full_figures as figures
 
     series = figures._pp405b_variants()[2]
     ref = next(item for item in series.current_refs if item.nodes == nodes)
@@ -952,7 +967,7 @@ def test_current_pp_plan_rejects_any_unreviewed_source(nodes, replacement, field
 )
 def test_current_pp_plan_rejects_wrong_materialization_identity_scheme(nodes, replacement):
     from eval.lib import pp405b_evidence as evidence
-    from eval.plot import sc26_full_figures as figures
+    from eval.plot import arxiv_submission_full_figures as figures
 
     series = figures._pp405b_variants()[2]
     ref = next(item for item in series.current_refs if item.nodes == nodes)
@@ -965,7 +980,7 @@ def test_current_pp_plan_rejects_wrong_materialization_identity_scheme(nodes, re
 @pytest.mark.parametrize("nodes", [4, 32])
 def test_current_pp_plan_rejects_unreviewed_semantic_hash(nodes):
     from eval.lib import pp405b_evidence as evidence
-    from eval.plot import sc26_full_figures as figures
+    from eval.plot import arxiv_submission_full_figures as figures
 
     series = figures._pp405b_variants()[2]
     ref = next(item for item in series.current_refs if item.nodes == nodes)

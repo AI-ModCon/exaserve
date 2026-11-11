@@ -1,6 +1,6 @@
 """405B shard-aware pipeline-parallel weak-scaling figure.
 
-Companion to sc26_full_figures.py but for a DIFFERENT experiment: Llama-3.1-405B
+Companion to arxiv_submission_full_figures.py but for a DIFFERENT experiment: Llama-3.1-405B
 served TP=8 x PP=2, one replica per 2 nodes, HAProxy round-robin across replicas,
 offered load held at a fixed rate PER REPLICA (weak scaling). The scaling unit is
 the REPLICA (= one PP=2 group = 2 nodes), so the x-axis is #replicas.
@@ -20,9 +20,9 @@ from pathlib import Path
 import numpy as np
 
 import plotstyle as ps
-from eval.site_config import get_runs_root
+from eval.site_config import get_paper_suite_root
 
-RUNS_ROOT = get_runs_root() / "sc26workshop/full/pp405b_pp2_scale"
+RUNS_ROOT = get_paper_suite_root() / "full/pp405b_pp2_scale"
 OUT = Path(__file__).resolve().parent / "output" / "pp_scaling"
 PP = 2  # nodes per replica
 

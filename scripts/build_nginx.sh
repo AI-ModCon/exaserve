@@ -5,7 +5,11 @@
 # mode need to build it once. The validated runtime PATH must include $HOME/bin.
 #
 # Usage: NGINX_SOURCE_SHA256=<sha256> bash scripts/build_nginx.sh [version]
-#   version defaults to 1.27.3 (mainline at time of writing).
+#   version defaults to 1.27.3, the mainline release when this helper was
+#   written. That release is no longer supported and is affected by published
+#   nginx security advisories; build a current stable release before any use
+#   beyond trusted benchmarks. NGINX is a validation and benchmark gateway only
+#   (see scripts/hardening/README.md).
 
 set -euo pipefail
 

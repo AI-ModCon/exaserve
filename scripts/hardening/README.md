@@ -18,8 +18,18 @@ The other repository shell files under `scripts/` are opt-in dependency
 build/install helpers for HAProxy, NGINX, Pingora, and Envoy. They never run on
 the deployment path. Downloading helpers require an operator-supplied audited
 SHA-256 and fail closed if it is missing or mismatched. The Pingora helper does
-not bootstrap Rust and refuses to build without a committed lockfile. HAProxy
-is the production gateway target; the other gateways remain
+not bootstrap Rust and refuses to build without a committed lockfile; its
+declared `pingora` 0.5 range resolves to a release with published HTTP/2 and
+request-smuggling advisories (fixed in 0.6 and 0.8), so raise, build and lock it
+before any use beyond trusted benchmarks. The HAProxy helper defaults to 3.1.6,
+the version the recorded runs used; the 3.1 branch is end of life (last release
+3.1.17), and 3.1.6 is affected by CVE-2025-32464 and by later advisories fixed in
+subsequent 3.1 releases (for example CVE-2025-11230, fixed in 3.1.9), so build a
+supported release for new deployments and re-run the HAProxy validation cells.
+The NGINX (1.27.3) and Envoy (v1.32.3) helper defaults are also out of support
+and affected by published advisories; build or install current releases before
+any use beyond trusted benchmarks. HAProxy
+is the reference gateway target; the other gateways remain
 validation/benchmark-only unless the support matrix is amended and their
 qualification gates pass.
 

@@ -15,6 +15,7 @@ import json
 import os
 import re
 import secrets
+import shlex
 import sys
 import time
 from datetime import datetime, timezone
@@ -29,6 +30,7 @@ from .schedulers import (
     SubmissionRejected,
     default_queue_and_walltime,
     get_scheduler,
+    queue_walltime_violation,
 )
 from .state.atomic import (
     ExclusiveLease,
@@ -48,12 +50,56 @@ _ACTIVE_OR_UNCERTAIN = {
     SchedulerState.UNKNOWN,
 }
 
-# ``bootstrap_script`` is JobSpec's sole deliberate site-admin shell seam.
-_DEFAULT_ENV_SETUP = """if [ -f "$HOME/script/env_aurora" ]; then
-    source "$HOME/script/env_aurora"
-else
-    module load frameworks
-fi"""
+
+def _default_env_setup() -> str:
+    """Return the job's site preparation, JobSpec's sole raw shell seam.
+
+    ``EXASERVE_ENV_SCRIPT_AURORA`` names the site environment script that the
+    job sources, as for evaluation runs. It is resolved at submission, so the
+    job does not depend on the submitter's shell. It has no default: the site's
+    unversioned frameworks module is not the profiled stack.
+    """
+    configured = os.environ.get("EXASERVE_ENV_SCRIPT_AURORA", "").strip()
+    if not configured:
+        raise ValueError(
+            "EXASERVE_ENV_SCRIPT_AURORA is not set; set it to the absolute path of the site "
+            "environment script that the job sources (see 'Prepare the runtime' in "
+            "docs/getting_started.md)"
+        )
+    script = Path(configured).expanduser()
+    if not script.is_absolute():
+        raise ValueError(f"EXASERVE_ENV_SCRIPT_AURORA must be an absolute path, got {configured!r}")
+    if not script.is_file():
+        raise ValueError(
+            f"EXASERVE_ENV_SCRIPT_AURORA names {str(script)!r}, which is not an existing file"
+        )
+    return f"source {shlex.quote(str(script))}"
+
+
+def _require_current_bootstrap(
+    job_script_path: str, bootstrap_script: str, *, intent_path: Path
+) -> None:
+    """Refuse to reuse a prepared job that runs another site preparation.
+
+    The bootstrap is not part of the submission intent identity, so a retry
+    after EXASERVE_ENV_SCRIPT_AURORA changed would otherwise submit the stored
+    job script, which still sources the old environment script.
+    """
+    from .state.atomic import regular_file_reader
+
+    try:
+        with regular_file_reader(job_script_path) as handle:
+            lines = handle.read().splitlines()
+    except (OSError, ValueError) as exc:
+        raise RuntimeError(f"prepared job script {job_script_path} is unreadable: {exc}") from exc
+    if bootstrap_script in lines:
+        return
+    stored = " and ".join(repr(line) for line in lines if line.startswith(("source ", "module ")))
+    raise RuntimeError(
+        f"prepared job script {job_script_path} runs {stored or 'another site preparation'}, "
+        f"not {bootstrap_script!r} from the current EXASERVE_ENV_SCRIPT_AURORA; use a fresh "
+        f"--log-dir, or remove the intent record {intent_path} to prepare a new job"
+    )
 
 
 def _private_directory(path: Path) -> Path:
@@ -228,6 +274,7 @@ def _new_prepared_submission(
     project_account: str,
     job_name: Optional[str],
     intent_id: str,
+    bootstrap_script: str,
 ) -> tuple[dict, str]:
     """Persist canonical artifacts and render one exact scheduler job."""
     label = re.sub(r"[^A-Za-z0-9]", "", job_name or "es")[:2] or "es"
@@ -262,7 +309,7 @@ def _new_prepared_submission(
         cwd=cfg_path.parent,
         environment=environment,
         environment_unset=tuple(site_profile.environment_unset),
-        bootstrap_script=_DEFAULT_ENV_SETUP,
+        bootstrap_script=bootstrap_script,
         num_nodes=plan.num_nodes,
         walltime=walltime,
         account=project_account,
@@ -335,6 +382,13 @@ def submit_serve(
     resolved_queue = queue or defaults.queue or topology_queue
     resolved_walltime = walltime or defaults.walltime or topology_walltime
     resolved_account = project_account or defaults.project_account
+    if not resolved_account:
+        raise ValueError(
+            "no PBS allocation account: pass --project-account or set EXASERVE_PROJECT_ACCOUNT"
+        )
+    # Resolved before any directory or file is written, so a bad value leaves
+    # no partial submission behind.
+    bootstrap_script = _default_env_setup()
     scheduler = get_scheduler()
     if scheduler.name not in site_profile.scheduler_types:
         raise ValueError(
@@ -342,6 +396,9 @@ def submit_serve(
             f"{site_profile.site_id!r}; supported schedulers: "
             f"{', '.join(site_profile.scheduler_types) or 'none'}"
         )
+    violation = queue_walltime_violation(scheduler.name, resolved_queue, resolved_walltime)
+    if violation is not None:
+        raise ValueError(violation)
     from .site import require_execution_qualification
 
     require_execution_qualification(topology_plan, site_profile)
@@ -406,6 +463,9 @@ def submit_serve(
                     "proof that the prior request was never accepted"
                 )
             if existing["phase"] in {"PREPARED", "REJECTED"}:
+                _require_current_bootstrap(
+                    existing["job_script_path"], bootstrap_script, intent_path=intent_path
+                )
                 prepared = dict(existing)
                 prepared.update(phase="PREPARED", job_id="", submitted_at="")
                 job_script_path = str(existing["job_script_path"])
@@ -423,6 +483,7 @@ def submit_serve(
                 project_account=resolved_account,
                 job_name=job_name,
                 intent_id=intent_id,
+                bootstrap_script=bootstrap_script,
             )
         if dry_run:
             sys.stderr.write(

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import re
 import time
 
 import pytest
@@ -81,17 +82,25 @@ def test_runtime_and_generic_examples_do_not_embed_a_developer_account():
         *sorted((root / "examples").glob("*.yaml")),
         root / "clientlab/README.md",
     ]
-    forbidden = (
-        "/home/wenyiw",
-        "/lus/flare/projects/AuroraGPT/wenyiw",
-        "/tmp/claude-",
+    # Any concrete account under a home or project directory is a developer's
+    # path; generic examples may only use the documented placeholders.
+    account_path = re.compile(
+        r"/home/(?P<home_user>[A-Za-z0-9_.$<>{}-]+)"
+        r"|/lus/[a-z]+/projects/[A-Za-z0-9_.$<>{}-]+/(?P<project_user>[A-Za-z0-9_.$<>{}-]+)"
     )
-    offenders = {
-        str(path.relative_to(root)): token
-        for path in paths
-        for token in forbidden
-        if token in path.read_text(encoding="utf-8")
-    }
+    placeholders = {"YOUR_USER", "<user>", "$USER", "${USER}"}
+    offenders = {}
+    for path in paths:
+        text = path.read_text(encoding="utf-8")
+        tokens = [
+            match.group(0)
+            for match in account_path.finditer(text)
+            if (match.group("home_user") or match.group("project_user")) not in placeholders
+        ]
+        if "/tmp/claude-" in text:
+            tokens.append("/tmp/claude-")
+        if tokens:
+            offenders[str(path.relative_to(root))] = tokens
     assert offenders == {}
 
 
@@ -137,11 +146,21 @@ def test_status_revision_cas_rejects_aba_stale_writer(tmp_path):
         (DeploymentState.DEPLOYING, DeploymentState.VALIDATING),
         (DeploymentState.VALIDATING, DeploymentState.READY),
     ):
-        store.transition(a, b, reason_code="step")
+        store.transition(a, b, reason_code="step", expected_revision=store.load().revision)
     stale_revision = store.load().revision  # writer's view of READY
     # The record cycles READY -> VALIDATING -> READY behind that writer's back.
-    store.transition(DeploymentState.READY, DeploymentState.VALIDATING, reason_code="loss")
-    store.transition(DeploymentState.VALIDATING, DeploymentState.READY, reason_code="recovered")
+    store.transition(
+        DeploymentState.READY,
+        DeploymentState.VALIDATING,
+        reason_code="loss",
+        expected_revision=stale_revision,
+    )
+    store.transition(
+        DeploymentState.VALIDATING,
+        DeploymentState.READY,
+        reason_code="recovered",
+        expected_revision=stale_revision + 1,
+    )
     with pytest.raises(StatusConflict, match="ABA|revision"):
         store.transition(
             DeploymentState.READY,

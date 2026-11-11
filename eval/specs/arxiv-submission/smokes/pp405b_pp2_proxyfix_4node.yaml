@@ -1,0 +1,80 @@
+name: pp405b_pp2_proxyfix_4node
+# Validation of the HAProxy shard-aware health-check fix
+# (/-/healthz instead of /<route>_r0/health). 405B PP=2 x 2 replicas on 4 nodes,
+# dest=proxy (HAProxy). PASS = HAProxy log shows the health check target is
+# /-/healthz and servers stay UP (Layer7 check passed, ZERO "Layer7 timeout" /
+# "is DOWN" / "no server available" events), and the replay completes with ~0
+# errors. This confirms /-/healthz is the right endpoint and the r0-funnel is
+# gone; the at-scale flapping cure follows from removing the funnel.
+matrix:
+  name_template: 'n{num_nodes}'
+  axes:
+  - name: num_nodes
+    values: [4, 8, 64, 128, 256]   # scale the proxy-fix check up toward where the r0 funnel broke (256)
+    targets: [deployment.num_nodes, scheduler.nodes]
+    label_template: '{value}_nodes'
+  derived:
+  - path: deployment.models.0.num_replicas
+    expr: 'num_nodes // 2'
+  - path: client.num_nodes
+    expr: 'min(num_nodes, 4)'
+  # A cold run needs 60-75 min (head-side model verification plus staging alone
+  # take about 47 min), so cells below 256 nodes request 2 h and 256 nodes 4 h.
+  # Aurora's debug-scaling queue allows at most 1 h, so submit and submit-all
+  # refuse the 17-255-node cells before contacting the scheduler instead of
+  # letting them be killed after staging. Aurora's public queues give 17-255
+  # nodes one hour at most, and the allocation campaign takes none of these
+  # cells (it needs two non-streaming runs with clean_stage), so change the
+  # scheduler.queue expression below to a reservation queue to run them.
+  - path: scheduler.queue
+    expr: '"capacity" if num_nodes <= 16 else ("prod" if num_nodes >= 256 else "debug-scaling")'
+  - path: scheduler.walltime
+    expr: '"04:00:00" if num_nodes >= 256 else "02:00:00"'
+trace:
+  kind: weak_scaling
+workload:
+  duration: 120.0
+  input_len: 64
+  output_len: 64
+  rate_per_node: 0.2
+  arrival: fixed
+  generation_mode: deterministic
+deployment:
+  validation_mode: true
+  num_nodes: 4
+  model_storage_path: /lus/flare/projects/YOUR_PROJECT/YOUR_USER/models
+  local_stage_path: /tmp/pp405b_shard
+  models:
+  - model_id: meta-llama/Llama-3.1-405B-Instruct
+    tensor_parallel_size: 8
+    pipeline_parallel_size: 2
+    num_replicas: 2
+    max_model_len: 4096
+    size: 405
+    gpu_memory_utilization: 0.90
+    enforce_eager: true
+    max_num_seqs: 8
+  replica_max_ongoing_requests: 16
+client:
+  num_runs: 2
+  dest: proxy                 # <-- exercise HAProxy (with the fixed health check)
+  stream: true
+  num_go_procs: 4
+  num_go_workers: 4
+  go_concurrency: 256
+backend:
+  default: ray
+  args:
+    ray:
+      launch:
+        ray_node_cpus: 64
+      proxy:
+        type: haproxy
+        port: 4001
+        backend_port: 8000
+        num_workers: 1
+        options:
+          balance: leastconn
+          maxconn: 8000
+scheduler:
+  type: pbs

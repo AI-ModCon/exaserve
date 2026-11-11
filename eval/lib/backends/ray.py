@@ -8,9 +8,10 @@ Key responsibilities:
     already-compiled RunPlan and its exact DeploymentPlan/trace artifacts.
   - launch: starts the Python composition root as a child process group; diagnostics are
     tailed while readiness is read only from canonical DeploymentStatus.
-  - runtime_env: selects the shell env used for the Ray/vLLM stack and sets
-    launcher exports such as EXASERVE_NULL_COMPUTE. Compiled plan artifacts are
-    the runtime source of truth; this adapter does not reinterpret them.
+  - runtime_env: selects the site environment script that the job script
+    sources; it is resolved at materialization, so launching reads no site
+    configuration. Compiled plan artifacts are the runtime source of truth;
+    this adapter does not reinterpret them.
 """
 
 from __future__ import annotations
@@ -22,7 +23,7 @@ import sys
 import time
 from dataclasses import asdict
 
-from eval.site_config import get_site_config
+from eval.site_config import get_site_config, site_config_environment_names
 from exaserve.exception_notes import add_exception_note
 
 from ..manifest import (
@@ -70,11 +71,14 @@ def _sanitize_pythonpath(value: str) -> str:
 
 
 def _sanitize_launch_env(env: dict[str, str]) -> dict[str, str]:
+    # Site configuration is read on the head when runs are planned. Its values
+    # are shared-storage paths, which the composition root refuses to pass on.
+    site_configuration = site_config_environment_names()
     clean_env: dict[str, str] = {}
     for key, value in env.items():
         if key.startswith("BASH_FUNC_"):
             continue
-        if key in _DROP_ENV_KEYS:
+        if key in _DROP_ENV_KEYS or key in site_configuration:
             continue
         clean_env[key] = value
 
@@ -170,19 +174,29 @@ class RayBackendAdapter(BackendAdapter):
         env_script = launch_settings.get("env_script", "")
         if not isinstance(env_script, str):
             raise ValueError("backend.args.ray.launch.env_script must be text")
+        source = "backend.args.ray.launch.env_script"
         env_script = env_script.strip()
         if not env_script:
-            cfg = get_site_config()
-            env_script = cfg.env_script_aurora
+            source = "EXASERVE_ENV_SCRIPT_AURORA (or env_script_aurora in the local overrides)"
+            env_script = get_site_config().env_script_aurora
+        if env_script:
+            # The job sources the script, shell-quoted, after it changes into the
+            # run's source snapshot: a quoted '~' stays literal and a relative
+            # path names a file there. Expand '~' here and refuse a relative
+            # path now, not after the job has waited in the queue.
+            configured = env_script
+            env_script = os.path.expanduser(env_script)
+            if not os.path.isabs(env_script):
+                raise ValueError(f"{source} must be an absolute path, got {configured!r}")
         # Plan semantics are projected by exaserve.plan.runtime_environment in
         # the launcher. The eval adapter contributes no competing ambient flags.
-        return RuntimeEnvSpec(env_script=env_script, exports={})
+        return RuntimeEnvSpec(env_script=env_script)
 
     def launch(self, run_ctx: BackendRunContext) -> LaunchedBackend:
         run_plan = run_ctx.run_plan
+        # The job script already sources the environment script chosen at
+        # materialization, so a batch job needs no site configuration to launch.
         env = _sanitize_launch_env(os.environ.copy())
-        runtime_env = self.runtime_env(run_plan)
-        env.update(runtime_env.exports)
         # PYTHONPATH must include both the repo root (so 'from eval.X' resolves)
         # and repo_root/src (so 'from exaserve.X' resolves).
         env["PYTHONPATH"] = (

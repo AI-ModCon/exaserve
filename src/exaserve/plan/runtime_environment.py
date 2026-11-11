@@ -123,6 +123,7 @@ _AMBIENT_ALLOWED_KEYS = {
     "EXASERVE_RUNTIME_OWNERSHIP_ROOT",
     "EXASERVE_MULTIPROC_SPAWN_LOCK",
     "EXASERVE_VLLM_PATCH_VERBOSE",
+    "EXASERVE_VLLM_PP_LAYER_FALLBACK",
     "EXASERVE_QUALIFIED_PYTHON",
     "EXASERVE_QUALIFIED_PYTHON_SHA256",
     "EXASERVE_QUALIFIED_PYTHON_SITE_PROFILE_HASH",
@@ -174,7 +175,34 @@ _AMBIENT_DISCARD_PREFIXES = (
     # extension point. In particular, Lmod exports ``module``/``ml`` this way.
     "BASH_FUNC_",
 )
-_AMBIENT_DISCARD_KEYS = {"LOADEDMODULES", "_LMFILES_"}
+_AMBIENT_DISCARD_KEYS = {
+    "LOADEDMODULES",
+    "_LMFILES_",
+    # ExaServe's own head-side configuration: read when plans are compiled and
+    # jobs are submitted, never by ranks or engines. Users export it in their
+    # shell profile, so batch jobs inherit it, and its values name shared
+    # storage; drop it rather than report it as a leak. The second group is the
+    # evaluation tooling's site configuration (eval/site_config.py), which this
+    # package cannot import; tests/test_runtime_environment.py keeps the two
+    # lists in step. EXASERVE_NUM_GPUS_PER_NODE is not here: ranks read it.
+    "EXASERVE_PROJECT_ROOT",
+    "EXASERVE_MODEL_STORAGE_PATH",
+    "EXASERVE_LOCAL_STAGE_PATH",
+    "EXASERVE_ENV_SCRIPT_AURORA",
+    "EXASERVE_SUBMISSION_REGISTRY",
+    "EXASERVE_SITE_CONFIG_LOCAL",
+    "EXASERVE_PAPER_SUITE_ROOT",
+    "EXASERVE_USER_DATA_ROOT",
+    "EXASERVE_INPUT_TRACE_PATH",
+    "EXASERVE_INPUT_PROMPT_PATH",
+    "EXASERVE_OUTPUT_TRACE_DIR",
+    "EXASERVE_EXPERIMENTS_ROOT",
+    "EXASERVE_LITELLM_PYTHON_PATH",
+    "EXASERVE_SNAPSHOT_DIR",
+    "EXASERVE_BENCH_RESULTS_DIR",
+    "EXASERVE_ENV_SCRIPT_LITELLM",
+    "EXASERVE_SGLANG_PYTHON_PATH",
+}
 _OVERWRITTEN_PATH_KEYS = {
     "PWD",
     "OLDPWD",
@@ -1186,6 +1214,7 @@ def runtime_environment(plan) -> dict[str, str]:
     from ..compat.generated_overlay import ROOT_ENV, overlay_root_for
     from ..compat.profile import (
         MULTIPROC_WORKER_PATCH_GATE,
+        PP_LAYER_FALLBACK_POLICY,
         PP_PATCH_GATE,
         RAY_WORKER_PATCH_GATE,
     )
@@ -1213,6 +1242,7 @@ def runtime_environment(plan) -> dict[str, str]:
         "EXASERVE_COMPAT_MANIFEST_HASH": plan.manifest_hash,
         "EXASERVE_COMPAT_DELIVERY": "generated-overlay",
         PP_PATCH_GATE: "1" if pp_enabled else "0",
+        PP_LAYER_FALLBACK_POLICY: "record" if plan.validation_mode else "fail",
         RAY_WORKER_PATCH_GATE: "1" if pp_enabled else "0",
         MULTIPROC_WORKER_PATCH_GATE: "1" if multiproc_enabled else "0",
         "EXASERVE_XPU_VLLM_DISABLE_RAY_COMPILED_DAG": (

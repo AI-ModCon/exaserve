@@ -11,12 +11,11 @@ policy derives both from the compiled deployment's node count.
 Layering is: explicit kwarg > env var > built-in default.
 
 Names:
-    EXASERVE_PROJECT_ACCOUNT       PBS allocation/account (default: "AuroraGPT")
+    EXASERVE_PROJECT_ACCOUNT       PBS allocation/account (no default; required to submit)
     EXASERVE_DEFAULT_QUEUE         optional PBS queue override
     EXASERVE_DEFAULT_WALLTIME      optional PBS walltime override (hh:mm:ss)
     EXASERVE_DEFAULT_FILESYSTEMS   PBS filesystem list   (default: "home:flare")
     EXASERVE_PBS_KEEP_FLAG         PBS -k value          (default: "doe")
-    EXASERVE_PROJECT_ROOT          Repo root for source-tree usage (default: cwd)
 """
 
 from __future__ import annotations
@@ -33,16 +32,14 @@ class SiteDefaults:
     walltime: Optional[str]
     filesystems: str
     keep_flag: str
-    project_root: str
 
 
 _DEFAULTS = SiteDefaults(
-    project_account="AuroraGPT",
+    project_account="",
     queue=None,
     walltime=None,
     filesystems="home:flare",
     keep_flag="doe",
-    project_root=".",
 )
 
 
@@ -51,10 +48,11 @@ def get_site_defaults() -> SiteDefaults:
     queue = os.environ.get("EXASERVE_DEFAULT_QUEUE", "").strip() or None
     walltime = os.environ.get("EXASERVE_DEFAULT_WALLTIME", "").strip() or None
     return SiteDefaults(
-        project_account=os.environ.get("EXASERVE_PROJECT_ACCOUNT", _DEFAULTS.project_account),
+        project_account=os.environ.get(
+            "EXASERVE_PROJECT_ACCOUNT", _DEFAULTS.project_account
+        ).strip(),
         queue=queue,
         walltime=walltime,
         filesystems=os.environ.get("EXASERVE_DEFAULT_FILESYSTEMS", _DEFAULTS.filesystems),
         keep_flag=os.environ.get("EXASERVE_PBS_KEEP_FLAG", _DEFAULTS.keep_flag),
-        project_root=os.environ.get("EXASERVE_PROJECT_ROOT", _DEFAULTS.project_root),
     )

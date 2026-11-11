@@ -7,8 +7,8 @@ ExperimentSpec dataclass. It performs three phases:
      defaults filling in any omitted paths (model storage, prompts, etc.).
   2. **Validation** — structural checks (required fields, value ranges,
      supported enum values) that catch user errors early.
-  3. **Normalization** — derived-field sync (e.g., client.num_nodes defaults
-     to deployment.num_nodes when not explicitly set).
+  3. **Normalization** — derived-field sync (e.g., an omitted client.num_nodes
+     follows ``default_client_nodes``).
 
 Design note: site_config is accessed lazily via get_site_config() rather
 than module-level constants so that tests and non-Aurora environments can
@@ -23,6 +23,7 @@ from dataclasses import replace
 from typing import Any
 
 from eval.site_config import get_site_config
+from exaserve.config import get_site_defaults
 
 from .models import (
     BackendSpec,
@@ -468,7 +469,9 @@ def load_experiment_spec(path: str) -> ExperimentSpec:
         include_tp=_boolean(client_raw.get("include_tp", False), "client.include_tp"),
         early_stop=_number(client_raw.get("early_stop", 0.0), "client.early_stop"),
         dest=_string(client_raw.get("dest", "proxy"), "client.dest"),
-        num_nodes=_integer(client_raw.get("num_nodes", deployment.num_nodes), "client.num_nodes"),
+        # 0 (or an omitted value) means "derive": see default_client_nodes().
+        num_nodes=_integer(client_raw.get("num_nodes", 0), "client.num_nodes"),
+        num_nodes_auto=client_raw.get("num_nodes", 0) == 0,
         num_go_procs=_integer(client_raw.get("num_go_procs", 1), "client.num_go_procs"),
         num_go_workers=_integer(client_raw.get("num_go_workers", 4), "client.num_go_workers"),
         go_concurrency=_integer(client_raw.get("go_concurrency", 0), "client.go_concurrency"),
@@ -531,7 +534,9 @@ def load_experiment_spec(path: str) -> ExperimentSpec:
         nodes=_integer(scheduler_raw.get("nodes", deployment.num_nodes), "scheduler.nodes"),
         queue=_string(scheduler_raw.get("queue", ""), "scheduler.queue"),
         walltime=_string(scheduler_raw.get("walltime", ""), "scheduler.walltime"),
-        project=_string(scheduler_raw.get("project", "AuroraGPT"), "scheduler.project"),
+        project=_string(
+            scheduler_raw.get("project", get_site_defaults().project_account), "scheduler.project"
+        ),
         filesystems=_string(
             scheduler_raw.get("filesystems", "home:flare"), "scheduler.filesystems"
         ),
@@ -556,8 +561,24 @@ def load_experiment_spec(path: str) -> ExperimentSpec:
     return normalize_experiment_spec(spec)
 
 
-# KI-C5: a bounded default for proxy runs (see normalize()).
+# KI-C5: a bounded default for proxy runs (see default_client_nodes()).
 DEFAULT_PROXY_CLIENT_NODES = 4
+
+
+def default_client_nodes(client: ClientSpec, deployment_nodes: int) -> int:
+    """Return the client rank count for a spec that leaves client.num_nodes unset.
+
+    KI-C5: one rank per node is right only for dest=direct, where it is exactly
+    what saturates the fleet. For dest=proxy it points every rank at a single
+    front proxy -- at 256 nodes, 256 client ranks on one process, which was
+    misread as a proxy throughput regression. Proxy runs therefore get a
+    bounded count, and saturation searches use one client node.
+    """
+    if client.saturation.enabled:
+        return 1
+    if client.dest == "proxy":
+        return min(deployment_nodes, DEFAULT_PROXY_CLIENT_NODES)
+    return deployment_nodes
 
 
 def normalize_experiment_spec(spec: ExperimentSpec) -> ExperimentSpec:
@@ -574,28 +595,25 @@ def normalize_experiment_spec(spec: ExperimentSpec) -> ExperimentSpec:
     normalized.backend = replace(
         spec.backend, args={key: dict(value) for key, value in spec.backend.args.items()}
     )
-    if normalized.client.num_nodes < 1:
-        # KI-C5: this default is only right for dest=direct, where one client
-        # rank per node is exactly what saturates the fleet. For dest=proxy it
-        # points EVERY rank at a single front proxy -- at 256 nodes that is 256
-        # client ranks on one process, which was misread as a proxy throughput
-        # regression until the harness was examined. Proxy runs get a bounded
-        # default and say so; set client.num_nodes explicitly to override.
-        if normalized.client.dest == "proxy":
-            normalized.client.num_nodes = min(
-                normalized.deployment.num_nodes, DEFAULT_PROXY_CLIENT_NODES
+    if normalized.client.num_nodes_auto or normalized.client.num_nodes < 1:
+        # Remember that the count is derived, so matrix expansion re-derives it
+        # for every variant instead of treating it as an explicit value.
+        normalized.client.num_nodes_auto = True
+        normalized.client.num_nodes = default_client_nodes(
+            normalized.client, normalized.deployment.num_nodes
+        )
+        if (
+            normalized.client.dest == "proxy"
+            and normalized.deployment.num_nodes > normalized.client.num_nodes
+        ):
+            print(
+                f"[spec] client.num_nodes defaulted to "
+                f"{normalized.client.num_nodes} for dest=proxy "
+                f"(deployment.num_nodes={normalized.deployment.num_nodes}); "
+                "one rank per node would aim the whole fleet at a single "
+                "proxy. Set client.num_nodes explicitly to override.",
+                flush=True,
             )
-            if normalized.deployment.num_nodes > DEFAULT_PROXY_CLIENT_NODES:
-                print(
-                    f"[spec] client.num_nodes defaulted to "
-                    f"{normalized.client.num_nodes} for dest=proxy "
-                    f"(deployment.num_nodes={normalized.deployment.num_nodes}); "
-                    "one rank per node would aim the whole fleet at a single "
-                    "proxy. Set client.num_nodes explicitly to override.",
-                    flush=True,
-                )
-        else:
-            normalized.client.num_nodes = normalized.deployment.num_nodes
     if normalized.scheduler.nodes < 1:
         normalized.scheduler.nodes = normalized.deployment.num_nodes
     if not normalized.trace.input_prompt_path:
@@ -651,6 +669,11 @@ def validate_experiment_spec(spec: ExperimentSpec) -> None:
         raise ValueError("client.go_concurrency must be >= 0 (zero selects auto-sizing)")
     if getattr(spec.client, "num_go_procs", 1) < 1:
         raise ValueError("client.num_go_procs must be >= 1")
+    # 0 (the loader's value for an omitted count) means "derive it"; see
+    # default_client_nodes(). A negative count is a typo, not a request.
+    client_nodes_derived = spec.client.num_nodes_auto or spec.client.num_nodes == 0
+    if spec.client.num_nodes < 0:
+        raise ValueError("client.num_nodes must be >= 1; omit it to use the default")
     if spec.client.num_runs < 1 or spec.client.num_go_workers < 1:
         raise ValueError("client.num_runs and client.num_go_workers must be >= 1")
     if spec.client.warmup_rps < 0 or spec.client.warmup_duration_s < 0:
@@ -684,9 +707,11 @@ def validate_experiment_spec(spec: ExperimentSpec) -> None:
                 "eval client.saturation currently supports exactly one Go process; "
                 "use ClientLab for multi-process saturation"
             )
-        if ("client.num_nodes" not in matrix_controlled_fields and spec.client.num_nodes != 1) or (
-            "client.num_runs" not in matrix_controlled_fields and spec.client.num_runs != 1
-        ):
+        if (
+            "client.num_nodes" not in matrix_controlled_fields
+            and not client_nodes_derived
+            and spec.client.num_nodes != 1
+        ) or ("client.num_runs" not in matrix_controlled_fields and spec.client.num_runs != 1):
             raise ValueError(
                 "eval client.saturation requires num_nodes=1 and num_runs=1; "
                 "use ClientLab for distributed/repeated saturation"
@@ -716,6 +741,7 @@ def validate_experiment_spec(spec: ExperimentSpec) -> None:
     if (
         spec.client.dest == "direct"
         and any(arm in {"local", "paired"} for arm in pinned)
+        and not client_nodes_derived
         and spec.client.num_nodes != spec.deployment.num_nodes
     ):
         raise ValueError(

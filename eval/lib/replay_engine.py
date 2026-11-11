@@ -28,6 +28,7 @@ from exaserve.control.process_handshake import (
     wait_ready_handshake,
 )
 from exaserve.exception_notes import add_exception_note
+from exaserve.mpi_loader import import_mpi
 from exaserve.go_result_contract import (
     LATENCY_QUANTILE_METHOD,
     read_go_result_stream,
@@ -89,7 +90,7 @@ def _init_mpi():
     if declared_profile and declared_profile != profile.profile_id:
         raise RuntimeError("replay MPI compatibility profile identity mismatch")
     try:
-        from mpi4py import MPI
+        MPI = import_mpi()
     except ImportError as exc:  # pragma: no cover - optional dependency
         if launcher_rank_present or any(size > 1 for size in launcher_sizes):
             raise RuntimeError(
@@ -279,7 +280,7 @@ class _MPIMessageRequest:
 
 
 def _mpi_isend_message(comm, message, *, dest: int, tag: int):
-    from mpi4py import MPI
+    MPI = import_mpi()
 
     frame = _encode_mpi_message(message)
     return _MPIMessageRequest(
@@ -288,7 +289,7 @@ def _mpi_isend_message(comm, message, *, dest: int, tag: int):
 
 
 def _mpi_irecv_message(comm, *, source: int, tag: int):
-    from mpi4py import MPI
+    MPI = import_mpi()
 
     buffer = bytearray(_MPI_FRAME_BYTES)
     return _MPIMessageRequest(
@@ -799,7 +800,7 @@ def _reduce_summary_via_mpi(
         raise ValueError("MPI summary rank/run identity is invalid")
     summary = _validate_go_summary(local_summary)
     try:
-        from mpi4py import MPI
+        MPI = import_mpi()
     except ImportError as exc:  # pragma: no cover - MPI communicator implies mpi4py
         raise RuntimeError("mpi4py disappeared after communicator initialization") from exc
     sum_fields = (
@@ -991,7 +992,7 @@ def _reduce_dispatch_end_via_mpi(
         raise ValueError("MPI dispatch-end deadline must be finite and positive")
     if comm is None or mpi_size <= 1:
         return float(local_last_fire_time)
-    from mpi4py import MPI
+    MPI = import_mpi()
 
     _require_mpi_collective_ready()
     send_value = array("d", [float(local_last_fire_time)])

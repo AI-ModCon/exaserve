@@ -3,7 +3,7 @@
 Network statistics collector — polls /proc/net/dev at a configurable interval
 and writes cumulative counters as JSONL (one line per interface per sample).
 
-The output is consumed by plot_internode.py, which computes deltas and rates.
+The output is consumed by eval/plot/internode.py, which computes deltas and rates.
 
 Usage:
     python3 netstats.py --output /path/to/netstats.jsonl [--interval 1.0] [--interfaces hsn0,hsn1]

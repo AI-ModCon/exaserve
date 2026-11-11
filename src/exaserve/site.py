@@ -52,9 +52,15 @@ def local_account_name() -> str:
 
 
 def default_model_storage_path() -> str:
-    """Derive an account-local Aurora path without embedding a developer name."""
+    """Derive an account-local path under the configured allocation project root."""
 
-    project_root = Path(os.environ.get("EXASERVE_PROJECT_ROOT", "/lus/flare/projects/AuroraGPT"))
+    configured_root = os.environ.get("EXASERVE_PROJECT_ROOT", "").strip()
+    if not configured_root:
+        raise RuntimeError(
+            "cannot derive the model storage path; set EXASERVE_MODEL_STORAGE_PATH, or "
+            "EXASERVE_PROJECT_ROOT to the allocation's project directory"
+        )
+    project_root = Path(configured_root)
     if not project_root.is_absolute():
         raise RuntimeError("EXASERVE_PROJECT_ROOT must be an absolute path")
     try:
@@ -111,11 +117,16 @@ _AURORA_PREPARED_ENVIRONMENT = (
 
 
 @lru_cache(maxsize=4)
-def default_site_profile(site_id: str = "") -> SiteProfile:
+def default_site_profile(site_id: str = "", fallback_model_storage_path: str = "") -> SiteProfile:
     """The site profile for this deployment host.
 
     Values come from the environment where the site genuinely varies, and are
     fixed here where they are properties of the machine.
+
+    ``fallback_model_storage_path`` is used only when neither
+    EXASERVE_MODEL_STORAGE_PATH nor EXASERVE_PROJECT_ROOT is set. The evaluation
+    tooling passes the path its own site configuration resolved; serving entry
+    points pass none and fail closed.
     """
     site_id = site_id or os.environ.get("EXASERVE_SITE_ID", AURORA_SITE_ID)
     from .compat.profile import default_profile
@@ -132,7 +143,10 @@ def default_site_profile(site_id: str = "") -> SiteProfile:
     gpus_per_node = int(os.environ.get("EXASERVE_SITE_GPUS_PER_NODE", "12"))
     model_storage_path = os.environ.get("EXASERVE_MODEL_STORAGE_PATH")
     if not model_storage_path:
-        model_storage_path = default_model_storage_path()
+        if fallback_model_storage_path and not os.environ.get("EXASERVE_PROJECT_ROOT", "").strip():
+            model_storage_path = fallback_model_storage_path
+        else:
+            model_storage_path = default_model_storage_path()
     profile = default_profile("xpu")
     # Only this exact dimension has candidate-bound one-/two-node evidence.
     # Other implemented capabilities compile into explicit validation-only

@@ -1628,7 +1628,6 @@ class EngineWorker:
             messages,
             add_generation_prompt=add_generation_prompt,
             continue_final_message=continue_final_message,
-            chat_template=body.get("chat_template"),
             chat_template_kwargs=body.get("chat_template_kwargs") or {},
         )
         preflight_error = self._context_preflight_response(

@@ -29,6 +29,23 @@ for _path in _TEST_PATHS:
 os.environ.setdefault("HF_HUB_OFFLINE", "1")
 os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 
+# The package and the eval site configuration have no built-in allocation; tests
+# that derive storage paths or render jobs use this neutral placeholder project.
+_SITE_PLACEHOLDERS = {
+    "EXASERVE_PROJECT_ROOT": "/lus/flare/projects/example-project",
+    "EXASERVE_PROJECT_ACCOUNT": "example-project",
+    "EXASERVE_ENV_SCRIPT_AURORA": "/lus/flare/projects/example-project/site-environment.sh",
+    "EXASERVE_LITELLM_PYTHON_PATH": "/lus/flare/projects/example-project/litellm/bin/python3",
+}
+
+
+@pytest.fixture(autouse=True)
+def site_placeholders(monkeypatch):
+    """Set the placeholders for every test, so values exported in the developer's
+    shell cannot change a result; a test may still override or delete them."""
+    for name, value in _SITE_PLACEHOLDERS.items():
+        monkeypatch.setenv(name, value)
+
 
 @pytest.fixture
 def serve_module():

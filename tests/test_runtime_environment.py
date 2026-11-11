@@ -41,6 +41,7 @@ def _plan():
         manifest_hash="b" * 64,
         vendor="xpu",
         engine="vllm",
+        validation_mode=False,
         model_storage_path="/lus/flare/models",
         models=(SimpleNamespace(pipeline_parallel_size=1, tensor_parallel_size=1),),
         collect_stats=False,
@@ -388,6 +389,56 @@ def test_closed_environment_discards_lmod_bookkeeping_before_shared_path_scan(tm
     assert not bookkeeping.keys() & env.keys()
 
 
+def test_closed_environment_drops_exaserve_head_configuration(tmp_path):
+    """Users export these to submit jobs, so batch jobs inherit them. They name
+    shared storage and no rank reads them, so they are dropped, not reported."""
+    plan = _plan()
+    paths = _paths(tmp_path)
+    python = tmp_path / "site-python"
+    python.write_bytes(b"python")
+    python.chmod(0o755)
+    head_configuration = {
+        "EXASERVE_PROJECT_ROOT": "/home/user/project",
+        "EXASERVE_MODEL_STORAGE_PATH": "/home/user/project/models",
+        "EXASERVE_LOCAL_STAGE_PATH": "/tmp/hf_home",
+        "EXASERVE_ENV_SCRIPT_AURORA": "/home/user/site/env.sh",
+        "EXASERVE_SUBMISSION_REGISTRY": "/home/user/.cache/exaserve/submissions",
+        # The evaluation tooling's site configuration, which users also export.
+        "EXASERVE_LITELLM_PYTHON_PATH": "/home/user/litellm/bin/python3",
+        "EXASERVE_SITE_CONFIG_LOCAL": "/home/user/exaserve-config/site_config_local.py",
+        "EXASERVE_PAPER_SUITE_ROOT": "/lus/flare/projects/example-project/suite",
+    }
+    env = closed_runtime_environment(
+        plan,
+        paths=paths,
+        policy=plan,
+        base_environment={
+            QUALIFIED_PYTHON_ENV: str(python),
+            QUALIFIED_PYTHON_HASH_ENV: "d" * 64,
+            QUALIFIED_PYTHON_PROFILE_ENV: plan.site_profile_hash,
+            COMPAT_SOURCE_PROFILE_ENV: plan.compatibility_profile_hash,
+            COMPAT_SOURCE_MANIFEST_ENV: plan.manifest_hash,
+            **head_configuration,
+        },
+    )
+    assert not head_configuration.keys() & env.keys()
+
+
+def test_every_eval_site_path_setting_is_discarded_head_configuration():
+    """The package cannot import eval, so its discard list is a literal; keep
+    it in step with the evaluation tooling's path-valued site settings."""
+    from eval import site_config
+    from exaserve.plan.runtime_environment import _AMBIENT_DISCARD_KEYS
+
+    head_paths = {f"EXASERVE_{field.upper()}" for field in site_config._PATH_FIELDS} | {
+        "EXASERVE_SITE_CONFIG_LOCAL",
+        "EXASERVE_PAPER_SUITE_ROOT",
+    }
+    assert head_paths <= _AMBIENT_DISCARD_KEYS
+    # Ranks read the GPU count; it is a setting, not a path to drop.
+    assert "EXASERVE_NUM_GPUS_PER_NODE" not in _AMBIENT_DISCARD_KEYS
+
+
 def test_closed_environment_drops_unrecognized_ambient_behavior(tmp_path):
     plan = _plan()
     paths = _paths(tmp_path)
@@ -522,7 +573,7 @@ def test_worker_descriptor_rejects_shared_argv_and_missing_no_user_site(tmp_path
             environment={
                 "PYTHONNOUSERSITE": "1",
                 "PYTHONSAFEPATH": "1",
-                "PBS_NODEFILE": "/home/user/.aurora_leases/nodes",
+                "PBS_NODEFILE": "/home/user/allocation/nodes",
             },
             policy=_plan(),
         )

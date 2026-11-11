@@ -1,11 +1,8 @@
 # ExaServe Production Hardening: One-Pass Execution Plan
 
-**Draft date:** 2026-08-04
-
-**Last reconciled:** 2026-08-07 after completion-claim audit and cutover-question
-adjudication
-
-**Companion audit:** `docs/PRODUCTION_READINESS_AUDIT.md`
+**Background:** the audits, cutover questions and run logs that informed this
+plan are kept in the repository history; their lessons are in the
+[operations handbook](operations_handbook.md).
 
 **Scope:** Core serving, cluster launch, readiness, compatibility patches,
 model staging, gateways, schedulers, evaluation, ClientLab, observability,
@@ -14,7 +11,7 @@ packaging, tests, documentation, and supported-platform claims.
 ## 0. Authority, precedence, and worker contract
 
 This document is the **canonical implementation specification** for the
-production-hardening program. Claude Code and any other implementation worker
+production-hardening program. Every implementation worker, human or AI agent,
 must follow it faithfully. The active user request controls authorized scope and
 whether operational actions such as commits, external writes, or compute runs
 may occur; it does not make an unstated architecture choice. Within that scope,
@@ -27,16 +24,12 @@ the documents have the following precedence:
 3. After WP0 creates it, `docs/hardening/FINDINGS.yaml` is the authoritative
    status/evidence ledger. It may track disposition but may not weaken an
    invariant or gate in this plan.
-4. `docs/PRODUCTION_READINESS_AUDIT.md` is the corrected finding/evidence
-   register. `docs/PRODUCTION_READINESS_CLAUDE_AUDIT.md` is historical
-   adjudication; `docs/KNOWN_ISSUES.md`, `docs/TODO.md`, and `docs/findings/` are
-   empirical/backlog inputs, not implementation-order instructions.
-5. `docs/PLAN_FEASIBILITY_CLAUDE.md` is advisory sizing and program-risk
-   commentary only. It cannot waive, reorder, narrow, or replace a requirement
-   in this plan.
+4. `docs/KNOWN_ISSUES.md`, `docs/TODO.md` and `docs/operations_handbook.md` are
+   empirical and backlog inputs, not implementation-order instructions.
 
 If two documents disagree, the higher-precedence document wins. The worker
-must record the conflict in `docs/hardening/MIGRATION_LOG.md`; it must not
+must record the conflict in the pull request description and, when it affects
+a finding, in the findings ledger; it must not
 silently choose the easier interpretation. A safety rule always wins over an
 implementation rule.
 Audit line numbers are revision-local evidence hints: before editing, relocate
@@ -368,10 +361,10 @@ the per-replica application layout. These rules are deterministic for the
 schema/source pair; they are not an ambient switch and cannot be selected at
 runtime.
 
-#### 3.2.1 Binding cutover resolutions (2026-08-07)
+#### 3.2.1 Binding cutover resolutions
 
-This subsection resolves every question in
-`docs/hardening/QUESTIONS_FOR_CODEX_2026-08-07.md`. These are implementation
+This subsection resolves every cutover question raised during the program (the
+question record is kept in the repository history). These are implementation
 requirements, not alternative designs from which the worker may choose. The
 worker must continue the ordered cutover without waiting for another
 architecture answer. Evidence-derived production timeout values, the current
@@ -421,8 +414,7 @@ receipts/result manifests; zero exit without the declared result is failure.
 The migration therefore moves ownership into Python without rewriting a sound
 native distribution algorithm merely to avoid a subprocess.
 
-**Non-head shared-filesystem prohibition (product-owner decision,
-2026-09-04)**
+**Non-head shared-filesystem prohibition (product-owner decision)**
 
 Only explicitly head-owned processes running on the allocation-head node may
 read or write a SiteProfile-declared shared project or home filesystem. Each
@@ -1156,7 +1148,7 @@ invariant is implemented or this canonical plan is explicitly amended.
 
 ### 3.3 Normative code ownership
 
-Claude Code must converge on these ownership boundaries rather than adding a
+The implementation worker must converge on these ownership boundaries rather than adding a
 second orchestration layer:
 
 | Module/region | Sole responsibility after cutover |
@@ -1222,13 +1214,13 @@ Each work package must leave the main branch-equivalent state testable. The old
 path may coexist temporarily behind a migration switch, but it is removed in the
 cutover package. It cannot survive as an undocumented second architecture.
 
-### 4.1 Claude Code execution contract
+### 4.1 Worker execution contract
 
-Claude Code should treat this section and each work-package exit gate as
-execution instructions, not optional advice:
+The implementation worker should treat this section and each work-package exit
+gate as execution instructions, not optional advice:
 
-1. Read `AGENTS.md`, the production audit, the Claude cross-verification, Known
-   Issues, TODO, and this plan before changing code.
+1. Read `AGENTS.md`, the known issues, the open-work list, the operations
+   handbook and this plan before changing code.
 2. Record `git status`, revision, environment, and every pre-existing dirty file.
    Preserve user changes; never reset, overwrite, delete, commit, push, or submit
    jobs unless the active request authorizes that operation.
@@ -1244,9 +1236,9 @@ execution instructions, not optional advice:
    configuration, or error protocol to consumers.
 7. Run targeted tests and the cumulative login-node-safe suite after every
    slice. Test work starts in WP0; WP11 completes the global packaging/CI gate.
-8. Update `docs/hardening/FINDINGS.yaml`, the relevant ADR,
-   `docs/hardening/MIGRATION_LOG.md`, and evidence links in the same slice. Do
-   not defer documentation until the end.
+8. Update `docs/hardening/FINDINGS.yaml`, the relevant ADR and evidence links in
+   the same slice, and record migration notes in the pull request. Do not defer
+   documentation until the end.
 9. Advance only when the slice and work-package gates pass. A failed preferred
    option means continue down the recorded fallback ladder, not silently retain
    the legacy path.
@@ -1256,8 +1248,8 @@ execution instructions, not optional advice:
     combination is release-blocking or explicitly `UNSUPPORTED` and rejected by
     validation.
 
-Every temporary migration switch is registered in
-`docs/hardening/MIGRATION_LOG.md` with its owner, old and new paths, default
+Every temporary migration switch is registered in the pull request that
+introduces it, with its owner, old and new paths, default
 state, two-state tests, introduction slice, cutover gate, and mandatory WP13
 removal. Until the user confirms an evaluation
 campaign/data-freeze boundary, existing eval result schemas and the legacy path
@@ -1310,7 +1302,7 @@ semantics:
 
 1. S01-S03 and the technical parts of S00 must still meet every proof above;
    missing product approval does not excuse, downgrade, or falsely close a
-   technical spike. The historical 2026-08-05 spikes are partial evidence under
+   technical spike. The earlier spikes are partial evidence under
    the strengthened contract, so P00 is currently reopened until the ADRs name
    and close their remaining proof slices.
 2. After all technical P00 gates pass, but while the 64-versus-128/256 decision
@@ -1480,7 +1472,7 @@ in section 10 and keep the tree testable after each slice.
 
 ### 4.4 Mandatory acceptance catalog for the final adjudicated items
 
-These tests are minimum closure evidence; Claude may add stronger tests but may
+These tests are minimum closure evidence; the worker may add stronger tests but may
 not replace them with prose:
 
 | ID | Required acceptance evidence | Owner |
@@ -2053,27 +2045,29 @@ Using the WP12 procedure early does not waive the final qualification run.
 
 No GPU, distributed, MPI, or experiment workload runs on the login node. Before
 any cluster action, load the current Aurora workflow instructions. Login-node
-work is limited to brief unit/static/package checks after loading `frameworks`
-and `go` as needed.
+work is limited to brief unit/static/package checks after loading the stack in
+[Prepare the runtime](getting_started.md#prepare-the-runtime), which includes
+`go`, as needed.
 
 Compute-session acquisition and validation:
 
 1. Reuse a valid existing compute session when available.
-2. Otherwise prefer `subjob` to lease the required nodes from the user's
-   keepalive allocation. The agent does not start or manage keepalive.
-   `subjob` can lease only nodes already present and free in an eligible source;
-   never assume that `subjob 64`, `subjob 128`, or `subjob 256` is available.
-3. If no lease source exists, use the repository-approved `srundbg` or
-   `srundsc N` interactive fallback; do not improvise scheduler commands.
+2. Otherwise prefer leasing the required nodes from an allocation the user
+   already holds; the agent does not start or manage that allocation. A lease
+   can use only nodes already present and free in an eligible source; never
+   assume that a 64-, 128- or 256-node lease is available.
+3. If no lease source exists, use the site's approved interactive allocation;
+   do not improvise scheduler commands.
 4. A session is valid only when `PBS_JOBID` is set, `PBS_NODEFILE` exists and is
    readable, the current hostname is in that file, and the shell is either marked
    `AURORA_SUBJOB=1` or verified as the interactive PBS compute shell.
-5. In every fresh compute session, source `~/script/env_aurora` for an ExaServe
+5. In every fresh compute session, source the site environment script
+   (`EXASERVE_ENV_SCRIPT_AURORA`) for an ExaServe
    Ray/vLLM run, including one whose canonical plan selects LiteLLM. The parent
    must retain the framework environment while the plan launches LiteLLM from
    its separate, hash-bound executable; activating the LiteLLM virtualenv in
    the parent can make its NumPy version incompatible with vLLM/Numba. Source
-   `~/script/env_litellm` only for a standalone LiteLLM diagnostic that does not
+   a separate LiteLLM environment script only for a standalone LiteLLM diagnostic that does not
    import or run Ray/vLLM in the parent. Verify node count, working directory,
    Python/environment, executables, input models/data, unique output directory,
    remaining walltime, and XPU visibility before launch. Use
@@ -2122,12 +2116,12 @@ small isolation proof below passes.
   controller's sealed source identity, exact child artifact hashes, finite
   budgets, and required qualification evidence. Its scheduler body only prepares
   the environment and execs the Python controller. Do not start or manage
-  keepalive, disguise a data job as `debug-*`, or create SSH launch fan-out.
+  allocation-holding jobs, disguise a data job as `debug-*`, or create SSH launch fan-out.
 - The native batch head is the sole controller and shared-filesystem reader.
   Preserve the original PBS job/PALS environment and physical node inventory;
   select an explicit exact subset containing that same head, and supply its
   node-local nodefile to both PBS/MPI and ExaServe. Never change PBS_JOBID, fake
-  a subjob lease, or silently truncate a nodefile inside a DeploymentPlan binder.
+  an allocation lease, or silently truncate a nodefile inside a DeploymentPlan binder.
 - A child's original SchedulerPlan is not submitted in this attach/reuse mode.
   Its deployment, logical scheduler count, source snapshot, and immutable inputs
   remain unchanged. Execute the canonical child CLI from its sealed source,
@@ -2277,11 +2271,9 @@ Maintain these artifacts throughout the pass:
 
 ```text
 docs/hardening/
-  BASELINE.md
   FINDINGS.yaml
   COMPATIBILITY_MATRIX.md
-  MIGRATION_LOG.md
-  FINAL_AUDIT.md
+  STATUS.md
   decisions/ADR-*.md
 artifacts/hardening/<experiment-id>/
   manifest.yaml
@@ -2292,7 +2284,8 @@ artifacts/hardening/<experiment-id>/
   verdict.md
 ```
 
-`BASELINE.md` records revision and dirty state; Python/package/plugin versions;
+Each work package records its baseline in its pull request: revision and dirty
+state; Python/package/plugin versions;
 `PYTHONPATH` and executable resolution; exact commands and seeds; collected and
 failed pytest node IDs; scheduler/site profile; and current behavior. Large/raw
 Aurora logs remain in unique run storage and are linked by path and checksum
@@ -2356,7 +2349,7 @@ The pass is complete only when all of the following are true:
 ## 10. Recommended commit structure for the one pass
 
 Use the following small, reviewable logical checkpoints even though this is one
-migration. Claude Code creates commits only when explicitly authorized; otherwise
+migration. The worker creates commits only when explicitly authorized; otherwise
 it leaves a reviewed working-tree checkpoint with the same tests/evidence.
 
 1. Baseline and finding ledger.

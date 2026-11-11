@@ -5,7 +5,7 @@ BackendAdapter defines the lifecycle contract that every backend must implement:
   validate()                — check the RunMaterialization/backend combination.
   build_runtime_manifest()  — write a backend-specific config (e.g., ExpConfig YAML
                               for the ray backend) that the serving code reads at launch.
-  runtime_env()             — return env script path + env vars for the PBS job.
+  runtime_env()             — return the site environment script the PBS job sources.
   launch()                  — start the serving cluster, return a LaunchedBackend handle.
   wait_ready()              — wait on canonical DeploymentStatus readiness.
   discover_targets()        — return base URLs the replay client should hit.
@@ -35,7 +35,6 @@ from ..models import RunMaterialization
 @dataclass
 class RuntimeEnvSpec:
     env_script: str
-    exports: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
@@ -188,9 +187,8 @@ class BackendAdapter(abc.ABC):
 
     def job_env_exports(self, run_plan: RunMaterialization) -> dict[str, str]:
         """Env vars exported at the PBS job-script level, visible to the WHOLE
-        job: the server launch, discover_targets, and the replay client. This is
-        distinct from runtime_env().exports, which are applied only to the launch
-        subprocess. Default: none."""
+        job: the server launch, discover_targets, and the replay client.
+        Default: none."""
         return {}
 
     @abc.abstractmethod

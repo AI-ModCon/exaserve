@@ -26,7 +26,7 @@ if [ ! -r "${PBS_NODEFILE:-}" ] || ! awk -v host="$current_host" '
   exit 2
 fi
 
-source "$HOME/script/env_aurora"
+source "${EXASERVE_ENV_SCRIPT_AURORA:?set EXASERVE_ENV_SCRIPT_AURORA to the site environment script}"
 unset ONEAPI_DEVICE_SELECTOR
 set -u
 
@@ -54,7 +54,7 @@ trap cleanup EXIT
 
 python3 -m venv "$scratch/venv"
 python_bin="$scratch/venv/bin/python"
-"$python_bin" -m pip install pip==26.2.1
+"$python_bin" -m pip install pip==26.2.2
 "$python_bin" -m pip install -r "$repo_root/requirements/ci.lock"
 "$python_bin" -m pip install --no-deps "$wheel"
 
