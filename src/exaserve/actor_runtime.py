@@ -66,6 +66,14 @@ _INHERITED_ACTOR_ENV = (
     "EXASERVE_XPU_VLLM_DISABLE_RAY_COMPILED_DAG",
     "EXASERVE_XPU_VLLM_FORCE_RAY_CHANNEL_TYPE",
     "RAY_EXPERIMENTAL_NOSET_ONEAPI_DEVICE_SELECTOR",
+    # ROCm counterpart: vLLM's Ray executor selects devices by local rank
+    # among all node GPUs, so Ray must not mask HIP_VISIBLE_DEVICES per actor.
+    "RAY_EXPERIMENTAL_NOSET_HIP_VISIBLE_DEVICES",
+    # Collective transport selection for cross-node TP/PP (NCCL and RCCL).
+    "NCCL_SOCKET_IFNAME",
+    "GLOO_SOCKET_IFNAME",
+    "NCCL_DEBUG",
+    "NCCL_DEBUG_SUBSYS",
     "VLLM_USE_RAY_COMPILED_DAG_CHANNEL_TYPE",
     "VLLM_USE_RAY_WRAPPED_PP_COMM",
     "ZE_FLAT_DEVICE_HIERARCHY",

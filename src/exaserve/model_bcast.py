@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 
 from .control.finite_process import FiniteProcessError, run_finite
+from .control.rank_launcher import slurm_export_argument as _slurm_export_argument
 from .exception_notes import add_exception_note
 from .model_paths import get_model_storage_name, iter_unique_model_ids
 from .model_staging import (
@@ -482,11 +483,16 @@ def compile_bcast(tools_dir: Path | None = None, *, site_profile=None) -> Path:
     )
 
 
+# Launchers that copy a head-local executable to every node before exec:
+# PALS ``mpiexec --transfer`` and Slurm ``srun --bcast``.
+EXECUTABLE_TRANSFER_SCHEDULERS = frozenset({"pbs", "slurm"})
+
+
 def resolve_bcast_executable(*, scheduler: str, site_profile=None) -> Path:
     """Resolve a bootstrap that workers can execute without a shared open.
 
-    On PBS/PALS the helper is compiled on allocation-head local storage and
-    ``mpiexec --transfer`` moves it before exec.  Other schedulers need an
+    On PBS/PALS and Slurm the helper is compiled on allocation-head local
+    storage and ``mpiexec --transfer``/``srun --bcast`` moves it before exec.  Other schedulers need an
     explicitly qualified immutable site-local executable; silently assuming a
     head-local path is visible remotely would violate the distribution
     contract.
@@ -515,7 +521,7 @@ def resolve_bcast_executable(*, scheduler: str, site_profile=None) -> Path:
             return Path(qualify_site_local_bootstrap(configured, site_profile))
         except RuntimeError as exc:
             raise RuntimeError(f"qualified bcast executable failed site evidence: {exc}") from exc
-    if scheduler == "pbs":
+    if scheduler in EXECUTABLE_TRANSFER_SCHEDULERS:
         return compile_bcast(site_profile=site_profile)
     raise RuntimeError(
         f"scheduler {scheduler!r} has no qualified executable-transfer contract; "
@@ -583,16 +589,23 @@ def mpi_launch_prefix(
     ):
         raise ValueError("MPI application environment must contain safe string pairs")
     if scheduler == "slurm":
-        exports = ["NONE", *(f"{name}={value}" for name, value in sorted(environment.items()))]
-        if any("," in item for item in exports[1:]):
+        exports = [f"{name}={value}" for name, value in sorted(environment.items())]
+        if any("," in item for item in exports):
             raise ValueError("Slurm application environment values may not contain commas")
+        # ``--overlap``: these finite steps run while the long-lived rank step
+        # holds every CPU of the whole-node allocation; without it Slurm queues
+        # them behind that step forever.  ``--bcast`` is Slurm's equivalent of
+        # PALS ``--transfer``: srun copies the head-local executable to each
+        # node's /tmp before exec, so no worker opens it from shared storage.
         return [
             "srun",
+            "--overlap",
             f"--nodes={num_nodes}",
             "--ntasks-per-node=1",
             "--cpu-bind=none",
+            *(["--bcast=/tmp/"] if transfer_executable else []),
             f"--chdir={cwd}",
-            f"--export={','.join(exports)}",
+            f"--export={_slurm_export_argument(exports)}",
         ]
     if scheduler != "pbs":
         raise ValueError(f"unsupported model-broadcast scheduler {scheduler!r}")
@@ -1774,7 +1787,7 @@ def bcast_models(
                 application_cwd=Path(os.environ["EXASERVE_LOCAL_RUNTIME_ROOT"]) / "python",
                 application_environment=native_application_environment,
                 transfer_executable=(
-                    scheduler == "pbs"
+                    scheduler in EXECUTABLE_TRANSFER_SCHEDULERS
                     and not os.environ.get("EXASERVE_LOCAL_RUNTIME_ROOT")
                     and not os.environ.get("EXASERVE_QUALIFIED_BCAST")
                 ),

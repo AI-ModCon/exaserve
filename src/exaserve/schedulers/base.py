@@ -52,6 +52,8 @@ class JobSpec:
     stderr_dir: Path
     command_argv: tuple[str, ...]
     queue: str = ""
+    qos: Optional[str] = None
+    constraint: Optional[str] = None
     cwd: Optional[Path] = None
     environment: Mapping[str, str] = field(default_factory=dict)
     bootstrap_script: str = ""
@@ -90,6 +92,8 @@ class JobSpec:
             "account",
             "job_name",
             "queue",
+            "qos",
+            "constraint",
             "filesystems",
             "keep_flag",
             "mail_user",
@@ -271,21 +275,72 @@ def run_submission_cmd(cmd: Sequence[str], timeout_s: int) -> subprocess.Complet
         raise SubmissionAmbiguous(str(exc)) from exc
 
 
-def default_queue_and_walltime(num_nodes: int) -> tuple[str, str]:
-    """Conservative Aurora defaults for a topology without explicit values.
+# (largest node count covered, queue/partition, walltime) per site, ascending.
+# Sites are keyed by SiteProfile id; an unlisted site has no defaults and must
+# supply queue and walltime explicitly rather than inherit another site's.
+_QUEUE_DEFAULTS: Mapping[str, tuple[tuple[Optional[int], str, str], ...]] = MappingProxyType(
+    {
+        # The capacity queue covers 1--16 nodes (and permits longer jobs),
+        # while debug-scaling covers 2--256 nodes with a one-hour maximum.
+        # Production starts at 256 nodes.  At the overlapping 256-node boundary
+        # we choose prod so a default is not silently constrained to a debug
+        # reservation.
+        "alcf-aurora": (
+            (16, "capacity", "01:00:00"),
+            (255, "debug-scaling", "01:00:00"),
+            (None, "prod", "02:00:00"),
+        ),
+        # Frontier's default ``batch`` partition with a one-hour request.
+        # Small validation jobs normally pass ``--queue extended`` with
+        # ``--qos debug`` (two-hour QOS limit) instead.
+        "olcf-frontier": ((None, "batch", "01:00:00"),),
+    }
+)
 
-    The site's capacity queue covers 1--16 nodes (and permits longer jobs),
-    while debug-scaling covers 2--256 nodes with a one-hour maximum.  Production
-    starts at 256 nodes.  At the overlapping 256-node boundary we choose prod
-    so a default is not silently constrained to a debug reservation.
+
+@dataclass(frozen=True)
+class SiteJobPolicy:
+    """Per-site batch-request facts that are not deployment topology.
+
+    ``constraint`` is a node feature every job needs (Frontier's node-local
+    NVMe under ``/mnt/bb`` exists only with ``--constraint=nvme``).
+    ``request_gpus`` controls whether the job asks the scheduler for GPU
+    generic resources.  Frontier nodes are allocated whole and every GCD is
+    visible to steps without a GRES request, while a GRES request makes Slurm
+    inject a per-step ROCr mask that competes with Ray's device assignment.
+    """
+
+    constraint: Optional[str] = None
+    request_gpus: bool = True
+
+
+_SITE_JOB_POLICY: Mapping[str, SiteJobPolicy] = MappingProxyType(
+    {"olcf-frontier": SiteJobPolicy(constraint="nvme", request_gpus=False)}
+)
+
+
+def site_job_policy(site_id: str) -> SiteJobPolicy:
+    return _SITE_JOB_POLICY.get(site_id, SiteJobPolicy())
+
+
+def default_queue_and_walltime(num_nodes: int, *, site_id: str = "alcf-aurora") -> tuple[str, str]:
+    """Conservative queue and walltime for a topology without explicit values.
+
+    ``site_id`` defaults to Aurora for backward compatibility; the submission
+    paths pass the active SiteProfile id explicitly.
     """
     if isinstance(num_nodes, bool) or not isinstance(num_nodes, int) or num_nodes <= 0:
         raise ValueError("num_nodes must be a positive integer")
-    if num_nodes <= 16:
-        return "capacity", "01:00:00"
-    if num_nodes < 256:
-        return "debug-scaling", "01:00:00"
-    return "prod", "02:00:00"
+    try:
+        rules = _QUEUE_DEFAULTS[site_id]
+    except KeyError:
+        raise ValueError(
+            f"no default queue/walltime for site {site_id!r}; set the queue and walltime explicitly"
+        ) from None
+    for limit, queue, walltime in rules:
+        if limit is None or num_nodes <= limit:
+            return queue, walltime
+    raise AssertionError("queue defaults must end with an unbounded rule")
 
 
 # The site's debug and debug-scaling queues stop a job after one hour, and qsub

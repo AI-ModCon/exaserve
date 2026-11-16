@@ -33,6 +33,7 @@ from .plan.contracts import (
 )
 
 AURORA_SITE_ID = "alcf-aurora"
+FRONTIER_SITE_ID = "olcf-frontier"
 AURORA_PMIX_PREPARED_ENVIRONMENT = (
     ("PMIX_MCA_mca_base_component_path", "/usr/lib64/pmix"),
     ("PMIX_MCA_mca_base_param_files", "/etc/pmix-mca-params.conf"),
@@ -115,6 +116,167 @@ _AURORA_PREPARED_ENVIRONMENT = (
     ("RAY_EXPERIMENTAL_NOSET_ONEAPI_DEVICE_SELECTOR", "1"),
 )
 
+_AURORA_ONLY_PREPARED_NAMES = frozenset(
+    {
+        "CCL_PROCESS_LAUNCHER",
+        "RAY_EXPERIMENTAL_NOSET_ONEAPI_DEVICE_SELECTOR",
+        "ZE_AFFINITY_MASK",
+        "ZE_FLAT_DEVICE_HIERARCHY",
+        *(name for name, _ in AURORA_PMIX_PREPARED_ENVIRONMENT),
+    }
+)
+
+# Vendor- and site-neutral Ray/threading controls.  Derived from the Aurora
+# tuple (rather than the reverse) so the Aurora SiteProfile hash cannot drift.
+_COMMON_PREPARED_ENVIRONMENT = tuple(
+    item for item in _AURORA_PREPARED_ENVIRONMENT if item[0] not in _AURORA_ONLY_PREPARED_NAMES
+)
+
+# Frontier (ROCm) prepared environment: the vendor-neutral Ray and threading
+# controls plus what 2-node TP=8 x PP=2 validation (job 5921405) required.
+# vLLM's Ray executor selects a device by local rank among all node GPUs, so
+# Ray must not mask HIP_VISIBLE_DEVICES per actor.  Bootstrap sockets for RCCL
+# and Gloo use the first Slingshot NIC.
+#
+# RCCL's network plugin (aws-ofi-nccl, copied into the runtime archive by
+# scripts/frontier/build_stack.sh) carries cross-node traffic over libfabric
+# CXI.  The values below are the ones OLCF's ``rccl-net-plugin/1.0`` module
+# sets for it (HPE shs-ccl-docs guidance), except NCCL_SOCKET_IFNAME, which
+# stays on the validated hsn0.  Without the plugin they are inert.
+_FRONTIER_RCCL_OFI_ENVIRONMENT = (
+    ("FI_CXI_DEFAULT_CQ_SIZE", "131072"),
+    ("FI_CXI_DEFAULT_TX_SIZE", "2048"),
+    ("FI_CXI_DISABLE_HOST_REGISTER", "1"),
+    ("FI_CXI_RDZV_EAGER_SIZE", "0"),
+    ("FI_CXI_RDZV_GET_MIN", "0"),
+    ("FI_CXI_RDZV_PROTO", "alt_read"),
+    ("FI_CXI_RDZV_THRESHOLD", "0"),
+    ("FI_CXI_RX_MATCH_MODE", "hybrid"),
+    ("FI_MR_CACHE_MONITOR", "kdreg2"),
+    ("HSA_FORCE_FINE_GRAIN_PCIE", "1"),
+    ("NCCL_CROSS_NIC", "1"),
+    ("NCCL_NET_GDR_LEVEL", "PHB"),
+)
+_FRONTIER_PREPARED_ENVIRONMENT = tuple(
+    sorted(
+        (
+            *_COMMON_PREPARED_ENVIRONMENT,
+            *_FRONTIER_RCCL_OFI_ENVIRONMENT,
+            ("GLOO_SOCKET_IFNAME", "hsn0"),
+            ("NCCL_SOCKET_IFNAME", "hsn0"),
+            ("RAY_EXPERIMENTAL_NOSET_HIP_VISIBLE_DEVICES", "1"),
+        )
+    )
+)
+
+# Node-local root of the prepared Frontier serving runtime (interpreter, Ray,
+# vLLM, HAProxy).  The job environment script unpacks one immutable stack
+# archive here on every allocated node before ExaServe starts, so no worker
+# executes its interpreter from Orion or NFS/DVS.  It plays the role of
+# Aurora's /opt/aurora image, but is a writable tmpfs: its immutability is an
+# operator contract (the archive), not a mount property, and the declaration
+# below records exactly that.
+FRONTIER_SITE_RUNTIME_ROOT = "/tmp/exaserve-site"
+
+# Mount facts recorded on Frontier compute nodes (probe job 5919005,
+# 2026-11-13).  Paths are the compute-node view: home, project and software
+# trees are Cray DVS projections there (NFS on login nodes), and ``/mnt/bb``
+# exists only for jobs that request ``--constraint=nvme``.
+_FRONTIER_FILESYSTEM_SEMANTICS = (
+    ("local_root:/mnt/bb", "node_local;fstype=xfs;readonly=false"),
+    ("local_root:/tmp", "node_local;fstype=tmpfs;readonly=false"),
+    ("local_stage", "node_local"),
+    ("shared", "lustre"),
+    ("shared_root:/autofs/nccs-svm1_home1", "shared;fstype=dvs;readonly=false"),
+    ("shared_root:/autofs/nccs-svm1_home2", "shared;fstype=dvs;readonly=false"),
+    ("shared_root:/autofs/nccs-svm1_proj", "shared;fstype=dvs;readonly=false"),
+    ("shared_root:/autofs/nccs-svm1_sw", "shared;fstype=dvs;readonly=true"),
+    ("shared_root:/lustre/orion", "shared;fstype=lustre;readonly=false"),
+    # Cray PE (MPICH, libfabric) and ROCm live in the node image's overlay
+    # mounts, which are node-local.  Declaring them lets their loader paths
+    # cross the env-none launch boundary; they are never written by ExaServe.
+    ("site_root:/opt/cray", "immutable_read_only_site;fstype=overlay;readonly=false"),
+    ("site_root:/opt/rocm-7.1.1", "immutable_read_only_site;fstype=overlay;readonly=false"),
+    (
+        f"site_root:{FRONTIER_SITE_RUNTIME_ROOT}",
+        "immutable_read_only_site;fstype=tmpfs;readonly=false",
+    ),
+)
+
+
+def frontier_model_storage_path() -> str:
+    """Account-local model path on OLCF Orion.
+
+    Unlike Aurora there is no safe built-in project default: Orion paths are
+    ``/lustre/orion/<project>/...`` and the project is the caller's.
+    """
+
+    explicit = os.environ.get("EXASERVE_MODEL_STORAGE_PATH")
+    if explicit:
+        return explicit
+    root = os.environ.get("EXASERVE_PROJECT_ROOT", "")
+    if not root:
+        raise RuntimeError(
+            "Frontier has no default model path; set EXASERVE_MODEL_STORAGE_PATH "
+            "or EXASERVE_PROJECT_ROOT (for example /lustre/orion/<project>/proj-shared)"
+        )
+    if not Path(root).is_absolute():
+        raise RuntimeError("EXASERVE_PROJECT_ROOT must be an absolute path")
+    return str(Path(root) / local_account_name() / "models")
+
+
+def frontier_site_profile() -> SiteProfile:
+    """Unqualified SiteProfile for OLCF Frontier (Slurm + ROCm + vLLM, MI250X).
+
+    ``scale_envelopes`` is empty on purpose, so every plan compiled against
+    this profile must set ``validation_mode: true`` and gets the explicit
+    unqualified generic envelope; it cannot cross the production execution
+    boundary.  Follow ``docs/deploy_slurm_amd.md`` to qualify; do not add
+    envelopes or ``evidence_backed`` limits without the measurements.
+    """
+    from .compat.profile import default_profile
+
+    max_nodes = int(os.environ.get("EXASERVE_SITE_MAX_NODES", "64"))
+    return SiteProfile(
+        schema_version=SCHEMA_VERSION,
+        site_id=FRONTIER_SITE_ID,
+        max_nodes=max_nodes,
+        # 4 MI250X per node, each exposing 2 GCDs; a replica owns GCDs.
+        gpus_per_node=int(os.environ.get("EXASERVE_SITE_GPUS_PER_NODE", "8")),
+        # 64 cores per node, 8 reserved by the low-noise mode: 56 schedulable.
+        cpus_per_node=int(os.environ.get("EXASERVE_SITE_CPUS_PER_NODE", "56")),
+        scheduler_types=("slurm",),
+        gateway_kinds=("haproxy", "litellm", "nginx", "envoy", "pingora"),
+        vendors=("rocm",),
+        engines=("vllm",),
+        model_storage_path=frontier_model_storage_path(),
+        local_stage_path=os.environ.get(
+            "EXASERVE_LOCAL_STAGE_PATH", f"/mnt/bb/{local_account_name()}/exaserve"
+        ),
+        control=ControlLimits(),  # evidence_backed=False by construction
+        readiness=ReadinessLimits(),
+        launcher_capabilities=("srun", "slurm", "ray_serve.run_many"),
+        filesystem_semantics=_FRONTIER_FILESYSTEM_SEMANTICS,
+        accelerator_inventory=("mi250x",),
+        network_boundary="trusted_allocation",
+        environment_profile_ref=default_profile("rocm").profile_id,
+        prepared_environment=_FRONTIER_PREPARED_ENVIRONMENT,
+        # Ray's AMD accelerator manager owns HIP_VISIBLE_DEVICES and rejects a
+        # conflicting ROCr mask; neither may leak in from the submitting shell.
+        environment_unset=("CUDA_VISIBLE_DEVICES", "HIP_VISIBLE_DEVICES", "ROCR_VISIBLE_DEVICES"),
+        stack_size_kb=8192,
+        scale_envelopes=(),
+    ).finalize()
+
+
+def active_site_id() -> str:
+    """The selected site id, without constructing its SiteProfile.
+
+    Callers that need only the identity (for example scheduler queue
+    defaults) must not require the model-storage inputs a full profile needs.
+    """
+    return os.environ.get("EXASERVE_SITE_ID", "").strip() or AURORA_SITE_ID
+
 
 @lru_cache(maxsize=4)
 def default_site_profile(site_id: str = "", fallback_model_storage_path: str = "") -> SiteProfile:
@@ -128,7 +290,9 @@ def default_site_profile(site_id: str = "", fallback_model_storage_path: str = "
     tooling passes the path its own site configuration resolved; serving entry
     points pass none and fail closed.
     """
-    site_id = site_id or os.environ.get("EXASERVE_SITE_ID", AURORA_SITE_ID)
+    site_id = site_id or active_site_id()
+    if site_id == FRONTIER_SITE_ID:
+        return frontier_site_profile()
     from .compat.profile import default_profile
 
     # ``max_nodes`` is the physical/validation ceiling, not a production
@@ -444,6 +608,36 @@ def qualify_declared_shared_filesystems(profile: SiteProfile) -> tuple[dict[str,
     return tuple(evidence)
 
 
+# Site-specific hostnames that name a node's high-speed-network interface.  A
+# template is tried before the plain node name; ``{short}`` is the node name up
+# to its first dot.  Sites absent from this table use the node name unchanged.
+# Frontier needs no template: a compute node's plain hostname already resolves
+# to its ``hsn0`` Slingshot address (``frontierNNNNN-hsn0`` is an alias of the
+# same record; confirmed in probe job 5919005).  Perlmutter's names are not
+# recorded until confirmed; a guess would silently bind Ray to the wrong NIC.
+_HSN_HOST_TEMPLATES: dict[str, tuple[str, ...]] = {
+    AURORA_SITE_ID: ("{short}.hsn.cm.aurora.alcf.anl.gov",),
+}
+
+
+def node_address_candidates(node: str, *, site_id: str) -> tuple[str, ...]:
+    """Hostnames to try, in order, when resolving ``node`` on ``site_id``."""
+    short = node.split(".", 1)[0]
+    templates = _HSN_HOST_TEMPLATES.get(site_id, ())
+    return tuple(dict.fromkeys([t.format(short=short) for t in templates] + [node]))
+
+
+def resolve_local_node_address(*, site_id: str) -> str:
+    """Resolve this host's address on the site's preferred interface."""
+    hostname = socket.gethostname()
+    for candidate in node_address_candidates(hostname, site_id=site_id):
+        try:
+            return socket.gethostbyname(candidate)
+        except OSError:
+            continue
+    raise RuntimeError(f"could not resolve allocated node {hostname!r}")
+
+
 def resolve_allocation_node_address(node: str, *, site_id: str) -> str:
     """Resolve one bound allocation node to a non-loopback IPv4 address.
 
@@ -454,13 +648,8 @@ def resolve_allocation_node_address(node: str, *, site_id: str) -> str:
     if not isinstance(node, str) or not node.strip():
         raise RuntimeError("allocation binding contains an empty node name")
     node = node.strip()
-    candidates = [node]
-    if site_id == AURORA_SITE_ID:
-        short = node.split(".", 1)[0]
-        hsn = f"{short}.hsn.cm.aurora.alcf.anl.gov"
-        candidates = [hsn, node]
     errors = []
-    for candidate in dict.fromkeys(candidates):
+    for candidate in node_address_candidates(node, site_id=site_id):
         try:
             infos = socket.getaddrinfo(
                 candidate, None, family=socket.AF_INET, type=socket.SOCK_STREAM
