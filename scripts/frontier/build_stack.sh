@@ -21,6 +21,10 @@ case "${EXASERVE_RUNTIME_PREFIX}" in
     /tmp/exaserve-site/*) ;;
     *) echo "EXASERVE_RUNTIME_PREFIX must be below /tmp/exaserve-site" >&2; exit 2 ;;
 esac
+if [[ ! -f "${RCCL_NET_PLUGIN_SOURCE:?set RCCL_NET_PLUGIN_SOURCE in the stack config}/librccl-net.so" ]]; then
+    echo "RCCL network plugin not found: ${RCCL_NET_PLUGIN_SOURCE}/librccl-net.so" >&2
+    exit 2
+fi
 if [[ -e "${EXASERVE_RUNTIME_ARCHIVE}" ]]; then
     echo "Refusing to overwrite existing archive ${EXASERVE_RUNTIME_ARCHIVE}" >&2
     exit 2
@@ -156,6 +160,20 @@ TMPDIR="${WORK}/tmp" HAPROXY_PREFIX="${EXASERVE_RUNTIME_PREFIX}/opt/haproxy-${HA
 # symlinked executables.
 cp --remove-destination "${EXASERVE_RUNTIME_PREFIX}/opt/haproxy-${HAPROXY_VERSION}/sbin/haproxy" \
     "${EXASERVE_RUNTIME_PREFIX}/bin/haproxy"
+
+# --- RCCL network plugin -----------------------------------------------------------
+# RCCL dlopens librccl-net.so by name.  /sw is a shared DVS mount on compute
+# nodes, so copy OLCF's build into the node-local prefix; env_frontier.sh puts
+# this directory on LD_LIBRARY_PATH.
+PLUGIN_DIR="${EXASERVE_RUNTIME_PREFIX}/lib/rccl-net-plugin"
+mkdir -p "${PLUGIN_DIR}"
+cp "${RCCL_NET_PLUGIN_SOURCE}/librccl-net.so" "${PLUGIN_DIR}/librccl-net.so"
+ln -s librccl-net.so "${PLUGIN_DIR}/libnccl-net.so"
+sha256sum "${PLUGIN_DIR}/librccl-net.so" | tee "${LOG_DIR}/rccl-net-plugin.sha256"
+if ldd "${PLUGIN_DIR}/librccl-net.so" | grep 'not found'; then
+    echo "[stack] RCCL network plugin has unresolved libraries" >&2
+    exit 4
+fi
 
 # --- Verification -----------------------------------------------------------------
 "${PIP[@]}" check 2>&1 | tee "${LOG_DIR}/pip-check.txt" || true

@@ -69,6 +69,10 @@ _AMBIENT_ALLOWED_KEYS = {
     "SSL_CERT_DIR",
     "REQUESTS_CA_BUNDLE",
     "CURL_CA_BUNDLE",
+    # Ray detects AMD GPUs through ROCM_PATH (default /opt/rocm, absent on
+    # Frontier); without it Ray falls back to its NVIDIA manager and masks
+    # CUDA_VISIBLE_DEVICES per actor.
+    "ROCM_PATH",
     "HTTP_PROXY",
     "HTTPS_PROXY",
     "ALL_PROXY",
@@ -133,6 +137,9 @@ _AMBIENT_ALLOWED_KEYS = {
 _AMBIENT_ALLOWED_PREFIXES = (
     "FI_",
     "GLOO_",
+    # NCCL and RCCL read the same NCCL_* names (socket interface, network
+    # plugin, debug); like FI_/CCL_ they are site transport settings.
+    "NCCL_",
     "RAY_",
     "VLLM_",
     "ZE_",

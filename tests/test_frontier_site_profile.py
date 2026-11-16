@@ -492,3 +492,37 @@ def test_rocm_modelinfo_manifest_differs_only_in_vllm_version():
     )
     assert bundle.vllm_version == profile.vllm == "0.15.0+rocm711"
     assert profile_manifest_filename(default_profile("xpu")) == "manifest.json"
+
+
+def test_frontier_ray_and_rccl_settings_from_multinode_pp_validation():
+    # Job 5921405: TP=8 x PP=2 across two nodes needs Ray to leave
+    # HIP_VISIBLE_DEVICES alone and RCCL/Gloo on the Slingshot NIC.
+    frontier = dict(frontier_site_profile().prepared_environment)
+    assert frontier["RAY_EXPERIMENTAL_NOSET_HIP_VISIBLE_DEVICES"] == "1"
+    assert frontier["NCCL_SOCKET_IFNAME"] == "hsn0"
+    assert frontier["GLOO_SOCKET_IFNAME"] == "hsn0"
+    # OLCF rccl-net-plugin/1.0 settings for aws-ofi-nccl on Slingshot.
+    assert frontier["NCCL_NET_GDR_LEVEL"] == "PHB"
+    assert frontier["FI_MR_CACHE_MONITOR"] == "kdreg2"
+    assert frontier["FI_CXI_RDZV_PROTO"] == "alt_read"
+    names = [name for name, _ in frontier_site_profile().prepared_environment]
+    assert names == sorted(names)
+    aurora = dict(default_site_profile(AURORA_SITE_ID).prepared_environment)
+    assert not {
+        "RAY_EXPERIMENTAL_NOSET_HIP_VISIBLE_DEVICES",
+        "NCCL_SOCKET_IFNAME",
+        "NCCL_NET_GDR_LEVEL",
+        "FI_MR_CACHE_MONITOR",
+    } & set(aurora)
+
+
+def test_rocm_detection_and_collective_settings_reach_ranks_and_actors():
+    from exaserve.actor_runtime import _INHERITED_ACTOR_ENV
+    from exaserve.plan.runtime_environment import _ambient_allowed
+
+    # Without ROCM_PATH Ray cannot find librocm_smi64 on Frontier (no
+    # /opt/rocm) and masks CUDA_VISIBLE_DEVICES through its NVIDIA manager.
+    for name in ("ROCM_PATH", "NCCL_SOCKET_IFNAME", "NCCL_DEBUG", "GLOO_SOCKET_IFNAME"):
+        assert _ambient_allowed(name, frozenset())
+    for name in ("RAY_EXPERIMENTAL_NOSET_HIP_VISIBLE_DEVICES", "NCCL_SOCKET_IFNAME"):
+        assert name in _INHERITED_ACTOR_ENV

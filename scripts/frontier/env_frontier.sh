@@ -104,6 +104,10 @@ unset -f _es_stage_runtime
 
 export PATH="${EXASERVE_RUNTIME_PREFIX}/bin:${PATH}"
 hash -r
+# RCCL finds its network plugin (aws-ofi-nccl) by name on the loader path.
+if [[ -d "${EXASERVE_RUNTIME_PREFIX}/lib/rccl-net-plugin" ]]; then
+    export LD_LIBRARY_PATH="${EXASERVE_RUNTIME_PREFIX}/lib/rccl-net-plugin${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+fi
 export EXASERVE_SITE_ID=olcf-frontier
 export EXASERVE_SCHEDULER=slurm
 export HF_HUB_OFFLINE=1

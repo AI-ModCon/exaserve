@@ -132,11 +132,42 @@ _COMMON_PREPARED_ENVIRONMENT = tuple(
     item for item in _AURORA_PREPARED_ENVIRONMENT if item[0] not in _AURORA_ONLY_PREPARED_NAMES
 )
 
-# Frontier (ROCm) prepared environment.  Only the vendor-neutral Ray and
-# threading controls are fixed today.  RCCL/libfabric settings
-# (``NCCL_SOCKET_IFNAME``, ``FI_*``) are added only with multi-node TP/PP
-# evidence; a guessed value here would become a hash-bearing site fact.
-_FRONTIER_PREPARED_ENVIRONMENT = _COMMON_PREPARED_ENVIRONMENT
+# Frontier (ROCm) prepared environment: the vendor-neutral Ray and threading
+# controls plus what 2-node TP=8 x PP=2 validation (job 5921405) required.
+# vLLM's Ray executor selects a device by local rank among all node GPUs, so
+# Ray must not mask HIP_VISIBLE_DEVICES per actor.  Bootstrap sockets for RCCL
+# and Gloo use the first Slingshot NIC.
+#
+# RCCL's network plugin (aws-ofi-nccl, copied into the runtime archive by
+# scripts/frontier/build_stack.sh) carries cross-node traffic over libfabric
+# CXI.  The values below are the ones OLCF's ``rccl-net-plugin/1.0`` module
+# sets for it (HPE shs-ccl-docs guidance), except NCCL_SOCKET_IFNAME, which
+# stays on the validated hsn0.  Without the plugin they are inert.
+_FRONTIER_RCCL_OFI_ENVIRONMENT = (
+    ("FI_CXI_DEFAULT_CQ_SIZE", "131072"),
+    ("FI_CXI_DEFAULT_TX_SIZE", "2048"),
+    ("FI_CXI_DISABLE_HOST_REGISTER", "1"),
+    ("FI_CXI_RDZV_EAGER_SIZE", "0"),
+    ("FI_CXI_RDZV_GET_MIN", "0"),
+    ("FI_CXI_RDZV_PROTO", "alt_read"),
+    ("FI_CXI_RDZV_THRESHOLD", "0"),
+    ("FI_CXI_RX_MATCH_MODE", "hybrid"),
+    ("FI_MR_CACHE_MONITOR", "kdreg2"),
+    ("HSA_FORCE_FINE_GRAIN_PCIE", "1"),
+    ("NCCL_CROSS_NIC", "1"),
+    ("NCCL_NET_GDR_LEVEL", "PHB"),
+)
+_FRONTIER_PREPARED_ENVIRONMENT = tuple(
+    sorted(
+        (
+            *_COMMON_PREPARED_ENVIRONMENT,
+            *_FRONTIER_RCCL_OFI_ENVIRONMENT,
+            ("GLOO_SOCKET_IFNAME", "hsn0"),
+            ("NCCL_SOCKET_IFNAME", "hsn0"),
+            ("RAY_EXPERIMENTAL_NOSET_HIP_VISIBLE_DEVICES", "1"),
+        )
+    )
+)
 
 # Node-local root of the prepared Frontier serving runtime (interpreter, Ray,
 # vLLM, HAProxy).  The job environment script unpacks one immutable stack
